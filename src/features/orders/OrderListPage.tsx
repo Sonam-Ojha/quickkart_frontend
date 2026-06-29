@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag } from 'lucide-react';
+import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, UserCheck } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { money, formatDateTime, formatDate } from '../../lib/utils';
+import { money, formatDateTime } from '../../lib/utils';
 import { orderApi, Order, OrderStats, OrderStatus } from './api';
+import { riderApi, Rider } from '../riders/api';
 
 // ── Status config ──────────────────────────────────────────
 
@@ -38,9 +39,20 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
 // ── Order Detail Drawer ────────────────────────────────────
 
 function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose: () => void; onStatusUpdate: (o: Order) => void }) {
-  const [updating, setUpdating] = useState(false);
-  const [error, setError]       = useState('');
+  const [updating, setUpdating]     = useState(false);
+  const [error, setError]           = useState('');
+  const [riders, setRiders]         = useState<Rider[]>([]);
+  const [assigningRider, setAssigningRider] = useState(false);
+  const [selectedRiderId, setSelectedRiderId] = useState<number | ''>(order.rider?.id ?? '');
   const nextStatus = NEXT_STATUS[order.status];
+
+  useEffect(() => {
+    riderApi.getAll({ status: 'active' }).then(setRiders).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setSelectedRiderId(order.rider?.id ?? '');
+  }, [order.rider]);
 
   const handleAdvance = async () => {
     if (!nextStatus) return;
@@ -62,6 +74,17 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Cancel failed');
     } finally { setUpdating(false); }
+  };
+
+  const handleAssignRider = async () => {
+    setAssigningRider(true); setError('');
+    try {
+      const riderId = selectedRiderId !== '' ? Number(selectedRiderId) : null;
+      const updated = await orderApi.assignRider(order.id, riderId);
+      onStatusUpdate(updated);
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Assign failed');
+    } finally { setAssigningRider(false); }
   };
 
   const timelineIcons: Record<OrderStatus, React.ReactNode> = {
@@ -136,9 +159,40 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
                   <div className="font-semibold text-sm text-slate-700">{order.rider.name}</div>
                   <div className="text-xs text-slate-400">{order.rider.mobile}</div>
                 </>
-              ) : <div className="text-xs text-slate-400">Not assigned</div>}
+              ) : <div className="text-xs text-slate-400 italic">Not assigned</div>}
             </div>
           </div>
+
+          {/* Assign Rider */}
+          {order.status !== 'delivered' && order.status !== 'cancelled' && (
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">
+                <UserCheck size={12} /> Assign Rider
+              </div>
+              <div className="flex gap-2">
+                <select
+                  value={selectedRiderId}
+                  onChange={e => setSelectedRiderId(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="flex-1 border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400"
+                >
+                  <option value="">— Unassign rider —</option>
+                  {riders.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.name} · {r.mobile} {r.store ? `(${r.store.name})` : ''}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  size="sm"
+                  onClick={handleAssignRider}
+                  disabled={assigningRider || selectedRiderId === (order.rider?.id ?? '')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {assigningRider ? <Loader2 size={12} className="animate-spin" /> : 'Assign'}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Items */}
           {order.items && order.items.length > 0 && (

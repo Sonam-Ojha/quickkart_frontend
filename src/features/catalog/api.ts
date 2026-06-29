@@ -29,6 +29,7 @@ export interface Product {
   mrp: number;
   price: number;
   imageUrl: string | null;
+  tag: 'deal' | 'bestseller' | 'new' | null;
   isActive: boolean;
 }
 
@@ -40,6 +41,7 @@ export interface ProductPayload {
   mrp: number;
   price: number;
   imageUrl?: string;
+  tag?: 'deal' | 'bestseller' | 'new' | null;
   isActive?: boolean;
 }
 

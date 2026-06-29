@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Star, Bike, MapPin, Phone, Edit2, Trash2, Loader2, AlertCircle, X, Search } from 'lucide-react';
+import { Plus, Star, Bike, MapPin, Phone, Edit2, Trash2, Loader2, AlertCircle, X, Search, Wifi, WifiOff, TrendingUp } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -14,6 +14,9 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
     name: rider?.name ?? '',
     mobile: rider?.mobile ?? '',
     storeId: rider?.storeId ?? (stores[0]?.id ?? 0),
+    vehicleType: rider?.vehicleType ?? 'bike',
+    vehicleNumber: rider?.vehicleNumber ?? '',
+    password: '',
     rating: rider?.rating ?? 5,
     status: rider?.status ?? 'active',
   });
@@ -58,6 +61,34 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
               <option value="">Select store</option>
               {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">Vehicle Type</label>
+              <select value={form.vehicleType} onChange={e => set('vehicleType', e.target.value as any)}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400">
+                <option value="bike">🏍️ Bike</option>
+                <option value="scooter">🛵 Scooter</option>
+                <option value="cycle">🚲 Cycle</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">Vehicle Number</label>
+              <Input value={form.vehicleNumber ?? ''} onChange={e => set('vehicleNumber', e.target.value)} placeholder="MH 01 AB 1234" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-600 mb-1 block">
+              {rider ? 'New Password (leave blank to keep)' : 'Password (for app login) *'}
+            </label>
+            <Input
+              type="password"
+              value={form.password ?? ''}
+              onChange={e => set('password', e.target.value)}
+              placeholder="Min 6 characters"
+              required={!rider}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -202,7 +233,7 @@ export function RiderListPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 <div className="text-center p-2 bg-slate-50 rounded-xl">
                   <div className="flex items-center justify-center gap-1 text-amber-500 mb-0.5">
                     <Star size={12} fill="currentColor" />
@@ -214,12 +245,34 @@ export function RiderListPage() {
                   <div className="font-bold text-sm text-slate-800 mb-0.5">{rider.totalDeliveries}</div>
                   <div className="text-[10px] text-slate-400">Deliveries</div>
                 </div>
+                <div className="text-center p-2 bg-slate-50 rounded-xl">
+                  <div className="flex items-center justify-center gap-0.5 mb-0.5">
+                    <TrendingUp size={10} className="text-green-600" />
+                    <span className="font-bold text-sm text-slate-800">₹{Math.round((rider.totalEarnings ?? 0) / 100)}</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400">Earned</div>
+                </div>
               </div>
 
               {rider.store && (
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-3">
-                  <MapPin size={11} className="text-[#EA580C] shrink-0" />
-                  <span className="truncate">{rider.store.name}</span>
+                <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <MapPin size={11} className="text-[#EA580C] shrink-0" />
+                    <span className="truncate">{rider.store.name}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {rider.isOnline
+                      ? <><Wifi size={10} className="text-green-500" /><span className="text-green-600 text-[10px] font-semibold">Online</span></>
+                      : <><WifiOff size={10} className="text-slate-300" /><span className="text-slate-400 text-[10px]">Offline</span></>
+                    }
+                  </div>
+                </div>
+              )}
+              {rider.vehicleType && (
+                <div className="text-[10px] text-slate-400 mb-3">
+                  {rider.vehicleType === 'bike' ? '🏍️' : rider.vehicleType === 'scooter' ? '🛵' : rider.vehicleType === 'cycle' ? '🚲' : '🚗'}{' '}
+                  {rider.vehicleType.charAt(0).toUpperCase() + rider.vehicleType.slice(1)}
+                  {rider.vehicleNumber ? ` · ${rider.vehicleNumber}` : ''}
                 </div>
               )}
 

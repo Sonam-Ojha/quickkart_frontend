@@ -1,11 +1,16 @@
 import api from '../../lib/api';
 
+export type BgType = 'orange-tint' | 'teal-tint' | 'blue-tint' | 'emerald-tint' | 'rose-tint' | 'purple-tint';
+export type BannerSection = 'hero' | 'promo';
+
 export interface Banner {
   id: number;
   title: string;
   subtitle: string | null;
   bannerImage: string;
-  bgType: 'orange-tint' | 'teal-tint';
+  section: BannerSection;
+  emoji: string | null;
+  bgType: BgType;
   deeplink: string | null;
   sortOrder: number;
   validTo: string | null;
@@ -17,7 +22,9 @@ export interface BannerPayload {
   title: string;
   subtitle?: string;
   bannerImage: string;
-  bgType: 'orange-tint' | 'teal-tint';
+  section?: BannerSection;
+  emoji?: string;
+  bgType: BgType;
   deeplink?: string;
   sortOrder?: number;
   validTo?: string;

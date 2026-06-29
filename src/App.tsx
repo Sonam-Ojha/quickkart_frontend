@@ -27,6 +27,7 @@ import { ProfilePage } from './features/profile/ProfilePage';
 import { ReferralPage } from './features/referrals/ReferralPage';
 import { WalletPage } from './features/wallet/WalletPage';
 import { SupportPage } from './features/support/SupportPage';
+import { FaqListPage } from './features/faqs/FaqListPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } }
@@ -56,6 +57,7 @@ export default function App() {
 
               <Route element={<ProtectedRoute permission="banners.view" />}>
                 <Route path="banners" element={<BannerListPage />} />
+                <Route path="faqs"    element={<FaqListPage />} />
               </Route>
 
               <Route element={<ProtectedRoute permission="coupons.view" />}>

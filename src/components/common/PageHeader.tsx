@@ -14,7 +14,7 @@ export function PageHeader({ title, subtitle, action, breadcrumbs }: PageHeaderP
         {breadcrumbs && breadcrumbs.length > 0 && (
           <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1.5">
             {breadcrumbs.map((b, i) => (
-              <span key={i} className="flex items-center gap-1.5">
+              <span key={i} className="flex items-centers gap-1.5">
                 {i > 0 && <span>/</span>}
                 <span className={b.href ? 'text-[#EA580C] cursor-pointer hover:underline' : ''}>{b.label}</span>
               </span>

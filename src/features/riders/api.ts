@@ -6,8 +6,12 @@ export interface Rider {
   mobile: string;
   storeId: number;
   store?: { id: number; name: string; city: string };
+  vehicleType: 'bike' | 'scooter' | 'cycle' | 'other';
+  vehicleNumber: string | null;
+  isOnline: boolean;
   rating: number;
   totalDeliveries: number;
+  totalEarnings: number;
   status: 'active' | 'inactive' | 'suspended';
 }
 
@@ -15,6 +19,9 @@ export interface RiderPayload {
   name: string;
   mobile: string;
   storeId: number;
+  vehicleType?: 'bike' | 'scooter' | 'cycle' | 'other';
+  vehicleNumber?: string;
+  password?: string;
   rating?: number;
   status?: 'active' | 'inactive' | 'suspended';
 }
@@ -34,4 +41,7 @@ export const riderApi = {
 
   remove: (id: number) =>
     api.delete(`/api/admin/riders/${id}`).then(r => r.data),
+
+  setPassword: (id: number, password: string) =>
+    api.patch(`/api/admin/riders/${id}/set-password`, { password }).then(r => r.data),
 };

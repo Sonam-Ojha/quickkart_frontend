@@ -48,4 +48,7 @@ export const orderApi = {
 
   updateStatus: (id: number, status: OrderStatus, note?: string) =>
     api.patch<{ order: Order }>(`/api/admin/orders/${id}/status`, { status, note }).then(r => r.data.order),
+
+  assignRider: (orderId: number, riderId: number | null) =>
+    api.patch<{ order: Order }>(`/api/admin/orders/${orderId}/assign-rider`, { riderId }).then(r => r.data.order),
 };

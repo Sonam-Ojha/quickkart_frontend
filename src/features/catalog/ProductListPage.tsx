@@ -25,6 +25,7 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
     mrp: product ? product.mrp / 100 : 0,
     price: product ? product.price / 100 : 0,
     imageUrl: product?.imageUrl ?? '',
+    tag: product?.tag ?? null,
     isActive: product?.isActive ?? true,
   });
   const [saving, setSaving] = useState(false);
@@ -108,6 +109,20 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
               <label className="text-xs font-medium text-slate-600 mb-1 block">Selling Price (₹) *</label>
               <Input type="number" step="0.01" min="0" value={form.price} onChange={e => set('price', Number(e.target.value))} placeholder="0.00" />
             </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-600 mb-1 block">Homepage Tag</label>
+            <select
+              value={form.tag ?? ''}
+              onChange={e => set('tag', e.target.value || null)}
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400"
+            >
+              <option value="">— None —</option>
+              <option value="deal">🔥 Deal of the Day</option>
+              <option value="bestseller">⭐ Best Seller</option>
+              <option value="new">🆕 New Arrival</option>
+            </select>
+            <p className="text-xs text-slate-400 mt-1">Controls which homepage section this product appears in</p>
           </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" checked={form.isActive ?? true} onChange={e => set('isActive', e.target.checked)} className="accent-[#EA580C]" />

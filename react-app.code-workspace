@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../quickkart_backend"
+		},
+		{
+			"path": "../quickkart_customer"
 		}
 	],
 	"settings": {}
