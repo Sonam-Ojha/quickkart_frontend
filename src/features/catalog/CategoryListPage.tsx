@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { usePermission } from '../../hooks/usePermission';
 import { catalogApi, Category, CategoryPayload } from './api';
+import ImageUploadField from '../../components/common/ImageUploadField';
 
 // ── Modal ─────────────────────────────────────────────────
 
@@ -18,6 +19,7 @@ function CategoryModal({ category, onClose, onSave }: ModalProps) {
   const [form, setForm] = useState<CategoryPayload>({
     name: category?.name ?? '',
     icon: category?.icon ?? '',
+    imageUrl: category?.imageUrl ?? '',
     sortOrder: category?.sortOrder ?? 0,
     isActive: category?.isActive ?? true,
   });
@@ -63,6 +65,13 @@ function CategoryModal({ category, onClose, onSave }: ModalProps) {
           <div>
             <label className="text-xs font-medium text-slate-600 mb-1 block">Icon (emoji)</label>
             <Input value={form.icon ?? ''} onChange={e => setForm(f => ({ ...f, icon: e.target.value }))} placeholder="e.g. 🥛" maxLength={4} />
+          </div>
+          <div>
+            <ImageUploadField
+              label="Category Image (optional)"
+              value={form.imageUrl ?? ''}
+              onChange={url => setForm(f => ({ ...f, imageUrl: url }))}
+            />
           </div>
           <div>
             <label className="text-xs font-medium text-slate-600 mb-1 block">Sort Order</label>

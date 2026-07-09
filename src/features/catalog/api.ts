@@ -7,6 +7,7 @@ export interface Category {
   name: string;
   parentId: number | null;
   icon: string | null;
+  imageUrl: string | null;
   sortOrder: number;
   isActive: boolean;
 }
@@ -15,6 +16,7 @@ export interface CategoryPayload {
   name: string;
   parentId?: number | null;
   icon?: string;
+  imageUrl?: string;
   sortOrder?: number;
   isActive?: boolean;
 }

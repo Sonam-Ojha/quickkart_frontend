@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { usePermission } from '../../hooks/usePermission';
 import { bannerApi, Banner, BannerPayload, BgType } from './api';
+import ImageUploadField from '../../components/common/ImageUploadField';
 
 const BG_OPTIONS: { value: BgType; label: string; from: string; to: string }[] = [
   { value: 'orange-tint',  label: '🟠 Orange',  from: '#EA580C', to: '#FB923C' },
@@ -111,8 +112,12 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
           )}
 
           <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Image URL *</label>
-            <Input value={form.bannerImage} onChange={e => set('bannerImage', e.target.value)} placeholder="https://..." />
+            <ImageUploadField
+              label="Banner Image"
+              required
+              value={form.bannerImage}
+              onChange={url => set('bannerImage', url)}
+            />
           </div>
 
           {/* Live preview */}

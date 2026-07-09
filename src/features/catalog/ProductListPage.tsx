@@ -6,6 +6,7 @@ import { Input } from '../../components/ui/input';
 import { money } from '../../lib/utils';
 import { usePermission } from '../../hooks/usePermission';
 import { catalogApi, Product, ProductPayload, Category } from './api';
+import ImageUploadField from '../../components/common/ImageUploadField';
 
 // ── Product Modal ─────────────────────────────────────────
 
@@ -96,8 +97,11 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
               <Input value={form.unit ?? ''} onChange={e => set('unit', e.target.value)} placeholder="e.g. 500 ml" />
             </div>
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Image URL</label>
-              <Input value={form.imageUrl ?? ''} onChange={e => set('imageUrl', e.target.value)} placeholder="https://..." />
+              <ImageUploadField
+                label="Image"
+                value={form.imageUrl ?? ''}
+                onChange={url => set('imageUrl', url)}
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

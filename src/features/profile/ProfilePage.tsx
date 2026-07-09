@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { useAuthStore } from '../../store/auth.store';
 import { profileApi, ProfileData, UpdateProfilePayload } from './api';
+import ImageUploadField from '../../components/common/ImageUploadField';
 
 // ── Helpers ───────────────────────────────────────────────
 
@@ -132,14 +133,11 @@ function EditProfileTab({ profile, onSaved }: { profile: ProfileData; onSaved: (
         </div>
       </div>
       <div>
-        <label className="text-xs font-medium text-slate-600 mb-1 block">Avatar URL</label>
-        <Input value={form.avatar ?? ''} onChange={e => set('avatar', e.target.value)} placeholder="https://..." />
-        {form.avatar && (
-          <div className="mt-2 flex items-center gap-3">
-            <img src={form.avatar} alt="Preview" className="w-10 h-10 rounded-full object-cover border border-slate-200" onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-            <span className="text-xs text-slate-400">Preview</span>
-          </div>
-        )}
+        <ImageUploadField
+          label="Avatar"
+          value={form.avatar ?? ''}
+          onChange={url => set('avatar', url)}
+        />
       </div>
 
       <div className="pt-2">
