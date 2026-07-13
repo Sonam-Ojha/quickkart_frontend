@@ -125,6 +125,7 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
               <option value="deal">🔥 Deal of the Day</option>
               <option value="bestseller">⭐ Best Seller</option>
               <option value="new">🆕 New Arrival</option>
+              <option value="fresh">🌿 Fresh</option>
             </select>
             <p className="text-xs text-slate-400 mt-1">Controls which homepage section this product appears in</p>
           </div>
