@@ -97,4 +97,13 @@ export const catalogApi = {
 
   toggleProduct: (id: number) =>
     api.patch<{ product: Product }>(`/api/admin/catalog/products/${id}/toggle`).then(r => r.data.product),
+
+  bulkCreateProducts: (rows: ProductPayload[]) =>
+    api.post<{ created: number; products: Product[] }>('/api/admin/catalog/products/bulk-create', { rows }).then(r => r.data),
+
+  bulkUpdateProducts: (ids: number[], data: Partial<ProductPayload>) =>
+    api.patch<{ updated: number }>('/api/admin/catalog/products/bulk', { ids, data }).then(r => r.data),
+
+  bulkDeleteProducts: (ids: number[]) =>
+    api.delete<{ deleted: number }>('/api/admin/catalog/products/bulk', { data: { ids } }).then(r => r.data),
 };
