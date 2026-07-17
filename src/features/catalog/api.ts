@@ -73,6 +73,15 @@ export const catalogApi = {
   toggleCategory: (id: number) =>
     api.patch<{ category: Category }>(`/api/admin/catalog/categories/${id}/toggle`).then(r => r.data.category),
 
+  bulkCreateCategories: (rows: CategoryPayload[]) =>
+    api.post<{ created: number; categories: Category[] }>('/api/admin/catalog/categories/bulk-create', { rows }).then(r => r.data),
+
+  bulkUpdateCategories: (ids: number[], data: Partial<CategoryPayload>) =>
+    api.patch<{ updated: number }>('/api/admin/catalog/categories/bulk', { ids, data }).then(r => r.data),
+
+  bulkDeleteCategories: (ids: number[]) =>
+    api.delete<{ deleted: number }>('/api/admin/catalog/categories/bulk', { data: { ids } }).then(r => r.data),
+
   // Products
   getProducts: (params?: { categoryId?: number; search?: string; activeOnly?: boolean; page?: number; limit?: number }) =>
     api.get<ProductsResponse>('/api/admin/catalog/products', { params }).then(r => r.data),
