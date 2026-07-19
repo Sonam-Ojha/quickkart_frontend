@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Save, Loader2, AlertCircle, CheckCircle2, Plus, Trash2 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { settingsApi, Settings } from './api';
+
+interface WhyItem { icon: string; title: string; desc: string }
+
+const DEFAULT_WHY: WhyItem[] = [
+  { icon: '⚡', title: '10 Min Delivery',   desc: 'Get your order delivered to your doorstep in minutes from nearby dark stores.' },
+  { icon: '🛡️', title: 'Best Prices',        desc: 'Best price destination with offers directly from the manufacturers.' },
+  { icon: '🎁', title: 'Wide Assortment',   desc: 'Choose from thousands of products across all categories.' },
+];
 
 const SETTINGS_GROUPS = [
   {
@@ -49,6 +57,7 @@ const SETTINGS_GROUPS = [
 
 export function SettingsPage() {
   const [values, setValues]   = useState<Settings>({});
+  const [whyItems, setWhyItems] = useState<WhyItem[]>(DEFAULT_WHY);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
   const [status, setStatus]   = useState<'idle' | 'saved' | 'error'>('idle');
@@ -56,17 +65,25 @@ export function SettingsPage() {
 
   useEffect(() => {
     settingsApi.getAll()
-      .then(data => setValues(data))
+      .then(data => {
+        setValues(data);
+        if (data.why_choose_us) {
+          try { setWhyItems(JSON.parse(data.why_choose_us)); } catch {}
+        }
+      })
       .catch(() => setError('Failed to load settings'))
       .finally(() => setLoading(false));
   }, []);
 
   const set = (key: string, val: string) => setValues(prev => ({ ...prev, [key]: val }));
 
+  const updateWhy = (i: number, key: keyof WhyItem, val: string) =>
+    setWhyItems(prev => prev.map((item, idx) => idx === i ? { ...item, [key]: val } : item));
+
   const handleSave = async () => {
     setSaving(true); setStatus('idle'); setError('');
     try {
-      await settingsApi.save(values);
+      await settingsApi.save({ ...values, why_choose_us: JSON.stringify(whyItems) });
       setStatus('saved');
       setTimeout(() => setStatus('idle'), 3000);
     } catch (err: any) {
@@ -126,6 +143,44 @@ export function SettingsPage() {
               </div>
             </div>
           ))}
+
+          {/* ── Why Choose Us ── */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-semibold text-slate-800">Why Choose Us</h3>
+                <p className="text-xs text-slate-400 mt-0.5">Shown on every product page — add features that build trust</p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setWhyItems(p => [...p, { icon: '✨', title: '', desc: '' }])}>
+                <Plus size={14} /> Add Feature
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {whyItems.map((item, i) => (
+                <div key={i} className="grid grid-cols-[48px_1fr_2fr_32px] gap-2 items-start bg-slate-50 rounded-xl p-3">
+                  <div>
+                    <label className="text-xs text-slate-500 block mb-1">Icon</label>
+                    <Input value={item.icon} onChange={e => updateWhy(i, 'icon', e.target.value)}
+                      className="text-center text-xl h-9" maxLength={4} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-500 block mb-1">Title *</label>
+                    <Input value={item.title} onChange={e => updateWhy(i, 'title', e.target.value)}
+                      placeholder="e.g. Fast Delivery" className="h-9" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-500 block mb-1">Description</label>
+                    <Input value={item.desc} onChange={e => updateWhy(i, 'desc', e.target.value)}
+                      placeholder="Short explanation..." className="h-9" />
+                  </div>
+                  <button onClick={() => setWhyItems(p => p.filter((_, idx) => idx !== i))}
+                    className="mt-6 p-1.5 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-500 transition-colors">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
