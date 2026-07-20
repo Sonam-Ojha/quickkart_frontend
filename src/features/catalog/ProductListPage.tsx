@@ -58,17 +58,36 @@ function ErrorBox({ msg }: { msg: string }) {
   );
 }
 
+// Shows sub-categories grouped by main category (optgroup).
+// Falls back to flat list if no hierarchy exists.
 function CatSelect({ value, categories, onChange, className }: {
   value: number; categories: Category[]; onChange: (v: number) => void; className?: string;
 }) {
+  const mains = categories.filter(c => !c.parentId);
+  const subs  = categories.filter(c =>  c.parentId);
+  const hasHierarchy = mains.length > 0 && subs.length > 0;
+
   return (
     <select
       value={value}
       onChange={e => onChange(Number(e.target.value))}
       className={`border border-slate-200 rounded-lg px-2 py-1.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 ${className}`}
     >
-      <option value={0}>Select…</option>
-      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+      <option value={0}>Select sub-category…</option>
+      {hasHierarchy
+        ? mains.map(main => {
+            const children = subs.filter(s => s.parentId === main.id);
+            if (!children.length) return null;
+            return (
+              <optgroup key={main.id} label={`── ${main.name} ──`}>
+                {children.map(c => (
+                  <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ` : ''}{c.name}</option>
+                ))}
+              </optgroup>
+            );
+          })
+        : categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+      }
     </select>
   );
 }
@@ -93,25 +112,49 @@ function ProductThumb({ imageUrl, name }: { imageUrl?: string | null; name: stri
 function ProductModal({ product, categories, onClose, onSave }: {
   product?: Product | null; categories: Category[]; onClose: () => void; onSave: () => void;
 }) {
+  const mains = categories.filter(c => !c.parentId);
+  const subs  = categories.filter(c =>  c.parentId);
+  const hasHierarchy = mains.length > 0 && subs.length > 0;
+
+  // Determine initial main category from product's sub-category
+  const getInitialMainId = () => {
+    if (!product?.categoryId) return mains[0]?.id ?? 0;
+    const sub = subs.find(s => s.id === product.categoryId);
+    return sub?.parentId ?? mains[0]?.id ?? 0;
+  };
+
+  const [mainId, setMainId] = useState<number>(getInitialMainId);
   const [form, setForm] = useState<ProductPayload>({
-    name: product?.name ?? '',
-    categoryId: product?.categoryId ?? (categories[0]?.id ?? 0),
-    brand: product?.brand ?? '',
-    unit: product?.unit ?? '',
-    mrp: product ? product.mrp / 100 : 0,
-    price: product ? product.price / 100 : 0,
-    imageUrl: product?.imageUrl ?? '',
-    tag: product?.tag ?? null,
-    isActive: product?.isActive ?? true,
+    name:       product?.name       ?? '',
+    categoryId: product?.categoryId ?? 0,
+    brand:      product?.brand      ?? '',
+    unit:       product?.unit       ?? '',
+    mrp:        product ? product.mrp   / 100 : 0,
+    price:      product ? product.price / 100 : 0,
+    imageUrl:   product?.imageUrl   ?? '',
+    tag:        product?.tag        ?? null,
+    isActive:   product?.isActive   ?? true,
   });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]   = useState('');
   const set = (key: keyof ProductPayload, val: any) => setForm(f => ({ ...f, [key]: val }));
+
+  // Filtered sub-categories for the selected main category
+  const filteredSubs = hasHierarchy
+    ? subs.filter(s => s.parentId === mainId)
+    : categories;
+
+  // When main category changes, reset sub-category selection
+  const handleMainChange = (id: number) => {
+    setMainId(id);
+    const firstSub = subs.find(s => s.parentId === id);
+    set('categoryId', firstSub?.id ?? 0);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) { setError('Name is required'); return; }
-    if (!form.categoryId)  { setError('Category is required'); return; }
+    if (!form.categoryId)  { setError('Sub category is required'); return; }
     if (!form.mrp || !form.price) { setError('MRP and Price are required'); return; }
     setSaving(true); setError('');
     try {
@@ -133,11 +176,44 @@ function ProductModal({ product, categories, onClose, onSave }: {
             <label className="text-xs font-medium text-slate-600 mb-1 block">Product Name *</label>
             <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Amul Milk 500ml" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Category *</label>
-              <CatSelect value={form.categoryId} categories={categories} onChange={v => set('categoryId', v)} className="w-full" />
+
+          {/* Category selection — Main → Sub */}
+          {hasHierarchy ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">Main Category *</label>
+                <select
+                  value={mainId}
+                  onChange={e => handleMainChange(Number(e.target.value))}
+                  className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400"
+                >
+                  <option value={0}>Select…</option>
+                  {mains.map(m => <option key={m.id} value={m.id}>{m.icon ? `${m.icon} ` : ''}{m.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">Sub Category *</label>
+                <select
+                  value={form.categoryId}
+                  onChange={e => set('categoryId', Number(e.target.value))}
+                  disabled={!mainId}
+                  className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 disabled:opacity-50"
+                >
+                  <option value={0}>Select…</option>
+                  {filteredSubs.map(s => <option key={s.id} value={s.id}>{s.icon ? `${s.icon} ` : ''}{s.name}</option>)}
+                </select>
+              </div>
             </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">Category *</label>
+                <CatSelect value={form.categoryId} categories={categories} onChange={v => set('categoryId', v)} className="w-full" />
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Brand</label>
               <Input value={form.brand ?? ''} onChange={e => set('brand', e.target.value)} placeholder="e.g. Amul" />
@@ -632,19 +708,50 @@ export function ProductListPage() {
         </label>
       </div>
 
-      {/* Category tabs */}
-      <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1">
-        <button onClick={() => { setCategoryFilter(undefined); setPage(1); }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${!categoryFilter ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
-          All
-        </button>
-        {categories.map(cat => (
-          <button key={cat.id} onClick={() => { setCategoryFilter(cat.id); setPage(1); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${categoryFilter === cat.id ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
-            {cat.icon} {cat.name}
-          </button>
-        ))}
-      </div>
+      {/* Category filter tabs — Main → Sub hierarchy */}
+      {(() => {
+        const mains = categories.filter(c => !c.parentId);
+        const subs  = categories.filter(c =>  c.parentId);
+        const hasHierarchy = mains.length > 0 && subs.length > 0;
+
+        return (
+          <div className="mb-5 space-y-2">
+            {/* All button */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              <button onClick={() => { setCategoryFilter(undefined); setPage(1); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${!categoryFilter ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
+                All
+              </button>
+              {hasHierarchy
+                ? mains.map(main => {
+                    const children = subs.filter(s => s.parentId === main.id);
+                    if (!children.length) return null;
+                    return (
+                      <React.Fragment key={main.id}>
+                        {/* Main category label */}
+                        <span className="px-2 py-1.5 text-xs font-bold text-slate-400 whitespace-nowrap flex items-center">
+                          {main.icon} {main.name} ›
+                        </span>
+                        {children.map(sub => (
+                          <button key={sub.id} onClick={() => { setCategoryFilter(sub.id); setPage(1); }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${categoryFilter === sub.id ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
+                            {sub.icon} {sub.name}
+                          </button>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })
+                : categories.map(cat => (
+                    <button key={cat.id} onClick={() => { setCategoryFilter(cat.id); setPage(1); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${categoryFilter === cat.id ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
+                      {cat.icon} {cat.name}
+                    </button>
+                  ))
+              }
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Product grid */}
       {loading ? (
