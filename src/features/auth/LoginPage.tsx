@@ -45,7 +45,7 @@ export function LoginPage() {
               <Zap size={20} className="text-white" />
             </div>
             <span className="font-bold text-white text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              QuickKart
+              Jhatpats
             </span>
           </div>
           <h2 className="text-4xl font-bold text-white leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -78,7 +78,7 @@ export function LoginPage() {
             <div className="w-9 h-9 rounded-xl bg-[#EA580C] flex items-center justify-center">
               <Zap size={18} className="text-white" />
             </div>
-            <span className="font-bold text-slate-900 text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>QuickKart Admin</span>
+            <span className="font-bold text-slate-900 text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Jhatpats Admin</span>
           </div>
 
           <h1 className="text-2xl font-bold text-slate-900 mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -103,7 +103,7 @@ export function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="pl-9"
-                  placeholder="admin@quickkart.app"
+                  placeholder="admin@jhatpats.app"
                   required
                   autoFocus
                 />
@@ -160,7 +160,7 @@ export function LoginPage() {
           </p>
 
           <p className="text-center text-xs text-slate-400 mt-6">
-            QuickKart Admin · v1.0 · Secured with JWT
+            Jhatpats Admin · v1.0 · Secured with JWT
           </p>
         </div>
       </div>

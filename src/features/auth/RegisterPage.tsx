@@ -100,10 +100,10 @@ export function RegisterPage() {
             <div className="w-10 h-10 rounded-xl bg-[#EA580C] flex items-center justify-center">
               <Zap size={20} className="text-white" />
             </div>
-            <span className="font-bold text-white text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>QuickKart</span>
+            <span className="font-bold text-white text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Jhatpats</span>
           </div>
           <h2 className="text-3xl font-bold text-white leading-tight mb-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Join QuickKart<br />
+            Join Jhatpats<br />
             <span className="text-[#0F766E]">Admin Team</span>
           </h2>
           <p className="text-slate-400">
@@ -132,13 +132,13 @@ export function RegisterPage() {
             <div className="w-9 h-9 rounded-xl bg-[#EA580C] flex items-center justify-center">
               <Zap size={18} className="text-white" />
             </div>
-            <span className="font-bold text-slate-900 text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>QuickKart Admin</span>
+            <span className="font-bold text-slate-900 text-xl" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Jhatpats Admin</span>
           </div>
 
           <h1 className="text-2xl font-bold text-slate-900 mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             Create Account
           </h1>
-          <p className="text-slate-500 text-sm mb-8">Register for the QuickKart admin panel</p>
+          <p className="text-slate-500 text-sm mb-8">Register for the Jhatpats admin panel</p>
 
           {/* Success state */}
           {success && (
@@ -190,7 +190,7 @@ export function RegisterPage() {
                   value={form.email}
                   onChange={set('email')}
                   className={`pl-9 ${fieldErrors.email ? 'border-red-300 focus:ring-red-400' : ''}`}
-                  placeholder="admin@quickkart.app"
+                  placeholder="admin@jhatpats.app"
                   disabled={success}
                 />
               </div>
@@ -276,7 +276,7 @@ export function RegisterPage() {
           </p>
 
           <p className="text-center text-xs text-slate-400 mt-6">
-            QuickKart Admin · v1.0 · Secured with JWT
+            Jhatpats Admin · v1.0 · Secured with JWT
           </p>
         </div>
       </div>

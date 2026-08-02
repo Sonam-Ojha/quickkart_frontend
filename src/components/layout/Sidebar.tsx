@@ -50,7 +50,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
         {!collapsed && (
           <div>
             <span className="font-bold text-white text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              QuickKart
+              Jhatpats
             </span>
             <span className="block text-[10px] text-slate-400 leading-none">Admin Panel</span>
           </div>

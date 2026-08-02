@@ -119,7 +119,7 @@ export function InviteAdminModal({ open, onClose }: Props) {
                 <label className="text-xs font-medium text-slate-600 mb-1.5 block">Email Address *</label>
                 <Input
                   type="email"
-                  placeholder="priya@quickkart.app"
+                  placeholder="priya@jhatpats.app"
                   {...register('email', {
                     required: 'Email is required',
                     pattern: { value: /^\S+@\S+\.\S+$/, message: 'Invalid email' },

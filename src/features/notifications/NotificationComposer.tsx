@@ -60,7 +60,7 @@ export function NotificationComposer() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Deep Link (optional)</label>
-                <Input placeholder="quickkart://offers/..." />
+                <Input placeholder="jhatpats://offers/..." />
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -96,7 +96,7 @@ export function NotificationComposer() {
                     <div className="w-6 h-6 rounded-lg bg-[#EA580C] flex items-center justify-center">
                       <Bell size={10} className="text-white" />
                     </div>
-                    <span className="text-white/60 text-[10px]">QuickKart · now</span>
+                    <span className="text-white/60 text-[10px]">Jhatpats · now</span>
                   </div>
                   <div className="text-white text-sm font-semibold leading-snug">{title || 'Notification title'}</div>
                   {body && <div className="text-white/70 text-xs mt-1 leading-relaxed">{body.slice(0, 80)}{body.length > 80 ? '...' : ''}</div>}
