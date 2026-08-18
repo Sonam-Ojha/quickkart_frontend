@@ -10,6 +10,8 @@ export interface Category {
   imageUrl: string | null;
   sortOrder: number;
   isActive: boolean;
+  showInFilter: boolean;
+  showInGrid: boolean;
 }
 
 export interface CategoryPayload {
@@ -19,6 +21,8 @@ export interface CategoryPayload {
   imageUrl?: string;
   sortOrder?: number;
   isActive?: boolean;
+  showInFilter?: boolean;
+  showInGrid?: boolean;
 }
 
 export interface Product {

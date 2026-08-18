@@ -102,6 +102,8 @@ function CategoryModal({
     sortOrder: category?.sortOrder ?? 0,
     isActive:  category?.isActive  ?? true,
     parentId:  category?.parentId  ?? (mode === 'sub' ? (mainCategories[0]?.id ?? null) : null),
+    showInFilter: category?.showInFilter ?? true,
+    showInGrid:   category?.showInGrid   ?? true,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
@@ -234,6 +236,36 @@ function CategoryModal({
               <span className="text-sm font-medium text-slate-600">Active</span>
             </label>
           </div>
+
+          {/* Home screen visibility — only meaningful for main categories, since
+              only root categories render in either Home section */}
+          {isMain && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                Show On Home Screen
+              </label>
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.showInFilter}
+                    onChange={e => setForm(f => ({ ...f, showInFilter: e.target.checked }))}
+                    className="accent-[#EA580C] w-4 h-4"
+                  />
+                  <span className="text-sm text-slate-600">Category filter tabs (top of Home)</span>
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.showInGrid}
+                    onChange={e => setForm(f => ({ ...f, showInGrid: e.target.checked }))}
+                    className="accent-[#EA580C] w-4 h-4"
+                  />
+                  <span className="text-sm text-slate-600">"Shop by Category" grid</span>
+                </label>
+              </div>
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="flex gap-3 pt-2">
