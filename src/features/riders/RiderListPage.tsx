@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Star, Bike, MapPin, Phone, Edit2, Trash2, Loader2, AlertCircle, X, Search, Wifi, WifiOff, TrendingUp } from 'lucide-react';
+import { Plus, Star, Bike, MapPin, Phone, Edit2, Trash2, Loader2, AlertCircle, X, Search, Wifi, WifiOff, TrendingUp, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { usePermission } from '../../hooks/usePermission';
 import { riderApi, Rider, RiderPayload } from './api';
+import { KycModal } from './KycModal';
 import { darkStoreApi, DarkStore } from '../dark-stores/api';
 
 // ── Modal ─────────────────────────────────────────────────
@@ -122,6 +123,7 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
 
 const STATUS_COLOR: Record<string, string> = {
   active:    'bg-green-50 text-green-700',
+  pending_verification: 'bg-amber-50 text-amber-700',
   inactive:  'bg-slate-100 text-slate-500',
   suspended: 'bg-red-50 text-red-600',
 };
@@ -136,6 +138,7 @@ export function RiderListPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [storeFilter, setStoreFilter] = useState<number | undefined>();
   const [modal, setModal] = useState<{ open: boolean; rider?: Rider | null }>({ open: false });
+  const [kycRider, setKycRider] = useState<Rider | null>(null);
 
   useEffect(() => { darkStoreApi.getAll().then(setStores).catch(() => {}); }, []);
 
@@ -194,10 +197,10 @@ export function RiderListPage() {
           {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         <div className="flex gap-1.5">
-          {['all', 'active', 'inactive', 'suspended'].map(s => (
+          {['all', 'pending_verification', 'active', 'inactive', 'suspended'].map(s => (
             <button key={s} onClick={() => setStatusFilter(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${statusFilter === s ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
-              {s}
+              {s === 'pending_verification' ? 'Pending KYC' : s}
             </button>
           ))}
         </div>
@@ -227,9 +230,16 @@ export function RiderListPage() {
                     <Phone size={10} />{rider.mobile}
                   </div>
                 </div>
-                <button onClick={() => can('riders.edit') && handleToggle(rider)}
-                  className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLOR[rider.status]}`}>
-                  {rider.status}
+                <button
+                  onClick={() => {
+                    if (!can('riders.edit')) return;
+                    // Pending riders are activated by clearing their KYC, not
+                    // by flipping the status chip.
+                    if (rider.status === 'pending_verification') setKycRider(rider);
+                    else handleToggle(rider);
+                  }}
+                  className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${STATUS_COLOR[rider.status] ?? 'bg-slate-100 text-slate-500'}`}>
+                  {rider.status === 'pending_verification' ? 'pending KYC' : rider.status}
                 </button>
               </div>
 
@@ -278,6 +288,9 @@ export function RiderListPage() {
 
               {can('riders.edit') && (
                 <div className="flex gap-2 pt-3 border-t border-slate-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setKycRider(rider)}>
+                    <ShieldCheck size={12} /> KYC
+                  </Button>
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => setModal({ open: true, rider })}>
                     <Edit2 size={12} /> Edit
                   </Button>
@@ -295,6 +308,10 @@ export function RiderListPage() {
         <RiderModal rider={modal.rider} stores={stores}
           onClose={() => setModal({ open: false })}
           onSave={() => { setModal({ open: false }); load(); }} />
+      )}
+
+      {kycRider && (
+        <KycModal rider={kycRider} onClose={() => setKycRider(null)} onChanged={load} />
       )}
     </div>
   );
