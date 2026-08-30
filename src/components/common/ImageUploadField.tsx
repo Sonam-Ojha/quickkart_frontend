@@ -111,7 +111,7 @@ export default function ImageUploadField({ value, onChange, label = 'Image', req
             ref={inputRef}
             type="file"
             className="hidden"
-            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/svg+xml"
+            accept="image/jpeg,image/jpg,image/png,image/webp"
             onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
           />
           {uploading ? (
