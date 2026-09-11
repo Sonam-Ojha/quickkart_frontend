@@ -10,7 +10,7 @@ export interface Banner {
   bannerImage: string;
   section: BannerSection;
   emoji: string | null;
-  bgType: BgType;
+  bgType: BgType | null;
   deeplink: string | null;
   sortOrder: number;
   validTo: string | null;
@@ -24,7 +24,7 @@ export interface BannerPayload {
   bannerImage: string;
   section?: BannerSection;
   emoji?: string;
-  bgType: BgType;
+  bgType: BgType | null;
   deeplink?: string;
   sortOrder?: number;
   validTo?: string;

@@ -25,7 +25,7 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
     bannerImage: banner?.bannerImage ?? '',
     section:     banner?.section     ?? 'hero',
     emoji:       banner?.emoji       ?? '',
-    bgType:      banner?.bgType      ?? 'orange-tint',
+    bgType:      banner ? banner.bgType : 'orange-tint',
     deeplink:    banner?.deeplink    ?? '',
     sortOrder:   banner?.sortOrder   ?? 0,
     validTo:     banner?.validTo ? banner.validTo.slice(0, 10) : '',
@@ -37,6 +37,7 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
   const set = (k: keyof BannerPayload, v: any) => setForm(f => ({ ...f, [k]: v }));
 
   const bgOption = BG_OPTIONS.find(o => o.value === form.bgType) ?? BG_OPTIONS[0];
+  const noBg     = form.bgType == null;
   const isPromo  = form.section === 'promo';
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,7 +63,7 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-slate-100 sticky top-0 bg-white">
           <h2 className="font-semibold text-slate-800">{banner ? 'Edit Banner' : 'Add Banner'}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
@@ -123,21 +124,23 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
           {/* Live preview */}
           {(form.title || form.bannerImage) && (
             <div
-              className="h-24 rounded-xl relative flex flex-col justify-end p-4 overflow-hidden"
-              style={{ background: `linear-gradient(to right, ${bgOption.from}, ${bgOption.to})` }}
+              className="h-24 rounded-xl relative flex flex-col justify-end p-4 overflow-hidden bg-slate-800"
+              style={noBg ? undefined : { background: `linear-gradient(to right, ${bgOption.from}, ${bgOption.to})` }}
             >
-              {form.bannerImage && <img src={form.bannerImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" onError={() => {}} />}
+              {form.bannerImage && <img src={form.bannerImage} alt="" className={`absolute inset-0 w-full h-full object-cover ${noBg ? '' : 'opacity-20'}`} onError={() => {}} />}
+              {noBg && form.bannerImage && <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />}
               {isPromo && form.emoji && <span className="absolute top-3 left-3 text-2xl">{form.emoji}</span>}
-              <p className="font-bold text-white text-sm leading-tight">{form.title || 'Title'}</p>
-              {form.subtitle && <p className="text-white/80 text-xs mt-0.5">{form.subtitle}</p>}
+              <p className="relative font-bold text-white text-sm leading-tight">{form.title || 'Title'}</p>
+              {form.subtitle && <p className="relative text-white/80 text-xs mt-0.5">{form.subtitle}</p>}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Color Theme</label>
-              <select value={form.bgType} onChange={e => set('bgType', e.target.value as BgType)}
+              <label className="text-xs font-medium text-slate-600 mb-1 block">Color Theme <span className="text-slate-400">(optional)</span></label>
+              <select value={form.bgType ?? 'none'} onChange={e => set('bgType', e.target.value === 'none' ? null : e.target.value as BgType)}
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400">
+                <option value="none">⬜ No color (image only)</option>
                 {BG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -267,16 +270,18 @@ export function BannerListPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map(banner => {
             const bg = BG_OPTIONS.find(o => o.value === banner.bgType) ?? BG_OPTIONS[0];
+            const noBg = banner.bgType == null;
             return (
               <div key={banner.id} className={`bg-white rounded-2xl border overflow-hidden hover:shadow-sm transition-all ${banner.isActive ? 'border-slate-100' : 'border-slate-100 opacity-70'}`}>
                 {/* Preview */}
                 <div
-                  className="h-32 relative flex flex-col justify-end p-5 overflow-hidden"
-                  style={{ background: `linear-gradient(to right, ${bg.from}, ${bg.to})` }}
+                  className="h-32 relative flex flex-col justify-end p-5 overflow-hidden bg-slate-800"
+                  style={noBg ? undefined : { background: `linear-gradient(to right, ${bg.from}, ${bg.to})` }}
                 >
                   {banner.bannerImage && (
-                    <img src={banner.bannerImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" onError={e => (e.currentTarget.style.display = 'none')} />
+                    <img src={banner.bannerImage} alt="" className={`absolute inset-0 w-full h-full object-cover ${noBg ? '' : 'opacity-20'}`} onError={e => (e.currentTarget.style.display = 'none')} />
                   )}
+                  {noBg && banner.bannerImage && <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />}
                   <div className="absolute top-3 right-3 flex gap-1.5">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${banner.section === 'promo' ? 'bg-white/30 text-white' : 'bg-white/20 text-white'}`}>
                       {banner.section === 'promo' ? '🃏 Promo' : '🖼️ Hero'}
@@ -285,8 +290,8 @@ export function BannerListPage() {
                     {!banner.isActive && <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/20 text-white">Hidden</span>}
                   </div>
                   {banner.emoji && <span className="absolute top-3 left-4 text-2xl">{banner.emoji}</span>}
-                  <h3 className="font-bold text-white text-lg leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{banner.title}</h3>
-                  {banner.subtitle && <p className="text-white/80 text-sm mt-0.5">{banner.subtitle}</p>}
+                  <h3 className="relative font-bold text-white text-lg leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{banner.title}</h3>
+                  {banner.subtitle && <p className="relative text-white/80 text-sm mt-0.5">{banner.subtitle}</p>}
                 </div>
 
                 {/* Footer */}

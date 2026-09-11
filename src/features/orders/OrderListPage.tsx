@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, UserCheck } from 'lucide-react';
+import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, UserCheck, Mail, Phone } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { money, formatDateTime } from '../../lib/utils';
+import { cn, money, formatDateTime } from '../../lib/utils';
 import { orderApi, Order, OrderStats, OrderStatus } from './api';
 import { riderApi, Rider } from '../riders/api';
 
@@ -44,7 +44,24 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
   const [riders, setRiders]         = useState<Rider[]>([]);
   const [assigningRider, setAssigningRider] = useState(false);
   const [selectedRiderId, setSelectedRiderId] = useState<number | ''>(order.rider?.id ?? '');
+  const [show, setShow]             = useState(false);
   const nextStatus = NEXT_STATUS[order.status];
+  const isClosed   = order.status === 'delivered' || order.status === 'cancelled';
+
+  const handleClose = () => { setShow(false); setTimeout(onClose, 200); };
+
+  // Slide-in on mount, close on Escape, lock background scroll while open.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setShow(true));
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setShow(false); setTimeout(onClose, 200); } };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
 
   useEffect(() => {
     riderApi.getAll({ status: 'active' }).then(setRiders).catch(() => {});
@@ -96,172 +113,227 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
     cancelled:        <XCircle size={14} className="text-red-500" />,
   };
 
+  const fmtTime = (iso?: string | null) => {
+    if (!iso) return '';
+    const t = new Date(iso).getTime();
+    return !t || Number.isNaN(t) ? '' : formatDateTime(iso);
+  };
+  const initial = order.customer?.name?.trim().charAt(0).toUpperCase() || '?';
+  const timeline = order.timeline ?? [];
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-white shadow-2xl flex flex-col h-full overflow-y-auto">
+      <div
+        className={cn(
+          'absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-200',
+          show ? 'opacity-100' : 'opacity-0',
+        )}
+        onClick={handleClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={cn(
+          'relative flex h-full w-full max-w-xl flex-col bg-slate-50 shadow-2xl transition-transform duration-200 ease-out',
+          show ? 'translate-x-0' : 'translate-x-full',
+        )}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 sticky top-0 bg-white z-10">
-          <div>
-            <h2 className="font-bold text-slate-800">Order #{order.id}</h2>
-            <div className="text-xs text-slate-400 mt-0.5">{formatDateTime(order.created_at)}</div>
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-bold text-slate-900">Order #{order.id}</h2>
+              <StatusBadge status={order.status} />
+            </div>
+            <div className="mt-0.5 text-xs text-slate-400">{fmtTime(order.created_at)}</div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
+          <button
+            onClick={handleClose}
+            className="-mr-1.5 shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <div className="p-5 space-y-5 flex-1">
-          {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
-
-          {/* Status + actions */}
-          <div className="flex items-center justify-between">
-            <StatusBadge status={order.status} />
-            <div className="flex gap-2">
-              {nextStatus && (
-                <Button size="sm" onClick={handleAdvance} disabled={updating}>
-                  {updating && <Loader2 size={12} className="animate-spin" />}
-                  {STATUS_LABEL[order.status]}
-                </Button>
-              )}
-              {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                <Button size="sm" variant="outline" className="text-red-500 border-red-200 hover:bg-red-50" onClick={handleCancel} disabled={updating}>
-                  Cancel
-                </Button>
-              )}
+        {/* Body */}
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+          {error && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-600">
+              <AlertCircle size={14} className="shrink-0" />{error}
             </div>
-          </div>
+          )}
 
           {/* Customer */}
-          <div className="bg-slate-50 rounded-xl p-4">
-            <div className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wide">Customer</div>
+          <section className="rounded-xl border border-slate-200 bg-white p-4">
+            <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Customer</h3>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#EA580C] to-[#0F766E] flex items-center justify-center text-white text-sm font-bold">
-                {order.customer.name[0]}
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#EA580C] to-[#0F766E] text-sm font-bold text-white">
+                {initial}
               </div>
-              <div>
-                <div className="font-semibold text-slate-800">{order.customer.name}</div>
-                <div className="text-xs text-slate-400">{order.customer.email}</div>
-                {order.customer.mobile && <div className="text-xs text-slate-400">{order.customer.mobile}</div>}
+              <div className="min-w-0">
+                <div className="truncate font-semibold text-slate-800">{order.customer?.name ?? '—'}</div>
+                {order.customer?.email && (
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <Mail size={11} className="shrink-0" />
+                    <span className="truncate">{order.customer.email}</span>
+                  </div>
+                )}
+                {order.customer?.mobile && (
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <Phone size={11} className="shrink-0" />
+                    <span className="truncate">{order.customer.mobile}</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Store + Rider */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-50 rounded-xl p-3">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1"><MapPin size={11} /> Store</div>
-              <div className="font-semibold text-sm text-slate-700">{order.store.name}</div>
-              <div className="text-xs text-slate-400">{order.store.city}</div>
-            </div>
-            <div className="bg-slate-50 rounded-xl p-3">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1"><Bike size={11} /> Rider</div>
+            <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+              <h3 className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <MapPin size={11} className="shrink-0" /> Store
+              </h3>
+              <div className="truncate text-sm font-semibold text-slate-700">{order.store?.name ?? '—'}</div>
+              <div className="truncate text-xs text-slate-400">{order.store?.city}</div>
+            </section>
+            <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+              <h3 className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <Bike size={11} className="shrink-0" /> Rider
+              </h3>
               {order.rider ? (
                 <>
-                  <div className="font-semibold text-sm text-slate-700">{order.rider.name}</div>
-                  <div className="text-xs text-slate-400">{order.rider.mobile}</div>
+                  <div className="truncate text-sm font-semibold text-slate-700">{order.rider.name}</div>
+                  <div className="truncate text-xs text-slate-400">{order.rider.mobile}</div>
                 </>
-              ) : <div className="text-xs text-slate-400 italic">Not assigned</div>}
-            </div>
+              ) : (
+                <div className="text-xs italic text-slate-400">Not assigned</div>
+              )}
+            </section>
           </div>
 
           {/* Assign Rider */}
-          {order.status !== 'delivered' && order.status !== 'cancelled' && (
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-700 mb-2 uppercase tracking-wide">
-                <UserCheck size={12} /> Assign Rider
-              </div>
+          {!isClosed && (
+            <section className="rounded-xl border border-blue-100 bg-blue-50/60 p-4">
+              <h3 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
+                <UserCheck size={12} className="shrink-0" /> Assign Rider
+              </h3>
               <div className="flex gap-2">
                 <select
                   value={selectedRiderId}
                   onChange={e => setSelectedRiderId(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="flex-1 border border-blue-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400/30 focus:border-blue-400"
+                  className="min-w-0 flex-1 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30"
                 >
                   <option value="">— Unassign rider —</option>
                   {riders.map(r => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} · {r.mobile} {r.store ? `(${r.store.name})` : ''}
-                    </option>
+                    <option key={r.id} value={r.id}>{r.name} · {r.mobile}</option>
                   ))}
                 </select>
                 <Button
                   size="sm"
                   onClick={handleAssignRider}
                   disabled={assigningRider || selectedRiderId === (order.rider?.id ?? '')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="shrink-0 bg-blue-600 text-white hover:bg-blue-700"
                 >
                   {assigningRider ? <Loader2 size={12} className="animate-spin" /> : 'Assign'}
                 </Button>
               </div>
-            </div>
+            </section>
           )}
 
           {/* Items */}
           {order.items && order.items.length > 0 && (
-            <div>
-              <div className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wide">Items ({order.items.length})</div>
-              <div className="space-y-2">
+            <section className="rounded-xl border border-slate-200 bg-white p-4">
+              <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                Items ({order.items.length})
+              </h3>
+              <div className="space-y-3">
                 {order.items.map(item => (
-                  <div key={item.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-                        {item.product.imageUrl
-                          ? <img src={item.product.imageUrl} alt="" className="w-full h-full object-cover rounded-lg" />
-                          : <ShoppingBag size={14} className="text-slate-300" />}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-slate-700">{item.product.name}</div>
-                        <div className="text-xs text-slate-400">x{item.quantity} × {money(item.unitPrice)}</div>
-                      </div>
+                  <div key={item.id} className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                      {item.product.imageUrl
+                        ? <img src={item.product.imageUrl} alt="" className="h-full w-full object-cover" />
+                        : <ShoppingBag size={14} className="text-slate-300" />}
                     </div>
-                    <span className="font-semibold text-sm text-slate-800">{money(item.total)}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-slate-700">{item.product.name}</div>
+                      <div className="text-xs text-slate-400">{item.quantity} × {money(item.unitPrice)}</div>
+                    </div>
+                    <span className="shrink-0 text-sm font-semibold text-slate-800">{money(item.total)}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
           {/* Bill summary */}
-          <div className="bg-slate-50 rounded-xl p-4 space-y-2">
-            <div className="text-xs text-slate-400 mb-1 font-medium uppercase tracking-wide">Bill Summary</div>
-            {[
-              { label: 'Subtotal',     value: order.subtotal },
-              { label: 'Delivery Fee', value: order.deliveryFee },
-              ...(order.discount ? [{ label: 'Discount',    value: -order.discount }] : []),
-            ].map(r => (
-              <div key={r.label} className="flex justify-between text-sm">
-                <span className="text-slate-500">{r.label}</span>
-                <span className={`font-medium ${r.value < 0 ? 'text-green-600' : 'text-slate-700'}`}>
-                  {r.value < 0 ? `- ${money(Math.abs(r.value))}` : money(r.value)}
-                </span>
+          <section className="rounded-xl border border-slate-200 bg-white p-4">
+            <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Bill Summary</h3>
+            <div className="space-y-2">
+              {[
+                { label: 'Subtotal',     value: order.subtotal },
+                { label: 'Delivery Fee', value: order.deliveryFee },
+                ...(order.discount ? [{ label: 'Discount', value: -order.discount }] : []),
+              ].map(r => (
+                <div key={r.label} className="flex justify-between text-sm">
+                  <span className="text-slate-500">{r.label}</span>
+                  <span className={cn('font-medium', r.value < 0 ? 'text-green-600' : 'text-slate-700')}>
+                    {r.value < 0 ? `- ${money(Math.abs(r.value))}` : money(r.value)}
+                  </span>
+                </div>
+              ))}
+              <div className="flex justify-between border-t border-slate-200 pt-2 text-sm font-bold">
+                <span className="text-slate-800">Total</span>
+                <span className="text-[#EA580C]">{money(order.total)}</span>
               </div>
-            ))}
-            <div className="flex justify-between text-sm font-bold pt-2 border-t border-slate-200">
-              <span className="text-slate-800">Total</span>
-              <span className="text-[#EA580C]">{money(order.total)}</span>
             </div>
-          </div>
+          </section>
 
           {/* Timeline */}
-          {order.timeline && order.timeline.length > 0 && (
-            <div>
-              <div className="text-xs text-slate-400 mb-3 font-medium uppercase tracking-wide">Timeline</div>
-              <div className="relative pl-5">
-                <div className="absolute left-2 top-0 bottom-0 w-px bg-slate-100" />
-                {order.timeline.map((t, i) => (
-                  <div key={t.id} className="relative mb-3 last:mb-0">
-                    <div className="absolute -left-3.5 w-5 h-5 rounded-full bg-white border-2 border-[#EA580C] flex items-center justify-center text-[#EA580C]">
-                      {timelineIcons[t.status]}
+          {timeline.length > 0 && (
+            <section className="rounded-xl border border-slate-200 bg-white p-4">
+              <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Timeline</h3>
+              <div className="space-y-1">
+                {timeline.map((t, i) => (
+                  <div key={t.id} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-[#EA580C] bg-white text-[#EA580C]">
+                        {timelineIcons[t.status]}
+                      </div>
+                      {i < timeline.length - 1 && <div className="w-px flex-1 bg-slate-200" />}
                     </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-slate-700 capitalize">{t.status.replace(/_/g, ' ')}</div>
+                    <div className="pb-4">
+                      <div className="text-sm font-medium capitalize text-slate-700">{t.status.replace(/_/g, ' ')}</div>
                       {t.note && <div className="text-xs text-slate-400">{t.note}</div>}
-                      <div className="text-xs text-slate-300 mt-0.5">{formatDateTime(t.createdAt)}</div>
+                      {fmtTime(t.createdAt) && <div className="mt-0.5 text-xs text-slate-300">{fmtTime(t.createdAt)}</div>}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
         </div>
+
+        {/* Footer actions */}
+        {!isClosed && (
+          <div className="flex shrink-0 gap-2 border-t border-slate-200 bg-white px-5 py-3.5">
+            {nextStatus && (
+              <Button className="flex-1" onClick={handleAdvance} disabled={updating}>
+                {updating && <Loader2 size={14} className="animate-spin" />}
+                {STATUS_LABEL[order.status]}
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className={cn('border-red-200 text-red-500 hover:bg-red-50', !nextStatus && 'flex-1')}
+              onClick={handleCancel}
+              disabled={updating}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

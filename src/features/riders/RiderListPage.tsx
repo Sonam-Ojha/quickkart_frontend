@@ -40,20 +40,22 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100">
-          <h2 className="font-semibold text-slate-800">{rider ? 'Edit Rider' : 'Add Rider'}</h2>
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <h2 className="font-semibold text-lg text-slate-800">{rider ? 'Edit Rider' : 'Add Rider'}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Name *</label>
-            <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Rider name" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Mobile *</label>
-            <Input type="tel" value={form.mobile} onChange={e => set('mobile', e.target.value)} placeholder="+91 XXXXX XXXXX" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">Name *</label>
+              <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Rider name" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">Mobile *</label>
+              <Input type="tel" value={form.mobile} onChange={e => set('mobile', e.target.value)} placeholder="+91 XXXXX XXXXX" />
+            </div>
           </div>
           <div>
             <label className="text-xs font-medium text-slate-600 mb-1 block">Dark Store *</label>
@@ -63,7 +65,7 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
               {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Vehicle Type</label>
               <select value={form.vehicleType} onChange={e => set('vehicleType', e.target.value as any)}
@@ -91,7 +93,7 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
               required={!rider}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Rating</label>
               <Input type="number" step="0.1" min="1" max="5" value={form.rating ?? 5} onChange={e => set('rating', Number(e.target.value))} />
