@@ -19,13 +19,17 @@ const BG_OPTIONS: { value: BgType; label: string; from: string; to: string }[] =
 // ── Modal ─────────────────────────────────────────────────
 
 function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onClose: () => void; onSave: () => void }) {
+  // Detect existing banner mode: if it has no title or bgType it's an image-only banner
+  const defaultMode = banner && !banner.title && !banner.bgType ? 'image' : 'customize';
+  const [mode, setMode] = useState<'image' | 'customize'>(banner ? defaultMode : 'image');
+
   const [form, setForm] = useState<BannerPayload>({
     title:       banner?.title       ?? '',
     subtitle:    banner?.subtitle    ?? '',
     bannerImage: banner?.bannerImage ?? '',
     section:     banner?.section     ?? 'hero',
     emoji:       banner?.emoji       ?? '',
-    bgType:      banner ? banner.bgType : 'orange-tint',
+    bgType:      banner ? banner.bgType : null,
     deeplink:    banner?.deeplink    ?? '',
     sortOrder:   banner?.sortOrder   ?? 0,
     validTo:     banner?.validTo ? banner.validTo.slice(0, 10) : '',
@@ -42,13 +46,14 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title)       { setError('Title is required'); return; }
-    if (!form.bannerImage) { setError('Banner image URL is required'); return; }
-    if (isPromo && !form.emoji) { setError('Emoji is required for Promo Tiles'); return; }
+    if (!form.bannerImage) { setError('Banner image is required'); return; }
+    if (mode === 'customize' && isPromo && !form.emoji) { setError('Emoji is required for Promo Tiles'); return; }
     setSaving(true); setError('');
     try {
-      const payload = {
+      const payload: BannerPayload = {
         ...form,
+        title:    mode === 'image' ? (form.title || undefined as any) : (form.title || undefined as any),
+        bgType:   mode === 'image' ? null : form.bgType,
         validTo:  form.validTo  || undefined,
         deeplink: form.deeplink || undefined,
         subtitle: form.subtitle || undefined,
@@ -71,9 +76,41 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
 
-          {/* Section toggle */}
+          {/* Mode toggle */}
           <div>
-            <label className="text-xs font-medium text-slate-600 mb-2 block">Banner Type *</label>
+            <label className="text-xs font-medium text-slate-600 mb-2 block">Banner Style</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setMode('image')}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${
+                  mode === 'image'
+                    ? 'bg-orange-500 text-white border-orange-500'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'
+                }`}
+              >
+                🖼️ Direct Image
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('customize')}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${
+                  mode === 'customize'
+                    ? 'bg-orange-500 text-white border-orange-500'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'
+                }`}
+              >
+                🎨 Customize
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              {mode === 'image' ? 'Upload a designed banner image — shown as-is with no overlay' : 'Add title, subtitle and color theme over your image'}
+            </p>
+          </div>
+
+          {/* Section toggle — hero vs promo */}
+          <div>
+            <label className="text-xs font-medium text-slate-600 mb-2 block">Placement *</label>
             <div className="flex gap-2">
               {(['hero', 'promo'] as const).map(s => (
                 <button
@@ -81,8 +118,8 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
                   onClick={() => set('section', s)}
                   className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
                     form.section === s
-                      ? 'bg-orange-500 text-white border-orange-500'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'
+                      ? 'bg-slate-800 text-white border-slate-800'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
                   }`}
                 >
                   {s === 'hero' ? '🖼️ Hero Carousel' : '🃏 Promo Tile'}
@@ -94,24 +131,7 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
             </p>
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Title *</label>
-            <Input value={form.title} onChange={e => set('title', e.target.value)} placeholder={isPromo ? 'e.g. Get printouts delivered' : 'e.g. Weekend Sale'} />
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">{isPromo ? 'Sub-text' : 'Subtitle'}</label>
-            <Input value={form.subtitle ?? ''} onChange={e => set('subtitle', e.target.value)} placeholder={isPromo ? 'e.g. Safe, secure & fast' : 'e.g. Up to 40% off on groceries'} />
-          </div>
-
-          {/* Emoji — promo tiles only */}
-          {isPromo && (
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Emoji * <span className="text-slate-400">(shown on the tile)</span></label>
-              <Input value={form.emoji ?? ''} onChange={e => set('emoji', e.target.value)} placeholder="e.g. 🖨️ 💊 🥬 🍼" maxLength={4} />
-            </div>
-          )}
-
+          {/* Image upload — always shown */}
           <div>
             <ImageUploadField
               label="Banner Image"
@@ -122,43 +142,74 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
           </div>
 
           {/* Live preview */}
-          {(form.title || form.bannerImage) && (
-            <div
-              className="h-24 rounded-xl relative flex flex-col justify-end p-4 overflow-hidden bg-slate-800"
-              style={noBg ? undefined : { background: `linear-gradient(to right, ${bgOption.from}, ${bgOption.to})` }}
-            >
-              {form.bannerImage && <img src={form.bannerImage} alt="" className={`absolute inset-0 w-full h-full object-cover ${noBg ? '' : 'opacity-20'}`} onError={() => {}} />}
-              {noBg && form.bannerImage && <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />}
-              {isPromo && form.emoji && <span className="absolute top-3 left-3 text-2xl">{form.emoji}</span>}
-              <p className="relative font-bold text-white text-sm leading-tight">{form.title || 'Title'}</p>
-              {form.subtitle && <p className="relative text-white/80 text-xs mt-0.5">{form.subtitle}</p>}
+          {form.bannerImage && (
+            <div className="rounded-xl overflow-hidden relative" style={{ height: '120px' }}>
+              <img src={form.bannerImage} alt="" className="absolute inset-0 w-full h-full object-cover" onError={() => {}} />
+              {mode === 'customize' && (
+                <>
+                  {!noBg && (
+                    <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${bgOption.from} 8%, ${bgOption.from}E6 42%, ${bgOption.from}00 78%)` }} />
+                  )}
+                  {noBg && (form.title || form.subtitle) && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-transparent" />
+                  )}
+                  {isPromo && form.emoji && <span className="absolute top-3 left-3 text-2xl">{form.emoji}</span>}
+                  {(form.title || form.subtitle) && (
+                    <div className="absolute inset-0 flex flex-col justify-end p-4">
+                      {form.title && <p className="font-bold text-white text-sm leading-tight">{form.title}</p>}
+                      {form.subtitle && <p className="text-white/80 text-xs mt-0.5">{form.subtitle}</p>}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
+          )}
+
+          {/* Customize-only fields */}
+          {mode === 'customize' && (
+            <>
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">{isPromo ? 'Title' : 'Title'} <span className="text-slate-400">(optional)</span></label>
+                <Input value={form.title} onChange={e => set('title', e.target.value)} placeholder={isPromo ? 'e.g. Get printouts delivered' : 'e.g. Weekend Sale'} />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">{isPromo ? 'Sub-text' : 'Subtitle'} <span className="text-slate-400">(optional)</span></label>
+                <Input value={form.subtitle ?? ''} onChange={e => set('subtitle', e.target.value)} placeholder={isPromo ? 'e.g. Safe, secure & fast' : 'e.g. Up to 40% off on groceries'} />
+              </div>
+
+              {isPromo && (
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">Emoji * <span className="text-slate-400">(shown on the tile)</span></label>
+                  <Input value={form.emoji ?? ''} onChange={e => set('emoji', e.target.value)} placeholder="e.g. 🖨️ 💊 🥬 🍼" maxLength={4} />
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">Color Theme <span className="text-slate-400">(optional)</span></label>
+                <select value={form.bgType ?? 'none'} onChange={e => set('bgType', e.target.value === 'none' ? null : e.target.value as BgType)}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400">
+                  <option value="none">⬜ No color (image only)</option>
+                  {BG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+            </>
           )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Color Theme <span className="text-slate-400">(optional)</span></label>
-              <select value={form.bgType ?? 'none'} onChange={e => set('bgType', e.target.value === 'none' ? null : e.target.value as BgType)}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400">
-                <option value="none">⬜ No color (image only)</option>
-                {BG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
-            <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Sort Order</label>
               <Input type="number" min="0" value={form.sortOrder ?? 0} onChange={e => set('sortOrder', Number(e.target.value))} />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Valid Until</label>
-              <Input type="date" value={form.validTo ?? ''} onChange={e => set('validTo', e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">{isPromo ? 'Links to (route)' : 'Deeplink'}</label>
+              <label className="text-xs font-medium text-slate-600 mb-1 block">{isPromo ? 'Links to (route)' : 'Deeplink'} <span className="text-slate-400">(optional)</span></label>
               <Input value={form.deeplink ?? ''} onChange={e => set('deeplink', e.target.value)} placeholder={isPromo ? '/category or /print' : 'app://...'} />
             </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-slate-600 mb-1 block">Valid Until <span className="text-slate-400">(optional)</span></label>
+            <Input type="date" value={form.validTo ?? ''} onChange={e => set('validTo', e.target.value)} className="max-w-[200px]" />
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer">

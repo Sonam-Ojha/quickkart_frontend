@@ -1,8 +1,10 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/auth.store';
 
+const DEFAULT_API = import.meta.env.DEV ? 'http://localhost:4000' : 'https://api.jhatpats.com'
+
 const api = axios.create({
-  baseURL: 'https://api.jhatpats.com',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API,
   headers: { 'Content-Type': 'application/json' },
 });
 
