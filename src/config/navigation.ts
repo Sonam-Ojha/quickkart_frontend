@@ -9,6 +9,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard',    href: '/',                 icon: 'LayoutDashboard' },
   { label: 'Orders',       href: '/orders',           icon: 'ShoppingBag',     permission: 'orders.view' },
+  { label: 'Print Orders', href: '/print-orders',     icon: 'Printer',         permission: 'orders.view' },
   { label: 'Live Tracking',href: '/tracking',         icon: 'MapPin',          permission: 'orders.view' },
   {
     label: 'Catalog', href: '#', icon: 'Package', permission: 'catalog.view',

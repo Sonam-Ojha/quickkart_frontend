@@ -9,6 +9,7 @@ import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { OrderListPage } from './features/orders/OrderListPage';
+import { PrintOrdersPage } from './features/print-orders/PrintOrdersPage';
 import { ProductListPage } from './features/catalog/ProductListPage';
 import { CategoryListPage } from './features/catalog/CategoryListPage';
 import { BannerListPage } from './features/banners/BannerListPage';
@@ -48,6 +49,7 @@ export default function App() {
 
               <Route element={<ProtectedRoute permission="orders.view" />}>
                 <Route path="orders" element={<OrderListPage />} />
+                <Route path="print-orders" element={<PrintOrdersPage />} />
               </Route>
 
               <Route element={<ProtectedRoute permission="catalog.view" />}>

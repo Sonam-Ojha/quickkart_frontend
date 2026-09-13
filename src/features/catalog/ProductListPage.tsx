@@ -790,6 +790,9 @@ export function ProductListPage() {
                     {product.isActive ? 'Active' : 'Inactive'}
                   </button>
                 </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Manage stock → <a href="/catalog/inventory" className="text-orange-500 hover:underline">Inventory</a>
+                </p>
                 {can('catalog.edit') && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-slate-50 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button variant="outline" size="sm" className="flex-1" onClick={() => setModal({ type: 'single', product })}>
