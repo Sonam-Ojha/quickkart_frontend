@@ -132,7 +132,7 @@ function CategoryModal({
 
   return (
     <Backdrop onClose={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden">
 
         {/* Coloured header strip */}
         <div className={`px-6 pt-6 pb-5 ${isMain ? 'bg-orange-50' : 'bg-indigo-50'}`}>
