@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Save, Loader2, AlertCircle, CheckCircle2, Plus, Trash2,
-  FileText, Phone, Truck, ShieldCheck, Smartphone, Sparkles,
+  FileText, Phone, Truck, ShieldCheck, Smartphone, Sparkles, Clock,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
@@ -18,6 +18,14 @@ const DEFAULT_WHY: WhyItem[] = [
   { icon: '🎁', title: 'Wide Assortment', desc: 'Choose from thousands of products across all categories.' },
 ];
 
+// ── Delivery Shift ───────────────────────────────────────────────────────────
+interface Shift { name: string; open: string; close: string }
+
+const DEFAULT_SHIFTS: Shift[] = [
+  { name: 'Morning', open: '08:00', close: '14:00' },
+  { name: 'Evening', open: '16:00', close: '23:00' },
+];
+
 // ── Tab definitions ─────────────────────────────────────────────────────────
 const TABS = [
   { id: 'branding', label: 'Branding',         desc: 'Footer text, address & copyright',     Icon: FileText    },
@@ -26,6 +34,7 @@ const TABS = [
   { id: 'auth',     label: 'Auth & OTP',        desc: 'OTP length, expiry & attempt limits',  Icon: ShieldCheck },
   { id: 'app',      label: 'App Config',        desc: 'Minimum supported app version',        Icon: Smartphone  },
   { id: 'why',      label: 'Why Choose Us',     desc: 'Trust badges shown on product pages',  Icon: Sparkles    },
+  { id: 'service',  label: 'Service Hours',     desc: 'Operational hours & availability',     Icon: Clock       },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -38,11 +47,11 @@ interface Field {
   hint: string;
   suffix?: string;
   full?: boolean;
-  options?: string[];       // renders a segmented control
+  options?: string[];
   computeHint?: (v: string) => string | null;
 }
 
-const GROUPS: Record<Exclude<TabId, 'why'>, Field[]> = {
+const GROUPS: Record<Exclude<TabId, 'why' | 'service'>, Field[]> = {
   branding: [
     { key: 'footer_tagline',  label: 'Brand Tagline',    type: 'text', full: true, hint: 'Shown below the logo in footer' },
     { key: 'company_address', label: 'Company Address',   type: 'text', full: true, hint: 'City, State shown in footer contact block' },
@@ -133,12 +142,106 @@ function FieldRow({ field, value, onChange }: { field: Field; value: string; onC
   );
 }
 
+// ── Toggle ──────────────────────────────────────────────────────────────────
+function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange: (v: boolean) => void; label: string; hint: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-slate-800">{label}</p>
+        <p className="mt-0.5 text-xs text-slate-500">{hint}</p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className={cn(
+          'relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA580C]',
+          checked ? 'bg-[#EA580C]' : 'bg-slate-200',
+        )}
+      >
+        <span className={cn(
+          'block h-5 w-5 rounded-full bg-white shadow transition-transform',
+          checked ? 'translate-x-[22px]' : 'translate-x-[2px]',
+        )} />
+      </button>
+    </div>
+  );
+}
+
+// ── ShiftEditor ─────────────────────────────────────────────────────────────
+function ShiftEditor({ shifts, onChange }: { shifts: Shift[]; onChange: (s: Shift[]) => void }) {
+  const update = (i: number, key: keyof Shift, val: string) =>
+    onChange(shifts.map((s, idx) => idx === i ? { ...s, [key]: val } : s));
+  const add    = () => onChange([...shifts, { name: '', open: '09:00', close: '21:00' }]);
+  const remove = (i: number) => onChange(shifts.filter((_, idx) => idx !== i));
+
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Delivery Shifts</p>
+        <button
+          type="button"
+          onClick={add}
+          className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+        >
+          <Plus size={12} /> Add Shift
+        </button>
+      </div>
+
+      {shifts.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center text-xs text-slate-400">
+          No shifts — service available 24 hours
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {shifts.map((s, i) => (
+            <div key={i} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+              <Input
+                value={s.name}
+                onChange={e => update(i, 'name', e.target.value)}
+                placeholder="Shift name"
+                className="h-8 flex-1 text-sm"
+              />
+              <div className="flex items-center gap-1">
+                <input
+                  type="time"
+                  value={s.open}
+                  onChange={e => update(i, 'open', e.target.value)}
+                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
+                />
+                <span className="text-xs text-slate-400">–</span>
+                <input
+                  type="time"
+                  value={s.close}
+                  onChange={e => update(i, 'close', e.target.value)}
+                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                className="shrink-0 rounded-lg p-1 text-slate-400 hover:text-red-500 transition-colors"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="mt-2 text-xs text-slate-400">
+        Leave empty for 24/7. Customers see "closed" outside these windows.
+      </p>
+    </div>
+  );
+}
+
 // ── Loading skeleton ────────────────────────────────────────────────────────
 function SettingsSkeleton() {
   return (
     <div className="flex flex-col gap-5 lg:flex-row">
       <div className="h-fit space-y-1.5 rounded-2xl border border-slate-100 bg-white p-2 lg:w-72">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: 7 }).map((_, i) => (
           <div key={i} className="h-14 animate-pulse rounded-xl bg-slate-100" />
         ))}
       </div>
@@ -157,7 +260,8 @@ export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('branding');
   const [values, setValues]       = useState<Settings>({});
   const [whyItems, setWhyItems]   = useState<WhyItem[]>(DEFAULT_WHY);
-  const [initial, setInitial]     = useState<{ values: Settings; why: WhyItem[] } | null>(null);
+  const [shifts, setShifts]       = useState<Shift[]>(DEFAULT_SHIFTS);
+  const [initial, setInitial]     = useState<{ values: Settings; why: WhyItem[]; shifts: Shift[] } | null>(null);
   const [loading, setLoading]     = useState(true);
   const [saving, setSaving]       = useState(false);
   const [status, setStatus]       = useState<'idle' | 'saved' | 'error'>('idle');
@@ -166,6 +270,7 @@ export function SettingsPage() {
   useEffect(() => {
     settingsApi.getAll()
       .then(data => {
+        // Parse why_choose_us
         let why = DEFAULT_WHY;
         if (data.why_choose_us) {
           try {
@@ -173,11 +278,23 @@ export function SettingsPage() {
             if (Array.isArray(parsed)) why = parsed;
           } catch { /* keep defaults */ }
         }
+
+        // Parse operating_hours shifts
+        let parsedShifts = DEFAULT_SHIFTS;
+        if (data.operating_hours) {
+          try {
+            const parsed = JSON.parse(data.operating_hours);
+            if (parsed?.shifts && Array.isArray(parsed.shifts)) parsedShifts = parsed.shifts;
+          } catch { /* keep defaults */ }
+        }
+
         const rest: Settings = { ...data };
         delete rest.why_choose_us;
+        delete rest.operating_hours;
         setValues(rest);
         setWhyItems(why);
-        setInitial({ values: rest, why });
+        setShifts(parsedShifts);
+        setInitial({ values: rest, why, shifts: parsedShifts });
       })
       .catch(() => setError('Failed to load settings'))
       .finally(() => setLoading(false));
@@ -186,8 +303,9 @@ export function SettingsPage() {
   const isDirty = useMemo(() => {
     if (!initial) return false;
     return JSON.stringify(values) !== JSON.stringify(initial.values)
-      || JSON.stringify(whyItems) !== JSON.stringify(initial.why);
-  }, [values, whyItems, initial]);
+      || JSON.stringify(whyItems) !== JSON.stringify(initial.why)
+      || JSON.stringify(shifts)   !== JSON.stringify(initial.shifts);
+  }, [values, whyItems, shifts, initial]);
 
   // Warn before leaving with unsaved edits
   useEffect(() => {
@@ -213,6 +331,7 @@ export function SettingsPage() {
     if (!initial) return;
     setValues(initial.values);
     setWhyItems(initial.why);
+    setShifts(initial.shifts);
     setStatus('idle');
     setError('');
   };
@@ -220,8 +339,12 @@ export function SettingsPage() {
   const handleSave = async () => {
     setSaving(true); setStatus('idle'); setError('');
     try {
-      await settingsApi.save({ ...values, why_choose_us: JSON.stringify(whyItems) });
-      setInitial({ values: { ...values }, why: [...whyItems] });
+      await settingsApi.save({
+        ...values,
+        why_choose_us:   JSON.stringify(whyItems),
+        operating_hours: JSON.stringify({ shifts }),
+      });
+      setInitial({ values: { ...values }, why: [...whyItems], shifts: [...shifts] });
       setStatus('saved');
       setTimeout(() => setStatus(s => (s === 'saved' ? 'idle' : s)), 3000);
     } catch (err) {
@@ -234,8 +357,12 @@ export function SettingsPage() {
   };
 
   const activeMeta = TABS.find(t => t.id === activeTab)!;
-  const fields = activeTab === 'why' ? [] : GROUPS[activeTab];
+  const fields = (activeTab === 'why' || activeTab === 'service') ? [] : GROUPS[activeTab];
   const visibleWhy = whyItems.filter(i => i.title.trim() || i.desc.trim());
+
+  // Service Hours derived state
+  const serviceEnabled = values.service_enabled !== 'false';
+  const closedMessage  = values.closed_message ?? '';
 
   return (
     <div className="pb-24">
@@ -328,7 +455,7 @@ export function SettingsPage() {
               <div className="p-6">
 
                 {/* Field grid */}
-                {activeTab !== 'why' && (
+                {activeTab !== 'why' && activeTab !== 'service' && (
                   <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                     {fields.map(field => (
                       <FieldRow
@@ -425,6 +552,78 @@ export function SettingsPage() {
                         </div>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* ── Service Hours ── */}
+                {activeTab === 'service' && (
+                  <div className="space-y-6">
+
+                    {/* Manual kill-switch */}
+                    <div>
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Availability</p>
+                      <Toggle
+                        checked={serviceEnabled}
+                        onChange={v => { set('service_enabled', v ? 'true' : 'false'); }}
+                        label="Service Active"
+                        hint={serviceEnabled
+                          ? 'Service is live. Customers can place orders.'
+                          : 'Service is paused. All customers see a closed message.'}
+                      />
+                      {!serviceEnabled && (
+                        <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 p-3 text-xs text-amber-700">
+                          ⚠️ Service is manually paused. This overrides operating hours. Toggle on to resume.
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Closed message */}
+                    <div>
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Closed Message</p>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium text-slate-700">Message shown when closed</label>
+                        <Input
+                          value={closedMessage}
+                          onChange={e => set('closed_message', e.target.value)}
+                          placeholder="We're closed right now. Back soon! 🙏"
+                        />
+                        <p className="mt-1.5 text-xs text-slate-400">Shown on app & web home screen when service is unavailable.</p>
+                      </div>
+                    </div>
+
+                    {/* Delivery shifts */}
+                    <div>
+                      <ShiftEditor
+                        shifts={shifts}
+                        onChange={s => { setShifts(s); setStatus('idle'); }}
+                      />
+                    </div>
+
+                    {/* Live status preview */}
+                    <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-4">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Current Status Preview</p>
+                      {!serviceEnabled ? (
+                        <div className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                          <span className="text-sm font-semibold text-red-600">Closed (manually paused)</span>
+                        </div>
+                      ) : shifts.length === 0 ? (
+                        <div className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                          <span className="text-sm font-semibold text-emerald-600">Open 24/7</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
+                          {shifts.map((s, i) => (
+                            <div key={i} className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs">
+                              <Clock size={11} className="text-slate-400" />
+                              <span className="font-medium text-slate-700">{s.name || `Shift ${i + 1}`}</span>
+                              <span className="text-slate-400">{s.open} – {s.close}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

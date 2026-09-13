@@ -28,6 +28,7 @@ import { ReferralPage } from './features/referrals/ReferralPage';
 import { WalletPage } from './features/wallet/WalletPage';
 import { SupportPage } from './features/support/SupportPage';
 import { FaqListPage } from './features/faqs/FaqListPage';
+import InfoPagesPage from './features/info-pages/InfoPagesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } }
@@ -56,8 +57,9 @@ export default function App() {
               </Route>
 
               <Route element={<ProtectedRoute permission="banners.view" />}>
-                <Route path="banners" element={<BannerListPage />} />
-                <Route path="faqs"    element={<FaqListPage />} />
+                <Route path="banners"    element={<BannerListPage />} />
+                <Route path="faqs"       element={<FaqListPage />} />
+                <Route path="info-pages" element={<InfoPagesPage />} />
               </Route>
 
               <Route element={<ProtectedRoute permission="coupons.view" />}>

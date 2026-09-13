@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/auth.store';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  baseURL: 'https://api.jhatpats.com',
   headers: { 'Content-Type': 'application/json' },
 });
 
