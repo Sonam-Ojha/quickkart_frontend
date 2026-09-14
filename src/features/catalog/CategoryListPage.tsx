@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import {
   Plus, Edit2, Trash2, Loader2, AlertCircle, X,
   Upload, FileSpreadsheet, Download, PlusCircle, CheckCircle2,
-  FolderOpen, Folder, ChevronRight,
+  FolderOpen, Folder, ChevronRight, Search, SlidersHorizontal,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
@@ -297,6 +297,7 @@ function CategoryTable({
   onEdit,
   onDelete,
   onToggle,
+  isFiltered,
 }: {
   rows: Category[];
   showParent: boolean;
@@ -305,12 +306,14 @@ function CategoryTable({
   onEdit: (c: Category) => void;
   onDelete: (c: Category) => void;
   onToggle: (c: Category) => void;
+  isFiltered?: boolean;
 }) {
   if (rows.length === 0) {
     return (
       <div className="text-center py-16 text-slate-400">
-        <p className="font-medium">Nothing here yet</p>
-        <p className="text-sm mt-1">Use the button above to add one</p>
+        <Search size={28} className="mx-auto mb-3 text-slate-300" />
+        <p className="font-medium">{isFiltered ? 'No results match your filters' : 'Nothing here yet'}</p>
+        <p className="text-sm mt-1">{isFiltered ? 'Try clearing filters' : 'Use the button above to add one'}</p>
       </div>
     );
   }
@@ -389,6 +392,80 @@ function CategoryTable({
   );
 }
 
+// ── Filter Bar ────────────────────────────────────────────────────────────────
+
+function FilterBar({
+  search, onSearch,
+  status, onStatus,
+  parentId, onParentId,
+  parentOptions,
+  totalShown, totalAll,
+  onClear,
+}: {
+  search: string;       onSearch: (v: string) => void;
+  status: string;       onStatus: (v: string) => void;
+  parentId: string;     onParentId: (v: string) => void;
+  parentOptions: { id: number; name: string }[];
+  totalShown: number;   totalAll: number;
+  onClear: () => void;
+}) {
+  const hasFilter = search || status || parentId;
+  return (
+    <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-slate-100 bg-slate-50/40">
+      {/* Search */}
+      <div className="relative flex-1 min-w-[180px] max-w-xs">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <input
+          value={search}
+          onChange={e => onSearch(e.target.value)}
+          placeholder="Search by name…"
+          className="w-full h-8 pl-8 pr-3 text-sm border border-slate-200 rounded-lg bg-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+        />
+      </div>
+
+      {/* Status filter */}
+      <select
+        value={status}
+        onChange={e => onStatus(e.target.value)}
+        className="h-8 px-3 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+      >
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+
+      {/* Parent category filter (sub tab only) */}
+      {parentOptions.length > 0 && (
+        <select
+          value={parentId}
+          onChange={e => onParentId(e.target.value)}
+          className="h-8 px-3 text-sm border border-slate-200 rounded-lg bg-white text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+        >
+          <option value="">All Main Categories</option>
+          {parentOptions.map(p => (
+            <option key={p.id} value={String(p.id)}>{p.name}</option>
+          ))}
+        </select>
+      )}
+
+      {/* Count + clear */}
+      <div className="ml-auto flex items-center gap-2">
+        <span className="text-xs text-slate-400">
+          {hasFilter ? `${totalShown} of ${totalAll}` : `${totalAll} total`}
+        </span>
+        {hasFilter && (
+          <button
+            onClick={onClear}
+            className="flex items-center gap-1 text-xs text-slate-500 hover:text-red-500 transition-colors border border-slate-200 rounded-lg px-2 h-7 bg-white"
+          >
+            <X size={11} /> Clear
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 type ActiveTab = 'main' | 'sub';
@@ -406,6 +483,16 @@ export function CategoryListPage() {
   const [modal, setModal]      = useState<ModalState>({ type: 'none' });
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Filters
+  const [search,   setSearch]   = useState('');
+  const [status,   setStatus]   = useState('');
+  const [parentId, setParentId] = useState('');
+
+  const clearFilters = () => { setSearch(''); setStatus(''); setParentId(''); };
+
+  // Reset filters when switching tabs
+  const handleTabChange = (tab: ActiveTab) => { setActiveTab(tab); clearFilters(); };
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -443,7 +530,17 @@ export function CategoryListPage() {
   const closeModal = () => setModal({ type: 'none' });
   const afterSave  = () => { closeModal(); load(); };
 
-  const tabRows = activeTab === 'main' ? mainCategories : subCategories;
+  const baseRows = activeTab === 'main' ? mainCategories : subCategories;
+
+  const filteredRows = useMemo(() => {
+    let rows = baseRows;
+    if (search.trim())
+      rows = rows.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+    if (status === 'active')   rows = rows.filter(c =>  c.isActive);
+    if (status === 'inactive') rows = rows.filter(c => !c.isActive);
+    if (parentId) rows = rows.filter(c => String(c.parentId) === parentId);
+    return rows;
+  }, [baseRows, search, status, parentId]);
 
   const tabs: { id: ActiveTab; label: string; Icon: React.ElementType; count: number }[] = [
     { id: 'main', label: 'Main Categories', Icon: FolderOpen, count: mainCategories.length },
@@ -503,7 +600,7 @@ export function CategoryListPage() {
           {tabs.map(({ id, label, Icon, count }) => (
             <button
               key={id}
-              onClick={() => setActiveTab(id)}
+              onClick={() => handleTabChange(id)}
               className={`flex items-center gap-2 px-6 py-3.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === id
                   ? 'border-[#EA580C] text-[#EA580C] bg-white'
@@ -521,6 +618,19 @@ export function CategoryListPage() {
           ))}
         </div>
 
+        {/* Filter Bar */}
+        {!loading && (
+          <FilterBar
+            search={search}   onSearch={setSearch}
+            status={status}   onStatus={setStatus}
+            parentId={parentId} onParentId={setParentId}
+            parentOptions={activeTab === 'sub' ? mainCategories.map(c => ({ id: c.id, name: c.name })) : []}
+            totalShown={filteredRows.length}
+            totalAll={baseRows.length}
+            onClear={clearFilters}
+          />
+        )}
+
         {/* Table */}
         {loading ? (
           <div className="flex items-center justify-center py-20 text-slate-400">
@@ -528,13 +638,14 @@ export function CategoryListPage() {
           </div>
         ) : (
           <CategoryTable
-            rows={tabRows}
+            rows={filteredRows}
             showParent={activeTab === 'sub'}
             parentMap={parentMap}
             canEdit={can('catalog.edit')}
             onEdit={cat => setModal({ type: 'form', mode: activeTab, category: cat })}
             onDelete={setDeleteTarget}
             onToggle={handleToggle}
+            isFiltered={!!(search || status || parentId)}
           />
         )}
       </div>
