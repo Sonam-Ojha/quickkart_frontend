@@ -167,9 +167,13 @@ export function RiderListPage() {
   };
 
   const handleDelete = async (r: Rider) => {
-    if (!confirm(`Delete rider ${r.name}?`)) return;
+    if (!confirm(`Delete ${r.name}?\n\nThis cannot be undone. If the rider has orders linked, deletion will be blocked and you'll see an error.`)) return;
+    setError('');
     try { await riderApi.remove(r.id); load(); }
-    catch (err: any) { setError(err?.response?.data?.message ?? 'Delete failed'); }
+    catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Delete failed');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
