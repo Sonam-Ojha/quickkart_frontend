@@ -24,7 +24,13 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'FAQs',          href: '/faqs',            icon: 'HelpCircle',      permission: 'banners.view' },
   { label: 'Info Pages',    href: '/info-pages',      icon: 'FileText',        permission: 'banners.view' },
   { label: 'Referrals',     href: '/referrals',       icon: 'Users2',          permission: 'referrals.view' },
-  { label: 'Dark Stores',   href: '/dark-stores',     icon: 'Store',           permission: 'dark_stores.view' },
+  {
+    label: 'Stores & Geo', href: '#geo', icon: 'MapPin', permission: 'dark_stores.view',
+    children: [
+      { label: 'Dark Stores',  href: '/dark-stores',  icon: 'Store' },
+      { label: 'Geo Masters',  href: '/geo-masters',  icon: 'Globe2' },
+    ]
+  },
   { label: 'Riders',        href: '/riders',          icon: 'Bike',            permission: 'riders.view' },
   { label: 'Customers',     href: '/customers',       icon: 'Users',           permission: 'customers.view' },
   { label: 'Support',       href: '/support',         icon: 'MessageSquare',   permission: 'support.view' },

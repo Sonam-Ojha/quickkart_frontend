@@ -1,0 +1,433 @@
+import { useState, useEffect } from 'react';
+import { Plus, Pencil, Globe, MapPin, Building2, ToggleLeft, ToggleRight, X, Loader2, AlertCircle } from 'lucide-react';
+import { PageHeader } from '../../components/common/PageHeader';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import api from '../../lib/api';
+
+// ─── Types ────────────────────────────────────────────────
+interface Country { id: number; name: string; code: string; isActive: boolean }
+interface State   { id: number; countryId: number; name: string; code: string; isActive: boolean; country?: Country }
+interface City    { id: number; stateId: number; name: string; isActive: boolean; state?: State & { country?: Country } }
+
+type Tab = 'countries' | 'states' | 'cities';
+
+// ─── Shared toggle badge ──────────────────────────────────
+function ActiveBadge({ active }: { active: boolean }) {
+  return (
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+      {active ? 'Active' : 'Inactive'}
+    </span>
+  );
+}
+
+// ─── Modal ────────────────────────────────────────────────
+function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-5 py-4 border-b">
+          <h3 className="font-semibold text-base">{title}</h3>
+          <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Countries Tab ────────────────────────────────────────
+function CountriesTab() {
+  const [rows, setRows]     = useState<Country[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal]   = useState<null | 'add' | Country>(null);
+  const [form, setForm]     = useState({ name: '', code: '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError]   = useState('');
+
+  const load = () => {
+    setLoading(true);
+    api.get('/api/admin/geo/countries').then(r => setRows(r.data.countries)).finally(() => setLoading(false));
+  };
+  useEffect(load, []);
+
+  const openAdd  = () => { setForm({ name: '', code: '' }); setError(''); setModal('add'); };
+  const openEdit = (c: Country) => { setForm({ name: c.name, code: c.code }); setError(''); setModal(c); };
+
+  const save = async () => {
+    if (!form.name || !form.code) { setError('Name and code are required'); return; }
+    setSaving(true); setError('');
+    try {
+      if (modal === 'add') await api.post('/api/admin/geo/countries', form);
+      else                 await api.put(`/api/admin/geo/countries/${(modal as Country).id}`, form);
+      setModal(null); load();
+    } catch (e: any) { setError(e?.response?.data?.message ?? 'Save failed'); }
+    finally { setSaving(false); }
+  };
+
+  const toggle = async (c: Country) => {
+    await api.patch(`/api/admin/geo/countries/${c.id}/toggle`);
+    load();
+  };
+
+  return (
+    <>
+      <div className="flex justify-end mb-4">
+        <Button size="sm" onClick={openAdd}><Plus size={14} className="mr-1" /> Add Country</Button>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="animate-spin text-gray-400" /></div>
+      ) : rows.length === 0 ? (
+        <p className="text-center text-gray-400 py-12">No countries added yet</p>
+      ) : (
+        <div className="border rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+              <tr>
+                <th className="px-4 py-3 text-left">Country</th>
+                <th className="px-4 py-3 text-left">Code</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {rows.map(c => (
+                <tr key={c.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium">{c.name}</td>
+                  <td className="px-4 py-3 text-gray-500">{c.code}</td>
+                  <td className="px-4 py-3"><ActiveBadge active={c.isActive} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => openEdit(c)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Pencil size={14} /></button>
+                      <button onClick={() => toggle(c)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500" title="Toggle active">
+                        {c.isActive ? <ToggleRight size={16} className="text-green-500" /> : <ToggleLeft size={16} />}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modal !== null && (
+        <Modal title={modal === 'add' ? 'Add Country' : 'Edit Country'} onClose={() => setModal(null)}>
+          {error && <p className="text-red-500 text-sm mb-3 flex items-center gap-1"><AlertCircle size={13} />{error}</p>}
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Country Name</label>
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="India" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Code (ISO)</label>
+              <Input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="IN" maxLength={3} />
+            </div>
+          </div>
+          <div className="flex gap-2 mt-5">
+            <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancel</Button>
+            <Button className="flex-1" onClick={save} disabled={saving}>
+              {saving ? <Loader2 size={14} className="animate-spin mr-1" /> : null} Save
+            </Button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+// ─── States Tab ───────────────────────────────────────────
+function StatesTab() {
+  const [rows, setRows]         = useState<State[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [filterCountry, setFilterCountry] = useState('');
+  const [loading, setLoading]   = useState(true);
+  const [modal, setModal]       = useState<null | 'add' | State>(null);
+  const [form, setForm]         = useState({ countryId: '', name: '', code: '' });
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState('');
+
+  const load = () => {
+    setLoading(true);
+    const params = filterCountry ? `?countryId=${filterCountry}` : '';
+    Promise.all([
+      api.get(`/api/admin/geo/states${params}`),
+      api.get('/api/admin/geo/countries'),
+    ]).then(([sr, cr]) => {
+      setRows(sr.data.states);
+      setCountries(cr.data.countries);
+    }).finally(() => setLoading(false));
+  };
+  useEffect(load, [filterCountry]);
+
+  const openAdd  = () => { setForm({ countryId: countries[0]?.id?.toString() ?? '', name: '', code: '' }); setError(''); setModal('add'); };
+  const openEdit = (s: State) => { setForm({ countryId: String(s.countryId), name: s.name, code: s.code ?? '' }); setError(''); setModal(s); };
+
+  const save = async () => {
+    if (!form.countryId || !form.name) { setError('Country and name are required'); return; }
+    setSaving(true); setError('');
+    try {
+      if (modal === 'add') await api.post('/api/admin/geo/states', { ...form, countryId: Number(form.countryId) });
+      else                 await api.put(`/api/admin/geo/states/${(modal as State).id}`, { name: form.name, code: form.code });
+      setModal(null); load();
+    } catch (e: any) { setError(e?.response?.data?.message ?? 'Save failed'); }
+    finally { setSaving(false); }
+  };
+
+  const toggle = async (s: State) => { await api.patch(`/api/admin/geo/states/${s.id}/toggle`); load(); };
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <select
+          value={filterCountry}
+          onChange={e => setFilterCountry(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm text-gray-700 bg-white"
+        >
+          <option value="">All Countries</option>
+          {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        <Button size="sm" onClick={openAdd}><Plus size={14} className="mr-1" /> Add State</Button>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="animate-spin text-gray-400" /></div>
+      ) : rows.length === 0 ? (
+        <p className="text-center text-gray-400 py-12">No states found</p>
+      ) : (
+        <div className="border rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+              <tr>
+                <th className="px-4 py-3 text-left">State</th>
+                <th className="px-4 py-3 text-left">Code</th>
+                <th className="px-4 py-3 text-left">Country</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {rows.map(s => (
+                <tr key={s.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium">{s.name}</td>
+                  <td className="px-4 py-3 text-gray-500">{s.code ?? '—'}</td>
+                  <td className="px-4 py-3 text-gray-500">{s.country?.name ?? '—'}</td>
+                  <td className="px-4 py-3"><ActiveBadge active={s.isActive} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => openEdit(s)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Pencil size={14} /></button>
+                      <button onClick={() => toggle(s)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
+                        {s.isActive ? <ToggleRight size={16} className="text-green-500" /> : <ToggleLeft size={16} />}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modal !== null && (
+        <Modal title={modal === 'add' ? 'Add State' : 'Edit State'} onClose={() => setModal(null)}>
+          {error && <p className="text-red-500 text-sm mb-3 flex items-center gap-1"><AlertCircle size={13} />{error}</p>}
+          <div className="space-y-3">
+            {modal === 'add' && (
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">Country</label>
+                <select
+                  value={form.countryId}
+                  onChange={e => setForm(f => ({ ...f, countryId: e.target.value }))}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                >
+                  {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">State Name</label>
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Haryana" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">State Code</label>
+              <Input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="HR" maxLength={10} />
+            </div>
+          </div>
+          <div className="flex gap-2 mt-5">
+            <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancel</Button>
+            <Button className="flex-1" onClick={save} disabled={saving}>
+              {saving ? <Loader2 size={14} className="animate-spin mr-1" /> : null} Save
+            </Button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+// ─── Cities Tab ───────────────────────────────────────────
+function CitiesTab() {
+  const [rows, setRows]       = useState<City[]>([]);
+  const [states, setStates]   = useState<State[]>([]);
+  const [filterState, setFilterState] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal]     = useState<null | 'add' | City>(null);
+  const [form, setForm]       = useState({ stateId: '', name: '' });
+  const [saving, setSaving]   = useState(false);
+  const [error, setError]     = useState('');
+
+  const load = () => {
+    setLoading(true);
+    const params = filterState ? `?stateId=${filterState}` : '';
+    Promise.all([
+      api.get(`/api/admin/geo/cities${params}`),
+      api.get('/api/admin/geo/states'),
+    ]).then(([cr, sr]) => {
+      setRows(cr.data.cities);
+      setStates(sr.data.states);
+    }).finally(() => setLoading(false));
+  };
+  useEffect(load, [filterState]);
+
+  const openAdd  = () => { setForm({ stateId: states[0]?.id?.toString() ?? '', name: '' }); setError(''); setModal('add'); };
+  const openEdit = (c: City) => { setForm({ stateId: String(c.stateId), name: c.name }); setError(''); setModal(c); };
+
+  const save = async () => {
+    if (!form.stateId || !form.name) { setError('State and city name are required'); return; }
+    setSaving(true); setError('');
+    try {
+      if (modal === 'add') await api.post('/api/admin/geo/cities', { stateId: Number(form.stateId), name: form.name });
+      else                 await api.put(`/api/admin/geo/cities/${(modal as City).id}`, { name: form.name });
+      setModal(null); load();
+    } catch (e: any) { setError(e?.response?.data?.message ?? 'Save failed'); }
+    finally { setSaving(false); }
+  };
+
+  const toggle = async (c: City) => { await api.patch(`/api/admin/geo/cities/${c.id}/toggle`); load(); };
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <select
+          value={filterState}
+          onChange={e => setFilterState(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm text-gray-700 bg-white"
+        >
+          <option value="">All States</option>
+          {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+        <Button size="sm" onClick={openAdd}><Plus size={14} className="mr-1" /> Add City</Button>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="animate-spin text-gray-400" /></div>
+      ) : rows.length === 0 ? (
+        <p className="text-center text-gray-400 py-12">No cities found</p>
+      ) : (
+        <div className="border rounded-xl overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+              <tr>
+                <th className="px-4 py-3 text-left">City</th>
+                <th className="px-4 py-3 text-left">State</th>
+                <th className="px-4 py-3 text-left">Country</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {rows.map(c => (
+                <tr key={c.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium">{c.name}</td>
+                  <td className="px-4 py-3 text-gray-500">{c.state?.name ?? '—'}</td>
+                  <td className="px-4 py-3 text-gray-500">{c.state?.country?.name ?? '—'}</td>
+                  <td className="px-4 py-3"><ActiveBadge active={c.isActive} /></td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => openEdit(c)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Pencil size={14} /></button>
+                      <button onClick={() => toggle(c)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
+                        {c.isActive ? <ToggleRight size={16} className="text-green-500" /> : <ToggleLeft size={16} />}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modal !== null && (
+        <Modal title={modal === 'add' ? 'Add City' : 'Edit City'} onClose={() => setModal(null)}>
+          {error && <p className="text-red-500 text-sm mb-3 flex items-center gap-1"><AlertCircle size={13} />{error}</p>}
+          <div className="space-y-3">
+            {modal === 'add' && (
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">State</label>
+                <select
+                  value={form.stateId}
+                  onChange={e => setForm(f => ({ ...f, stateId: e.target.value }))}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                >
+                  {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">City Name</label>
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Faridabad" />
+            </div>
+          </div>
+          <div className="flex gap-2 mt-5">
+            <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancel</Button>
+            <Button className="flex-1" onClick={save} disabled={saving}>
+              {saving ? <Loader2 size={14} className="animate-spin mr-1" /> : null} Save
+            </Button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────
+const TABS: { key: Tab; label: string; icon: typeof Globe }[] = [
+  { key: 'countries', label: 'Countries', icon: Globe },
+  { key: 'states',    label: 'States',    icon: MapPin },
+  { key: 'cities',    label: 'Cities',    icon: Building2 },
+];
+
+export default function GeoMastersPage() {
+  const [tab, setTab] = useState<Tab>('countries');
+
+  return (
+    <div className="p-6 max-w-5xl mx-auto">
+      <PageHeader
+        title="Geo Masters"
+        subtitle="Manage Country → State → City hierarchy for store mapping"
+      />
+
+      {/* Tab Bar */}
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
+        {TABS.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setTab(key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              tab === key ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Icon size={15} />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      {tab === 'countries' && <CountriesTab />}
+      {tab === 'states'    && <StatesTab />}
+      {tab === 'cities'    && <CitiesTab />}
+    </div>
+  );
+}

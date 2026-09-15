@@ -30,6 +30,7 @@ import { WalletPage } from './features/wallet/WalletPage';
 import { SupportPage } from './features/support/SupportPage';
 import { FaqListPage } from './features/faqs/FaqListPage';
 import InfoPagesPage from './features/info-pages/InfoPagesPage';
+import GeoMastersPage from './features/geo/GeoMastersPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } }
@@ -83,6 +84,10 @@ export default function App() {
               <Route element={<ProtectedRoute permission="dark_stores.view" />}>
                 <Route path="dark-stores" element={<DarkStoreListPage />} />
                 <Route path="dark-stores/:id" element={<DarkStoreDetailPage />} />
+              </Route>
+
+              <Route element={<ProtectedRoute permission="dark_stores.view" />}>
+                <Route path="geo-masters" element={<GeoMastersPage />} />
               </Route>
 
               <Route element={<ProtectedRoute permission="payments.view" />}>
