@@ -5,17 +5,20 @@ export interface DarkStore {
   name: string;
   address: string;
   city: string;
+  cityId: number | null;
   lat: number | string | null;
   lng: number | string | null;
+  radius: number | null;
   isActive: boolean;
 }
 
 export interface DarkStorePayload {
   name: string;
   address: string;
-  city: string;
+  cityId?: number;
   lat?: number;
   lng?: number;
+  radius?: number;
   isActive?: boolean;
 }
 
