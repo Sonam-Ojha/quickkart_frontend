@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react';
+import { Search, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, CreditCard, CheckCircle2, Clock, XCircle, RotateCcw, TrendingUp } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
+import { StatCard } from '../../components/common/StatCard';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { money, formatDateTime } from '../../lib/utils';
@@ -56,19 +57,12 @@ export function PaymentListPage() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
-          {[
-            { l:'Total',    v: stats.total,           bg:'bg-slate-50',  t:'text-slate-700' },
-            { l:'Paid',     v: stats.paid,            bg:'bg-green-50',  t:'text-green-700' },
-            { l:'Pending',  v: stats.pending,         bg:'bg-amber-50',  t:'text-amber-700' },
-            { l:'Failed',   v: stats.failed,          bg:'bg-red-50',    t:'text-red-600'   },
-            { l:'Refunded', v: stats.refunded,        bg:'bg-purple-50', t:'text-purple-700'},
-            { l:'Revenue',  v: money(stats.revenue),  bg:'bg-teal-50',   t:'text-[#0F766E]' },
-          ].map(s => (
-            <div key={s.l} className={`${s.bg} rounded-2xl px-4 py-3`}>
-              <div className={`text-lg font-bold ${s.t}`}>{s.v}</div>
-              <div className="text-xs text-slate-400">{s.l}</div>
-            </div>
-          ))}
+          <StatCard label="Total" value={stats.total} icon={CreditCard} color="#475569" />
+          <StatCard label="Paid" value={stats.paid} icon={CheckCircle2} color="#16A34A" />
+          <StatCard label="Pending" value={stats.pending} icon={Clock} color="#F59E0B" />
+          <StatCard label="Failed" value={stats.failed} icon={XCircle} color="#DC2626" />
+          <StatCard label="Refunded" value={stats.refunded} icon={RotateCcw} color="#8B5CF6" />
+          <StatCard label="Revenue" value={money(stats.revenue)} icon={TrendingUp} color="#0F766E" />
         </div>
       )}
 

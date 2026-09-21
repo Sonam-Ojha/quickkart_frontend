@@ -1,23 +1,33 @@
 import { useRef, useState } from 'react';
-import { Upload, Link, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, Link, X, Image as ImageIcon, Crop } from 'lucide-react';
 import api from '../../lib/api';
+import ImageCropModal from './ImageCropModal';
 
 interface Props {
   value: string;
   onChange: (url: string) => void;
   label?: string;
   required?: boolean;
+  previewClassName?: string;
+  /** When set, a file picked for upload is cropped to this width/height ratio before upload (e.g. 3 for a 3:1 banner, 1 for square). */
+  aspectRatio?: number;
 }
 
 /**
  * Dual-mode image field: paste a URL OR upload a file.
  * Only one can be active at a time. Displays a live preview.
  */
-export default function ImageUploadField({ value, onChange, label = 'Image', required }: Props) {
+export default function ImageUploadField({ value, onChange, label = 'Image', required, previewClassName = 'h-28', aspectRatio }: Props) {
   const [mode, setMode] = useState<'url' | 'upload'>(value ? 'url' : 'url');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Original picked file, cached (as an object URL) so "Re-crop" can reopen it later
+  // without asking the user to re-select — separate from whether the crop UI is open now.
+  const [pendingSrc, setPendingSrc] = useState<string | null>(null);
+  const [pendingName, setPendingName] = useState('image.jpg');
+  const [cropOpen, setCropOpen] = useState(false);
 
   const switchMode = (m: 'url' | 'upload') => {
     setMode(m);
@@ -25,12 +35,12 @@ export default function ImageUploadField({ value, onChange, label = 'Image', req
     if (m === 'upload') onChange(''); // clear URL when switching to upload
   };
 
-  const handleFile = async (file: File) => {
+  const uploadBlob = async (blob: Blob, name: string) => {
     setError('');
     setUploading(true);
     try {
       const fd = new FormData();
-      fd.append('image', file);
+      fd.append('image', new File([blob], name, { type: blob.type || 'image/jpeg' }));
       const res = await api.post<{ url: string }>('/api/admin/upload', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -40,6 +50,17 @@ export default function ImageUploadField({ value, onChange, label = 'Image', req
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleFile = (file: File) => {
+    if (aspectRatio) {
+      // Route through the crop step first — upload happens once the user confirms the crop.
+      setPendingName(file.name);
+      setPendingSrc(URL.createObjectURL(file));
+      setCropOpen(true);
+      return;
+    }
+    uploadBlob(file, file.name);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -123,9 +144,19 @@ export default function ImageUploadField({ value, onChange, label = 'Image', req
             <div className="flex items-center gap-2 justify-center text-xs text-green-600">
               <ImageIcon size={14} />
               <span className="truncate max-w-[200px]">{value.split('/').pop()}</span>
+              {aspectRatio && pendingSrc && (
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); setCropOpen(true); }}
+                  className="flex items-center gap-1 text-slate-400 hover:text-indigo-600"
+                  title="Adjust crop"
+                >
+                  <Crop size={13} />
+                </button>
+              )}
               <button
                 type="button"
-                onClick={e => { e.stopPropagation(); onChange(''); }}
+                onClick={e => { e.stopPropagation(); onChange(''); setPendingSrc(null); setCropOpen(false); }}
                 className="text-slate-400 hover:text-red-500"
               >
                 <X size={13} />
@@ -146,7 +177,7 @@ export default function ImageUploadField({ value, onChange, label = 'Image', req
 
       {/* Live preview */}
       {value && (
-        <div className="mt-1 rounded-lg overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center h-28">
+        <div className={`mt-1 rounded-lg overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center ${previewClassName}`}>
           <img
             src={value}
             alt="preview"
@@ -154,6 +185,18 @@ export default function ImageUploadField({ value, onChange, label = 'Image', req
             onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
           />
         </div>
+      )}
+
+      {cropOpen && pendingSrc && (
+        <ImageCropModal
+          imageSrc={pendingSrc}
+          aspectRatio={aspectRatio ?? 1}
+          onCancel={() => setCropOpen(false)}
+          onConfirm={async blob => {
+            await uploadBlob(blob, pendingName);
+            setCropOpen(false);
+          }}
+        />
       )}
     </div>
   );

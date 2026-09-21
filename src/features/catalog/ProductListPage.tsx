@@ -94,7 +94,7 @@ function CatSelect({ value, categories, onChange, className }: {
 
 // ── Product Image thumbnail with fallback ──────────────────────────────────────
 
-function ProductThumb({ imageUrl, name }: { imageUrl?: string | null; name: string }) {
+function ProductThumb({ imageUrl, name, isActive = true }: { imageUrl?: string | null; name: string; isActive?: boolean }) {
   const [ok, setOk] = useState(!!imageUrl);
   useEffect(() => { setOk(!!imageUrl); }, [imageUrl]);
   return (
@@ -103,6 +103,11 @@ function ProductThumb({ imageUrl, name }: { imageUrl?: string | null; name: stri
         ? <img src={imageUrl} alt={name} className="h-full w-full object-cover" onError={() => setOk(false)} />
         : <Package size={40} className="text-slate-200" />
       }
+      {!isActive && (
+        <div className="absolute inset-0 bg-white/60 flex items-center justify-center pointer-events-none">
+          <span className="text-xs font-semibold text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded-full">Inactive</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -166,93 +171,199 @@ function ProductModal({ product, categories, onClose, onSave }: {
     } finally { setSaving(false); }
   };
 
+  const discountPct = form.mrp > 0 && form.price > 0 && form.mrp > form.price
+    ? Math.round((1 - form.price / form.mrp) * 100)
+    : null;
+
   return (
     <Backdrop onClose={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
-        <ModalHeader title={product ? 'Edit Product' : 'Add Product'} onClose={onClose} />
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {error && <ErrorBox msg={error} />}
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Product Name *</label>
-            <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Amul Milk 500ml" />
+      <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+
+        {/* Coloured header strip */}
+        <div className="px-6 sm:px-8 pt-6 pb-6 shrink-0 bg-gradient-to-r from-orange-50 to-amber-50">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-orange-100">
+                <Package size={24} className="text-orange-600" />
+              </div>
+              <div>
+                <h2 className="font-bold text-slate-800 text-lg leading-tight">
+                  {product ? 'Edit' : 'Add'} Product
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  {product ? 'Update details, pricing or category for this product' : 'Fill in the details to list a new product'}
+                </p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/70 text-slate-400 transition-colors">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="p-6 sm:p-8 space-y-5 overflow-y-auto">
+            {error && <ErrorBox msg={error} />}
+
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+              {/* Left column — core fields */}
+              <div className="lg:col-span-3 space-y-5">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+                  <h3 className="text-sm font-semibold text-slate-700">Basic Details</h3>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                      Product Name *
+                    </label>
+                    <Input
+                      value={form.name}
+                      onChange={e => set('name', e.target.value)}
+                      placeholder="e.g. Amul Milk 500ml"
+                      className="h-11 bg-white"
+                      autoFocus
+                    />
+                  </div>
+
+                  {/* Category selection — Main → Sub */}
+                  {hasHierarchy ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                          Main Category *
+                        </label>
+                        <select
+                          value={mainId}
+                          onChange={e => handleMainChange(Number(e.target.value))}
+                          className="w-full h-11 border border-slate-200 rounded-xl px-3 text-sm text-slate-800 bg-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                        >
+                          <option value={0}>Select…</option>
+                          {mains.map(m => <option key={m.id} value={m.id}>{m.icon ? `${m.icon} ` : ''}{m.name}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                          Sub Category *
+                        </label>
+                        <select
+                          value={form.categoryId}
+                          onChange={e => set('categoryId', Number(e.target.value))}
+                          disabled={!mainId}
+                          className="w-full h-11 border border-slate-200 rounded-xl px-3 text-sm text-slate-800 bg-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition disabled:opacity-50"
+                        >
+                          <option value={0}>Select…</option>
+                          {filteredSubs.map(s => <option key={s.id} value={s.id}>{s.icon ? `${s.icon} ` : ''}{s.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                        Category *
+                      </label>
+                      <CatSelect value={form.categoryId} categories={categories} onChange={v => set('categoryId', v)} className="w-full h-11 rounded-xl bg-white" />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                        Brand
+                      </label>
+                      <Input value={form.brand ?? ''} onChange={e => set('brand', e.target.value)} placeholder="e.g. Amul" className="h-11 bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                        Unit
+                      </label>
+                      <Input value={form.unit ?? ''} onChange={e => set('unit', e.target.value)} placeholder="e.g. 500 ml" className="h-11 bg-white" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+                  <h3 className="text-sm font-semibold text-slate-700">Pricing &amp; Visibility</h3>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                        MRP (₹) *
+                      </label>
+                      <Input type="number" step="0.01" min="0" value={form.mrp} onChange={e => set('mrp', Number(e.target.value))} className="h-11 bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                        Selling Price (₹) *
+                      </label>
+                      <Input type="number" step="0.01" min="0" value={form.price} onChange={e => set('price', Number(e.target.value))} className="h-11 bg-white" />
+                    </div>
+                  </div>
+
+                  {discountPct !== null && discountPct > 0 && (
+                    <div className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-100 rounded-lg px-2.5 py-1">
+                      <CheckCircle2 size={12} /> {discountPct}% off MRP
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                        Homepage Tag
+                      </label>
+                      <select
+                        value={form.tag ?? ''}
+                        onChange={e => set('tag', e.target.value || null)}
+                        className="w-full h-11 border border-slate-200 rounded-xl px-3 text-sm text-slate-800 bg-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition"
+                      >
+                        {TAGS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                        Status
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => set('isActive', !(form.isActive ?? true))}
+                        className={`w-full h-11 rounded-xl border flex items-center justify-between px-3.5 transition-colors ${
+                          (form.isActive ?? true) ? 'border-orange-200 bg-orange-50' : 'border-slate-200 bg-white'
+                        }`}
+                      >
+                        <span className={`text-sm font-medium ${(form.isActive ?? true) ? 'text-orange-700' : 'text-slate-500'}`}>
+                          {(form.isActive ?? true) ? 'Active' : 'Inactive'}
+                        </span>
+                        <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${(form.isActive ?? true) ? 'bg-orange-500' : 'bg-slate-300'}`}>
+                          <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${(form.isActive ?? true) ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right column — image */}
+              <div className="lg:col-span-2 rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+                <h3 className="text-sm font-semibold text-slate-700">Product Image</h3>
+                <p className="text-xs text-slate-400 mb-3">Shown on the product card and detail page in the customer app</p>
+                <ImageUploadField
+                  label="Image"
+                  value={form.imageUrl ?? ''}
+                  onChange={url => set('imageUrl', url)}
+                  previewClassName="h-40"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Category selection — Main → Sub */}
-          {hasHierarchy ? (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Main Category *</label>
-                <select
-                  value={mainId}
-                  onChange={e => handleMainChange(Number(e.target.value))}
-                  className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400"
-                >
-                  <option value={0}>Select…</option>
-                  {mains.map(m => <option key={m.id} value={m.id}>{m.icon ? `${m.icon} ` : ''}{m.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Sub Category *</label>
-                <select
-                  value={form.categoryId}
-                  onChange={e => set('categoryId', Number(e.target.value))}
-                  disabled={!mainId}
-                  className="w-full border border-slate-200 rounded-lg px-2 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 disabled:opacity-50"
-                >
-                  <option value={0}>Select…</option>
-                  {filteredSubs.map(s => <option key={s.id} value={s.id}>{s.icon ? `${s.icon} ` : ''}{s.name}</option>)}
-                </select>
-              </div>
+          {/* Buttons */}
+          <div className="flex items-center justify-between gap-3 px-6 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
+            <p className="text-xs text-slate-400 hidden sm:block">Fields marked * are required</p>
+            <div className="flex gap-3 ml-auto">
+              <Button type="button" variant="outline" className="h-10 px-5" onClick={onClose}>Cancel</Button>
+              <Button type="submit" className="h-10 px-6" disabled={saving}>
+                {saving && <Loader2 size={14} className="animate-spin" />}
+                {product ? 'Save Changes' : 'Add Product'}
+              </Button>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Category *</label>
-                <CatSelect value={form.categoryId} categories={categories} onChange={v => set('categoryId', v)} className="w-full" />
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Brand</label>
-              <Input value={form.brand ?? ''} onChange={e => set('brand', e.target.value)} placeholder="e.g. Amul" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Unit</label>
-              <Input value={form.unit ?? ''} onChange={e => set('unit', e.target.value)} placeholder="e.g. 500 ml" />
-            </div>
-            <ImageUploadField label="Image" value={form.imageUrl ?? ''} onChange={url => set('imageUrl', url)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">MRP (₹) *</label>
-              <Input type="number" step="0.01" min="0" value={form.mrp} onChange={e => set('mrp', Number(e.target.value))} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Selling Price (₹) *</label>
-              <Input type="number" step="0.01" min="0" value={form.price} onChange={e => set('price', Number(e.target.value))} />
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Homepage Tag</label>
-            <select value={form.tag ?? ''} onChange={e => set('tag', e.target.value || null)}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400">
-              {TAGS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
-          </div>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={form.isActive ?? true} onChange={e => set('isActive', e.target.checked)} className="accent-[#EA580C]" />
-            <span className="text-sm text-slate-600">Active</span>
-          </label>
-          <div className="flex gap-3 pt-1">
-            <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="flex-1" disabled={saving}>
-              {saving && <Loader2 size={14} className="animate-spin" />}
-              {product ? 'Save Changes' : 'Add Product'}
-            </Button>
           </div>
         </form>
       </div>
@@ -767,13 +878,10 @@ export function ProductListPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {products.map(product => (
-            <div key={product.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:border-orange-200 hover:shadow-sm transition-all group">
-              <ProductThumb imageUrl={product.imageUrl} name={product.name} />
-              {!product.isActive && (
-                <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                  <span className="text-xs font-semibold text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded-full">Inactive</span>
-                </div>
-              )}
+            <div key={product.id} className={`relative bg-white rounded-2xl border overflow-hidden hover:shadow-sm transition-all group ${
+              product.isActive ? 'border-slate-100 hover:border-orange-200' : 'border-red-300 hover:border-red-400'
+            }`}>
+              <ProductThumb imageUrl={product.imageUrl} name={product.name} isActive={product.isActive} />
               <div className="p-4">
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700">
                   {product.category?.name ?? 'Uncategorised'}
@@ -785,16 +893,30 @@ export function ProductListPage() {
                   {product.mrp !== product.price && (
                     <span className="text-xs text-slate-400 line-through">{money(product.mrp)}</span>
                   )}
-                  <button onClick={() => can('catalog.edit') && handleToggle(product)}
-                    className={`ml-auto text-xs px-1.5 py-0.5 rounded-full font-medium ${product.isActive ? 'text-green-600 bg-green-50' : 'text-slate-500 bg-slate-100'}`}>
-                    {product.isActive ? 'Active' : 'Inactive'}
-                  </button>
+                  <div className="ml-auto flex items-center gap-1.5">
+                    <span className={`text-[10px] font-medium ${product.isActive ? 'text-green-600' : 'text-slate-400'}`}>
+                      {product.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={!can('catalog.edit')}
+                      onClick={() => handleToggle(product)}
+                      title={product.isActive ? 'Click to deactivate' : 'Click to activate'}
+                      className={`relative inline-flex items-center w-9 h-5 rounded-full shrink-0 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                        product.isActive ? 'bg-green-500' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform ${
+                        product.isActive ? 'translate-x-4' : 'translate-x-0.5'
+                      }`} />
+                    </button>
+                  </div>
                 </div>
                 <p className="text-[10px] text-slate-400 mt-1">
                   Manage stock → <a href="/catalog/inventory" className="text-orange-500 hover:underline">Inventory</a>
                 </p>
                 {can('catalog.edit') && (
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-slate-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-slate-50">
                     <Button variant="outline" size="sm" className="flex-1" onClick={() => setModal({ type: 'single', product })}>
                       <Edit2 size={12} /> Edit
                     </Button>

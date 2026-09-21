@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Globe, MapPin, Building2, Store, ToggleLeft, ToggleRight, X, Loader2, AlertCircle, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Globe, MapPin, Building2, Store, ToggleLeft, ToggleRight, X, Loader2, AlertCircle, Trash2, Package } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -18,25 +18,54 @@ interface DarkStore {
 
 type Tab = 'countries' | 'states' | 'cities' | 'stores';
 
-// ─── Shared toggle badge ──────────────────────────────────
+// ─── Shared bits ────────────────────────────────────────────
 function ActiveBadge({ active }: { active: boolean }) {
   return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${active ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
       {active ? 'Active' : 'Inactive'}
     </span>
   );
 }
 
-// ─── Modal ────────────────────────────────────────────────
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+const selectClass = 'border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 bg-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition';
+const iconBtnClass = 'p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors';
+const labelClass = 'text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block';
+
+function TableShell({ children }: { children: React.ReactNode }) {
+  return <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">{children}</div>;
+}
+
+function Th({ children, right }: { children: React.ReactNode; right?: boolean }) {
+  return <th className={`px-4 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wide ${right ? 'text-right' : 'text-left'}`}>{children}</th>;
+}
+
+function LoadingRow() {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h3 className="font-semibold text-base">{title}</h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X size={16} /></button>
+    <div className="flex items-center justify-center py-16 text-slate-400">
+      <Loader2 size={22} className="animate-spin mr-2" /> Loading…
+    </div>
+  );
+}
+
+function EmptyRow({ text }: { text: string }) {
+  return (
+    <div className="text-center py-16 text-slate-400">
+      <Package size={36} className="mx-auto mb-3 text-slate-200" />
+      <p className="font-medium text-sm">{text}</p>
+    </div>
+  );
+}
+
+// ─── Modal ────────────────────────────────────────────────
+function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className={`bg-white rounded-2xl shadow-xl w-full ${wide ? 'max-w-xl' : 'max-w-md'}`}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h3 className="font-semibold text-slate-800 text-lg">{title}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );
@@ -79,35 +108,33 @@ function CountriesTab() {
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Button size="sm" onClick={openAdd}><Plus size={14} className="mr-1" /> Add Country</Button>
+        <Button size="sm" onClick={openAdd}><Plus size={14} /> Add Country</Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="animate-spin text-gray-400" /></div>
-      ) : rows.length === 0 ? (
-        <p className="text-center text-gray-400 py-12">No countries added yet</p>
+      {loading ? <LoadingRow /> : rows.length === 0 ? (
+        <EmptyRow text="No countries added yet" />
       ) : (
-        <div className="border rounded-xl overflow-hidden">
+        <TableShell>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left">Country</th>
-                <th className="px-4 py-3 text-left">Code</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <Th>Country</Th>
+                <Th>Code</Th>
+                <Th>Status</Th>
+                <Th right>Actions</Th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-50">
               {rows.map(c => (
-                <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{c.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.code}</td>
+                <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="px-4 py-3 font-medium text-slate-800">{c.name}</td>
+                  <td className="px-4 py-3 text-slate-500">{c.code}</td>
                   <td className="px-4 py-3"><ActiveBadge active={c.isActive} /></td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openEdit(c)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Pencil size={14} /></button>
-                      <button onClick={() => toggle(c)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500" title="Toggle active">
-                        {c.isActive ? <ToggleRight size={16} className="text-green-500" /> : <ToggleLeft size={16} />}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button onClick={() => openEdit(c)} className={iconBtnClass}><Edit2 size={14} /></button>
+                      <button onClick={() => toggle(c)} className={iconBtnClass} title="Toggle active">
+                        {c.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
                       </button>
                     </div>
                   </td>
@@ -115,26 +142,26 @@ function CountriesTab() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableShell>
       )}
 
       {modal !== null && (
         <Modal title={modal === 'add' ? 'Add Country' : 'Edit Country'} onClose={() => setModal(null)}>
-          {error && <p className="text-red-500 text-sm mb-3 flex items-center gap-1"><AlertCircle size={13} />{error}</p>}
+          {error && <p className="text-red-600 text-sm mb-3 flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-lg px-3 py-2"><AlertCircle size={13} />{error}</p>}
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Country Name</label>
+              <label className={labelClass}>Country Name</label>
               <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="India" />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Code (ISO)</label>
+              <label className={labelClass}>Code (ISO)</label>
               <Input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="IN" maxLength={3} />
             </div>
           </div>
-          <div className="flex gap-2 mt-5">
+          <div className="flex gap-3 mt-5">
             <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancel</Button>
             <Button className="flex-1" onClick={save} disabled={saving}>
-              {saving ? <Loader2 size={14} className="animate-spin mr-1" /> : null} Save
+              {saving && <Loader2 size={14} className="animate-spin" />} Save
             </Button>
           </div>
         </Modal>
@@ -186,45 +213,39 @@ function StatesTab() {
   return (
     <>
       <div className="flex items-center justify-between mb-4 gap-3">
-        <select
-          value={filterCountry}
-          onChange={e => setFilterCountry(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm text-gray-700 bg-white"
-        >
+        <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} className={selectClass}>
           <option value="">All Countries</option>
           {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <Button size="sm" onClick={openAdd}><Plus size={14} className="mr-1" /> Add State</Button>
+        <Button size="sm" onClick={openAdd}><Plus size={14} /> Add State</Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="animate-spin text-gray-400" /></div>
-      ) : rows.length === 0 ? (
-        <p className="text-center text-gray-400 py-12">No states found</p>
+      {loading ? <LoadingRow /> : rows.length === 0 ? (
+        <EmptyRow text="No states found" />
       ) : (
-        <div className="border rounded-xl overflow-hidden">
+        <TableShell>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left">State</th>
-                <th className="px-4 py-3 text-left">Code</th>
-                <th className="px-4 py-3 text-left">Country</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <Th>State</Th>
+                <Th>Code</Th>
+                <Th>Country</Th>
+                <Th>Status</Th>
+                <Th right>Actions</Th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-50">
               {rows.map(s => (
-                <tr key={s.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{s.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{s.code ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{s.country?.name ?? '—'}</td>
+                <tr key={s.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="px-4 py-3 font-medium text-slate-800">{s.name}</td>
+                  <td className="px-4 py-3 text-slate-500">{s.code ?? '—'}</td>
+                  <td className="px-4 py-3 text-slate-500">{s.country?.name ?? '—'}</td>
                   <td className="px-4 py-3"><ActiveBadge active={s.isActive} /></td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openEdit(s)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Pencil size={14} /></button>
-                      <button onClick={() => toggle(s)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
-                        {s.isActive ? <ToggleRight size={16} className="text-green-500" /> : <ToggleLeft size={16} />}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button onClick={() => openEdit(s)} className={iconBtnClass}><Edit2 size={14} /></button>
+                      <button onClick={() => toggle(s)} className={iconBtnClass}>
+                        {s.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
                       </button>
                     </div>
                   </td>
@@ -232,38 +253,34 @@ function StatesTab() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableShell>
       )}
 
       {modal !== null && (
         <Modal title={modal === 'add' ? 'Add State' : 'Edit State'} onClose={() => setModal(null)}>
-          {error && <p className="text-red-500 text-sm mb-3 flex items-center gap-1"><AlertCircle size={13} />{error}</p>}
+          {error && <p className="text-red-600 text-sm mb-3 flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-lg px-3 py-2"><AlertCircle size={13} />{error}</p>}
           <div className="space-y-3">
             {modal === 'add' && (
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Country</label>
-                <select
-                  value={form.countryId}
-                  onChange={e => setForm(f => ({ ...f, countryId: e.target.value }))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                >
+                <label className={labelClass}>Country</label>
+                <select value={form.countryId} onChange={e => setForm(f => ({ ...f, countryId: e.target.value }))} className={`w-full ${selectClass}`}>
                   {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
             )}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">State Name</label>
+              <label className={labelClass}>State Name</label>
               <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Haryana" />
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">State Code</label>
+              <label className={labelClass}>State Code</label>
               <Input value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="HR" maxLength={10} />
             </div>
           </div>
-          <div className="flex gap-2 mt-5">
+          <div className="flex gap-3 mt-5">
             <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancel</Button>
             <Button className="flex-1" onClick={save} disabled={saving}>
-              {saving ? <Loader2 size={14} className="animate-spin mr-1" /> : null} Save
+              {saving && <Loader2 size={14} className="animate-spin" />} Save
             </Button>
           </div>
         </Modal>
@@ -315,45 +332,39 @@ function CitiesTab() {
   return (
     <>
       <div className="flex items-center justify-between mb-4 gap-3">
-        <select
-          value={filterState}
-          onChange={e => setFilterState(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm text-gray-700 bg-white"
-        >
+        <select value={filterState} onChange={e => setFilterState(e.target.value)} className={selectClass}>
           <option value="">All States</option>
           {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <Button size="sm" onClick={openAdd}><Plus size={14} className="mr-1" /> Add City</Button>
+        <Button size="sm" onClick={openAdd}><Plus size={14} /> Add City</Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="animate-spin text-gray-400" /></div>
-      ) : rows.length === 0 ? (
-        <p className="text-center text-gray-400 py-12">No cities found</p>
+      {loading ? <LoadingRow /> : rows.length === 0 ? (
+        <EmptyRow text="No cities found" />
       ) : (
-        <div className="border rounded-xl overflow-hidden">
+        <TableShell>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left">City</th>
-                <th className="px-4 py-3 text-left">State</th>
-                <th className="px-4 py-3 text-left">Country</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <Th>City</Th>
+                <Th>State</Th>
+                <Th>Country</Th>
+                <Th>Status</Th>
+                <Th right>Actions</Th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-50">
               {rows.map(c => (
-                <tr key={c.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{c.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.state?.name ?? '—'}</td>
-                  <td className="px-4 py-3 text-gray-500">{c.state?.country?.name ?? '—'}</td>
+                <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="px-4 py-3 font-medium text-slate-800">{c.name}</td>
+                  <td className="px-4 py-3 text-slate-500">{c.state?.name ?? '—'}</td>
+                  <td className="px-4 py-3 text-slate-500">{c.state?.country?.name ?? '—'}</td>
                   <td className="px-4 py-3"><ActiveBadge active={c.isActive} /></td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openEdit(c)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Pencil size={14} /></button>
-                      <button onClick={() => toggle(c)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
-                        {c.isActive ? <ToggleRight size={16} className="text-green-500" /> : <ToggleLeft size={16} />}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button onClick={() => openEdit(c)} className={iconBtnClass}><Edit2 size={14} /></button>
+                      <button onClick={() => toggle(c)} className={iconBtnClass}>
+                        {c.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
                       </button>
                     </div>
                   </td>
@@ -361,34 +372,30 @@ function CitiesTab() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableShell>
       )}
 
       {modal !== null && (
         <Modal title={modal === 'add' ? 'Add City' : 'Edit City'} onClose={() => setModal(null)}>
-          {error && <p className="text-red-500 text-sm mb-3 flex items-center gap-1"><AlertCircle size={13} />{error}</p>}
+          {error && <p className="text-red-600 text-sm mb-3 flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-lg px-3 py-2"><AlertCircle size={13} />{error}</p>}
           <div className="space-y-3">
             {modal === 'add' && (
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">State</label>
-                <select
-                  value={form.stateId}
-                  onChange={e => setForm(f => ({ ...f, stateId: e.target.value }))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                >
+                <label className={labelClass}>State</label>
+                <select value={form.stateId} onChange={e => setForm(f => ({ ...f, stateId: e.target.value }))} className={`w-full ${selectClass}`}>
                   {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
             )}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">City Name</label>
+              <label className={labelClass}>City Name</label>
               <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Faridabad" />
             </div>
           </div>
-          <div className="flex gap-2 mt-5">
+          <div className="flex gap-3 mt-5">
             <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancel</Button>
             <Button className="flex-1" onClick={save} disabled={saving}>
-              {saving ? <Loader2 size={14} className="animate-spin mr-1" /> : null} Save
+              {saving && <Loader2 size={14} className="animate-spin" />} Save
             </Button>
           </div>
         </Modal>
@@ -482,53 +489,51 @@ function StoresTab() {
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Button size="sm" onClick={openAdd}><Plus size={14} className="mr-1" /> Add Store</Button>
+        <Button size="sm" onClick={openAdd}><Plus size={14} /> Add Store</Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="animate-spin text-gray-400" /></div>
-      ) : rows.length === 0 ? (
-        <p className="text-center text-gray-400 py-12">No stores added yet</p>
+      {loading ? <LoadingRow /> : rows.length === 0 ? (
+        <EmptyRow text="No stores added yet" />
       ) : (
-        <div className="border rounded-xl overflow-hidden">
+        <TableShell>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left">Store</th>
-                <th className="px-4 py-3 text-left">City / State</th>
-                <th className="px-4 py-3 text-left">Coordinates</th>
-                <th className="px-4 py-3 text-left">Radius</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+                <Th>Store</Th>
+                <Th>City / State</Th>
+                <Th>Coordinates</Th>
+                <Th>Radius</Th>
+                <Th>Status</Th>
+                <Th right>Actions</Th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-50">
               {rows.map(s => (
-                <tr key={s.id} className="hover:bg-gray-50">
+                <tr key={s.id} className="hover:bg-slate-50/60 transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-800">{s.name}</p>
-                    <p className="text-xs text-gray-400 truncate max-w-[180px]">{s.address}</p>
+                    <p className="font-medium text-slate-800">{s.name}</p>
+                    <p className="text-xs text-slate-400 truncate max-w-[180px]">{s.address}</p>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{cityLabel(s)}</td>
-                  <td className="px-4 py-3 text-gray-400 text-xs font-mono">
+                  <td className="px-4 py-3 text-slate-500 text-xs">{cityLabel(s)}</td>
+                  <td className="px-4 py-3 text-slate-400 text-xs font-mono">
                     {s.lat != null && s.lng != null ? `${Number(s.lat).toFixed(4)}, ${Number(s.lng).toFixed(4)}` : '—'}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-xs bg-blue-50 text-blue-700 font-medium px-2 py-0.5 rounded-full">
+                    <span className="text-xs bg-orange-50 text-orange-700 font-medium px-2 py-0.5 rounded-full">
                       {s.radius} km
                     </span>
                   </td>
                   <td className="px-4 py-3"><ActiveBadge active={s.isActive} /></td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => openEdit(s)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500"><Pencil size={14} /></button>
-                      <button onClick={() => toggle(s)} className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
-                        {s.isActive ? <ToggleRight size={16} className="text-green-500" /> : <ToggleLeft size={16} />}
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button onClick={() => openEdit(s)} className={iconBtnClass}><Edit2 size={14} /></button>
+                      <button onClick={() => toggle(s)} className={iconBtnClass}>
+                        {s.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
                       </button>
                       <button
                         onClick={() => remove(s.id)}
                         disabled={deleting === s.id}
-                        className="p-1.5 rounded hover:bg-red-50 text-red-400"
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-500 transition-colors"
                       >
                         {deleting === s.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                       </button>
@@ -538,55 +543,53 @@ function StoresTab() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableShell>
       )}
 
       {modal !== null && (
-        <Modal title={modal === 'add' ? 'Add Store' : 'Edit Store'} onClose={() => setModal(null)}>
-          {error && <p className="text-red-500 text-sm mb-3 flex items-center gap-1"><AlertCircle size={13} />{error}</p>}
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Store Name *</label>
-              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sector-15 Faridabad" />
+        <Modal title={modal === 'add' ? 'Add Store' : 'Edit Store'} onClose={() => setModal(null)} wide>
+          {error && <p className="text-red-600 text-sm mb-4 flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-lg px-3 py-2"><AlertCircle size={13} />{error}</p>}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelClass}>Store Name *</label>
+                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sector-15 Faridabad" />
+              </div>
+              <div>
+                <label className={labelClass}>City *</label>
+                <select value={form.cityId} onChange={e => setForm(f => ({ ...f, cityId: e.target.value }))} className={`w-full ${selectClass}`}>
+                  <option value="">Select city...</option>
+                  {cities.map(c => <option key={c.id} value={c.id}>{c.name}{c.state ? ` (${c.state.name})` : ''}</option>)}
+                </select>
+              </div>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Address *</label>
+              <label className={labelClass}>Address *</label>
               <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Full address" />
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">City *</label>
-              <select
-                value={form.cityId}
-                onChange={e => setForm(f => ({ ...f, cityId: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-              >
-                <option value="">Select city...</option>
-                {cities.map(c => <option key={c.id} value={c.id}>{c.name}{c.state ? ` (${c.state.name})` : ''}</option>)}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Latitude *</label>
+                <label className={labelClass}>Latitude *</label>
                 <Input type="number" step="any" value={form.lat} onChange={e => setForm(f => ({ ...f, lat: e.target.value }))} placeholder="28.4089" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Longitude *</label>
+                <label className={labelClass}>Longitude *</label>
                 <Input type="number" step="any" value={form.lng} onChange={e => setForm(f => ({ ...f, lng: e.target.value }))} placeholder="77.3178" />
               </div>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Radius (km)</label>
-              <Input type="number" step="0.1" min="0.1" value={form.radius} onChange={e => setForm(f => ({ ...f, radius: e.target.value }))} placeholder="5" />
+              <div>
+                <label className={labelClass}>Radius (km)</label>
+                <Input type="number" step="0.1" min="0.1" value={form.radius} onChange={e => setForm(f => ({ ...f, radius: e.target.value }))} placeholder="5" />
+              </div>
             </div>
             <label className="flex items-center gap-2 cursor-pointer pt-1">
               <input type="checkbox" checked={form.isActive} onChange={e => setForm(f => ({ ...f, isActive: e.target.checked }))} className="accent-[#EA580C]" />
-              <span className="text-sm text-gray-600">Active</span>
+              <span className="text-sm text-slate-600">Active</span>
             </label>
           </div>
-          <div className="flex gap-2 mt-5">
+          <div className="flex gap-3 mt-6">
             <Button variant="outline" className="flex-1" onClick={() => setModal(null)}>Cancel</Button>
             <Button className="flex-1" onClick={save} disabled={saving}>
-              {saving ? <Loader2 size={14} className="animate-spin mr-1" /> : null} Save
+              {saving && <Loader2 size={14} className="animate-spin" />} Save
             </Button>
           </div>
         </Modal>
@@ -607,23 +610,24 @@ export default function GeoMastersPage() {
   const [tab, setTab] = useState<Tab>('countries');
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div>
       <PageHeader
         title="Geo Masters"
         subtitle="Manage Country → State → City hierarchy for store mapping"
+        breadcrumbs={[{ label: 'Home' }, { label: 'Stores & Geo' }, { label: 'Geo Masters' }]}
       />
 
       {/* Tab Bar */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
+      <div className="flex gap-1.5 mb-6 overflow-x-auto pb-1">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === key ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              tab === key ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'
             }`}
           >
-            <Icon size={15} />
+            <Icon size={14} />
             {label}
           </button>
         ))}

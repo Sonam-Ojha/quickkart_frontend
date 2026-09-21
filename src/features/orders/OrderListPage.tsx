@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, UserCheck, Mail, Phone } from 'lucide-react';
+import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, UserCheck, Mail, Phone, IndianRupee } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Button } from '../../components/ui/button';
@@ -339,6 +339,23 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
   );
 }
 
+// ── Stat card ─────────────────────────────────────────────
+
+function OrderStatCard({ label, value, icon: Icon, color }: { label: string; value: string; icon: React.ElementType; color: string }) {
+  return (
+    <div
+      className="rounded-2xl px-4 py-3.5 border transition-shadow hover:shadow-sm"
+      style={{ background: `linear-gradient(155deg, ${color}17, ${color}08)`, borderColor: color + '2A' }}
+    >
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center mb-2" style={{ background: color + '22' }}>
+        <Icon size={14} style={{ color }} />
+      </div>
+      <div className="text-lg font-bold text-slate-900">{value}</div>
+      <div className="text-xs text-slate-500">{label}</div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────
 
 export function OrderListPage() {
@@ -399,19 +416,12 @@ export function OrderListPage() {
       {/* Stats row */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
-          {[
-            { label: 'Total',       value: stats.total,     bg: 'bg-slate-50',   text: 'text-slate-700' },
-            { label: 'Pending',     value: stats.pending,   bg: 'bg-amber-50',   text: 'text-amber-700' },
-            { label: 'Active',      value: stats.active,    bg: 'bg-blue-50',    text: 'text-blue-700' },
-            { label: 'Delivered',   value: stats.delivered, bg: 'bg-green-50',   text: 'text-green-700' },
-            { label: 'Cancelled',   value: stats.cancelled, bg: 'bg-red-50',     text: 'text-red-600' },
-            { label: 'Revenue',     value: money(stats.revenue), bg: 'bg-teal-50', text: 'text-[#0F766E]' },
-          ].map(s => (
-            <div key={s.label} className={`${s.bg} rounded-2xl px-4 py-3`}>
-              <div className={`text-lg font-bold ${s.text}`}>{s.value}</div>
-              <div className="text-xs text-slate-400">{s.label}</div>
-            </div>
-          ))}
+          <OrderStatCard label="Total"     value={String(stats.total)}      icon={ShoppingBag}  color="#64748B" />
+          <OrderStatCard label="Pending"   value={String(stats.pending)}    icon={Clock}        color="#D97706" />
+          <OrderStatCard label="Active"    value={String(stats.active)}     icon={Truck}        color="#2563EB" />
+          <OrderStatCard label="Delivered" value={String(stats.delivered)}  icon={CheckCircle}  color="#16A34A" />
+          <OrderStatCard label="Cancelled" value={String(stats.cancelled)}  icon={XCircle}      color="#DC2626" />
+          <OrderStatCard label="Revenue"   value={money(stats.revenue)}     icon={IndianRupee}  color="#0F766E" />
         </div>
       )}
 

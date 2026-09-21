@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Eye, EyeOff, Loader2, AlertCircle, X, Image } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, EyeOff, Loader2, AlertCircle, X, Image, ImagePlus, MousePointerClick } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -52,12 +52,12 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
     try {
       const payload: BannerPayload = {
         ...form,
-        title:    mode === 'image' ? (form.title || undefined as any) : (form.title || undefined as any),
+        title:    mode === 'image' ? null : (form.title || null),
+        subtitle: mode === 'image' ? null : (form.subtitle || null),
+        emoji:    mode === 'image' ? null : (form.emoji    || null),
         bgType:   mode === 'image' ? null : form.bgType,
-        validTo:  form.validTo  || undefined,
-        deeplink: form.deeplink || undefined,
-        subtitle: form.subtitle || undefined,
-        emoji:    form.emoji    || undefined,
+        validTo:  form.validTo  || null,
+        deeplink: form.deeplink || null,
       };
       banner ? await bannerApi.update(banner.id, payload) : await bannerApi.create(payload);
       onSave();
@@ -68,85 +68,114 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 sticky top-0 bg-white">
-          <h2 className="font-semibold text-slate-800">{banner ? 'Edit Banner' : 'Add Banner'}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
+      <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+
+        {/* Coloured header strip */}
+        <div className={`px-6 sm:px-8 pt-6 pb-6 shrink-0 ${isPromo ? 'bg-gradient-to-r from-indigo-50 to-violet-50' : 'bg-gradient-to-r from-orange-50 to-amber-50'}`}>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isPromo ? 'bg-indigo-100' : 'bg-orange-100'}`}>
+                <Image size={22} className={isPromo ? 'text-indigo-600' : 'text-orange-600'} />
+              </div>
+              <div>
+                <h2 className="font-bold text-slate-800 text-lg leading-tight">
+                  {banner ? 'Edit' : 'Add'} Banner
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5">
+                  {isPromo ? 'Small card shown in the promo row below the carousel' : 'Full-width slide in the home screen carousel'}
+                </p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/70 text-slate-400 transition-colors">
+              <X size={18} />
+            </button>
+          </div>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
 
-          {/* Mode toggle */}
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-2 block">Banner Style</label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setMode('image')}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${
-                  mode === 'image'
-                    ? 'bg-orange-500 text-white border-orange-500'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'
-                }`}
-              >
-                🖼️ Direct Image
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('customize')}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors ${
-                  mode === 'customize'
-                    ? 'bg-orange-500 text-white border-orange-500'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'
-                }`}
-              >
-                🎨 Customize
-              </button>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="p-6 sm:p-8 space-y-5 overflow-y-auto">
+            {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
+
+            {/* Style & Placement */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+              <h3 className="text-sm font-semibold text-slate-700">Style &amp; Placement</h3>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Banner Style</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMode('image')}
+                    className={`flex-1 h-11 rounded-xl text-sm font-medium border transition-colors ${
+                      mode === 'image'
+                        ? 'bg-orange-500 text-white border-orange-500'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'
+                    }`}
+                  >
+                    🖼️ Direct Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('customize')}
+                    className={`flex-1 h-11 rounded-xl text-sm font-medium border transition-colors ${
+                      mode === 'customize'
+                        ? 'bg-orange-500 text-white border-orange-500'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'
+                    }`}
+                  >
+                    🎨 Customize
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 mt-1.5">
+                  {mode === 'image' ? 'Upload a designed banner image — shown as-is with no overlay' : 'Add title, subtitle and color theme over your image'}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Placement *</label>
+                <div className="flex gap-2">
+                  {(['hero', 'promo'] as const).map(s => (
+                    <button
+                      key={s} type="button"
+                      onClick={() => set('section', s)}
+                      className={`flex-1 h-11 rounded-xl text-sm font-medium border transition-colors ${
+                        form.section === s
+                          ? 'bg-slate-800 text-white border-slate-800'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                      }`}
+                    >
+                      {s === 'hero' ? '🖼️ Hero Carousel' : '🃏 Promo Tile'}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-400 mt-1.5">
+                  {isPromo ? 'Small card row below the main carousel' : 'Full-width sliding carousel at the top'}
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
-              {mode === 'image' ? 'Upload a designed banner image — shown as-is with no overlay' : 'Add title, subtitle and color theme over your image'}
-            </p>
-          </div>
 
-          {/* Section toggle — hero vs promo */}
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-2 block">Placement *</label>
-            <div className="flex gap-2">
-              {(['hero', 'promo'] as const).map(s => (
-                <button
-                  key={s} type="button"
-                  onClick={() => set('section', s)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    form.section === s
-                      ? 'bg-slate-800 text-white border-slate-800'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
-                  }`}
-                >
-                  {s === 'hero' ? '🖼️ Hero Carousel' : '🃏 Promo Tile'}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-slate-400 mt-1">
-              {isPromo ? 'Small card row below the main carousel' : 'Full-width sliding carousel at the top'}
-            </p>
-          </div>
+            {/* Banner Image */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <ImagePlus size={14} className="text-slate-500" />
+                <h3 className="text-sm font-semibold text-slate-700">Banner Image</h3>
+              </div>
+              <p className="text-xs text-slate-400 mb-3">
+                Recommended: {isPromo ? '800 × 800px (square)' : '1200 × 400px (3:1)'}. Uploaded photos can be cropped to fit before saving.
+              </p>
+              <ImageUploadField
+                label="Banner Image"
+                required
+                value={form.bannerImage}
+                onChange={url => set('bannerImage', url)}
+                aspectRatio={isPromo ? 1 : 3}
+                previewClassName="h-36"
+              />
 
-          {/* Image upload — always shown */}
-          <div>
-            <ImageUploadField
-              label="Banner Image"
-              required
-              value={form.bannerImage}
-              onChange={url => set('bannerImage', url)}
-            />
-          </div>
-
-          {/* Live preview */}
-          {form.bannerImage && (
-            <div className="rounded-xl overflow-hidden relative" style={{ height: '120px' }}>
-              <img src={form.bannerImage} alt="" className="absolute inset-0 w-full h-full object-cover" onError={() => {}} />
-              {mode === 'customize' && (
-                <>
+              {/* Overlay mockup — only meaningful in Customize mode */}
+              {form.bannerImage && mode === 'customize' && (
+                <div className="rounded-xl overflow-hidden relative mt-3" style={{ height: '120px' }}>
+                  <img src={form.bannerImage} alt="" className="absolute inset-0 w-full h-full object-cover" onError={() => {}} />
                   {!noBg && (
                     <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${bgOption.from} 8%, ${bgOption.from}E6 42%, ${bgOption.from}00 78%)` }} />
                   )}
@@ -160,66 +189,99 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
                       {form.subtitle && <p className="text-white/80 text-xs mt-0.5">{form.subtitle}</p>}
                     </div>
                   )}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Customize-only fields */}
-          {mode === 'customize' && (
-            <>
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">{isPromo ? 'Title' : 'Title'} <span className="text-slate-400">(optional)</span></label>
-                <Input value={form.title} onChange={e => set('title', e.target.value)} placeholder={isPromo ? 'e.g. Get printouts delivered' : 'e.g. Weekend Sale'} />
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">{isPromo ? 'Sub-text' : 'Subtitle'} <span className="text-slate-400">(optional)</span></label>
-                <Input value={form.subtitle ?? ''} onChange={e => set('subtitle', e.target.value)} placeholder={isPromo ? 'e.g. Safe, secure & fast' : 'e.g. Up to 40% off on groceries'} />
-              </div>
-
-              {isPromo && (
-                <div>
-                  <label className="text-xs font-medium text-slate-600 mb-1 block">Emoji * <span className="text-slate-400">(shown on the tile)</span></label>
-                  <Input value={form.emoji ?? ''} onChange={e => set('emoji', e.target.value)} placeholder="e.g. 🖨️ 💊 🥬 🍼" maxLength={4} />
                 </div>
               )}
+            </div>
+
+            {/* Customize-only fields */}
+            {mode === 'customize' && (
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+                <h3 className="text-sm font-semibold text-slate-700">Text &amp; Color</h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Title <span className="text-slate-400 normal-case">(optional)</span></label>
+                    <Input value={form.title ?? ''} onChange={e => set('title', e.target.value)} placeholder={isPromo ? 'e.g. Get printouts delivered' : 'e.g. Weekend Sale'} className="h-11 bg-white" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">{isPromo ? 'Sub-text' : 'Subtitle'} <span className="text-slate-400 normal-case">(optional)</span></label>
+                    <Input value={form.subtitle ?? ''} onChange={e => set('subtitle', e.target.value)} placeholder={isPromo ? 'e.g. Safe, secure & fast' : 'e.g. Up to 40% off on groceries'} className="h-11 bg-white" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {isPromo && (
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Emoji * <span className="text-slate-400 normal-case">(shown on the tile)</span></label>
+                      <Input value={form.emoji ?? ''} onChange={e => set('emoji', e.target.value)} placeholder="e.g. 🖨️ 💊 🥬 🍼" maxLength={4} className="h-11 bg-white text-center text-xl" />
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Color Theme <span className="text-slate-400 normal-case">(optional)</span></label>
+                    <select value={form.bgType ?? 'none'} onChange={e => set('bgType', e.target.value === 'none' ? null : e.target.value as BgType)}
+                      className="w-full h-11 border border-slate-200 rounded-xl px-3 text-sm bg-white outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition">
+                      <option value="none">⬜ No color (image only)</option>
+                      {BG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Click destination & schedule */}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <MousePointerClick size={14} className="text-slate-500" />
+                <h3 className="text-sm font-semibold text-slate-700">Click Destination &amp; Schedule</h3>
+              </div>
 
               <div>
-                <label className="text-xs font-medium text-slate-600 mb-1 block">Color Theme <span className="text-slate-400">(optional)</span></label>
-                <select value={form.bgType ?? 'none'} onChange={e => set('bgType', e.target.value === 'none' ? null : e.target.value as BgType)}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400">
-                  <option value="none">⬜ No color (image only)</option>
-                  {BG_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">
+                  Opens Page <span className="text-slate-400 normal-case">(optional)</span>
+                </label>
+                <Input
+                  value={form.deeplink ?? ''}
+                  onChange={e => set('deeplink', e.target.value)}
+                  placeholder="/category/5, /product/12, /print, /search?q=atta"
+                  className="h-11 bg-white"
+                />
+                <p className="text-xs text-slate-400 mt-1.5">
+                  Tapping anywhere on the {isPromo ? 'tile' : 'banner'} opens this page. Leave blank for no action.
+                </p>
               </div>
-            </>
-          )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Sort Order</label>
-              <Input type="number" min="0" value={form.sortOrder ?? 0} onChange={e => set('sortOrder', Number(e.target.value))} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">{isPromo ? 'Links to (route)' : 'Deeplink'} <span className="text-slate-400">(optional)</span></label>
-              <Input value={form.deeplink ?? ''} onChange={e => set('deeplink', e.target.value)} placeholder={isPromo ? '/category or /print' : 'app://...'} />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Sort Order</label>
+                  <Input type="number" min="0" value={form.sortOrder ?? 0} onChange={e => set('sortOrder', Number(e.target.value))} className="h-11 bg-white" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Valid Until <span className="text-slate-400 normal-case">(optional)</span></label>
+                  <Input type="date" value={form.validTo ?? ''} onChange={e => set('validTo', e.target.value)} className="h-11 bg-white" />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => set('isActive', !(form.isActive ?? true))}
+                className={`w-full h-11 rounded-xl border flex items-center justify-between px-3.5 transition-colors ${
+                  (form.isActive ?? true) ? 'border-orange-200 bg-orange-50' : 'border-slate-200 bg-white'
+                }`}
+              >
+                <span className={`text-sm font-medium ${(form.isActive ?? true) ? 'text-orange-700' : 'text-slate-500'}`}>
+                  {(form.isActive ?? true) ? 'Active' : 'Inactive'} <span className="font-normal text-slate-400">— visible on customer site</span>
+                </span>
+                <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${(form.isActive ?? true) ? 'bg-orange-500' : 'bg-slate-300'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${(form.isActive ?? true) ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                </div>
+              </button>
             </div>
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-slate-600 mb-1 block">Valid Until <span className="text-slate-400">(optional)</span></label>
-            <Input type="date" value={form.validTo ?? ''} onChange={e => set('validTo', e.target.value)} className="max-w-[200px]" />
-          </div>
-
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" checked={form.isActive ?? true} onChange={e => set('isActive', e.target.checked)} className="accent-[#EA580C]" />
-            <span className="text-sm text-slate-600">Active (visible on customer site)</span>
-          </label>
-
-          <div className="flex gap-3 pt-1">
-            <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="flex-1" disabled={saving}>
+          {/* Buttons */}
+          <div className="flex items-center justify-end gap-3 px-6 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
+            <Button type="button" variant="outline" className="h-10 px-5" onClick={onClose}>Cancel</Button>
+            <Button type="submit" className="h-10 px-6" disabled={saving}>
               {saving && <Loader2 size={14} className="animate-spin" />}
               {banner ? 'Save Changes' : 'Add Banner'}
             </Button>

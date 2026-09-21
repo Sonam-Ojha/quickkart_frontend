@@ -5,7 +5,7 @@ export type BannerSection = 'hero' | 'promo';
 
 export interface Banner {
   id: number;
-  title: string;
+  title: string | null;
   subtitle: string | null;
   bannerImage: string;
   section: BannerSection;
@@ -19,15 +19,15 @@ export interface Banner {
 }
 
 export interface BannerPayload {
-  title: string;
-  subtitle?: string;
+  title?: string | null;
+  subtitle?: string | null;
   bannerImage: string;
   section?: BannerSection;
-  emoji?: string;
+  emoji?: string | null;
   bgType: BgType | null;
-  deeplink?: string;
+  deeplink?: string | null;
   sortOrder?: number;
-  validTo?: string;
+  validTo?: string | null;
   isActive?: boolean;
 }
 

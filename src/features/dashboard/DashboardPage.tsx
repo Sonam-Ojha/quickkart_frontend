@@ -25,9 +25,12 @@ const STATUS_COLORS: Record<string, string> = {
 
 function KpiCard({ label, value, icon: Icon, color }: { label: string; value: string; icon: React.ElementType; color: string }) {
   return (
-    <div className="bg-white rounded-2xl p-5 border border-slate-100 hover:border-slate-200 transition-colors">
+    <div
+      className="rounded-2xl p-5 border transition-shadow hover:shadow-sm"
+      style={{ background: `linear-gradient(155deg, ${color}17, ${color}08)`, borderColor: color + '2A' }}
+    >
       <div className="flex items-start justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: color + '15' }}>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: color + '22' }}>
           <Icon size={18} style={{ color }} />
         </div>
         <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
@@ -35,7 +38,7 @@ function KpiCard({ label, value, icon: Icon, color }: { label: string; value: st
         </span>
       </div>
       <div className="text-2xl font-bold text-slate-900 mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{value}</div>
-      <div className="text-sm text-slate-500">{label}</div>
+      <div className="text-sm font-medium text-slate-600">{label}</div>
     </div>
   );
 }

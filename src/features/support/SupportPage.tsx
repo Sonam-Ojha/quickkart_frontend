@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { MessageSquare, CheckCircle, Clock, AlertCircle, Search, Loader2, X, Send, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquare, CheckCircle, Clock, AlertCircle, Search, Loader2, X, Send, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
+import { StatCard } from '../../components/common/StatCard';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { formatDateTime } from '../../lib/utils';
@@ -165,17 +166,10 @@ export function SupportPage() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-          {[
-            { l:'Total', v: stats.total, bg:'bg-slate-50', t:'text-slate-700' },
-            { l:'Open',  v: stats.open,  bg:'bg-red-50',   t:'text-red-600' },
-            { l:'In Progress', v: stats.in_progress, bg:'bg-amber-50', t:'text-amber-700' },
-            { l:'Resolved',    v: stats.resolved,    bg:'bg-green-50', t:'text-green-700' },
-          ].map(s => (
-            <div key={s.l} className={`${s.bg} rounded-2xl px-5 py-4`}>
-              <div className={`text-2xl font-bold ${s.t}`}>{s.v}</div>
-              <div className="text-xs text-slate-500 mt-0.5">{s.l}</div>
-            </div>
-          ))}
+          <StatCard label="Total" value={stats.total} icon={Inbox} color="#475569" />
+          <StatCard label="Open" value={stats.open} icon={AlertCircle} color="#DC2626" />
+          <StatCard label="In Progress" value={stats.in_progress} icon={Clock} color="#F59E0B" />
+          <StatCard label="Resolved" value={stats.resolved} icon={CheckCircle} color="#16A34A" />
         </div>
       )}
 

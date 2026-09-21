@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import {
   Plus, Edit2, Trash2, Loader2, AlertCircle, X,
   Upload, FileSpreadsheet, Download, PlusCircle, CheckCircle2,
-  FolderOpen, Folder, ChevronRight, Search, SlidersHorizontal,
+  FolderOpen, Folder, ChevronRight, Search, SlidersHorizontal, Smartphone,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
@@ -16,7 +16,7 @@ import ImageUploadField from '../../components/common/ImageUploadField';
 
 function Backdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px] flex items-center justify-center p-4" onClick={onClose}>
       <div onClick={e => e.stopPropagation()}>{children}</div>
     </div>
   );
@@ -132,154 +132,199 @@ function CategoryModal({
 
   return (
     <Backdrop onClose={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden">
+      <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
 
         {/* Coloured header strip */}
-        <div className={`px-6 pt-6 pb-5 ${isMain ? 'bg-orange-50' : 'bg-indigo-50'}`}>
+        <div className={`px-6 sm:px-8 pt-6 pb-6 shrink-0 ${isMain ? 'bg-gradient-to-r from-orange-50 to-amber-50' : 'bg-gradient-to-r from-indigo-50 to-violet-50'}`}>
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl ${isMain ? 'bg-orange-100' : 'bg-indigo-100'}`}>
-                {isMain ? <FolderOpen size={20} className="text-orange-600" /> : <Folder size={20} className="text-indigo-600" />}
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isMain ? 'bg-orange-100' : 'bg-indigo-100'}`}>
+                {isMain ? <FolderOpen size={24} className="text-orange-600" /> : <Folder size={24} className="text-indigo-600" />}
               </div>
               <div>
-                <h2 className="font-bold text-slate-800 text-base leading-tight">
+                <h2 className="font-bold text-slate-800 text-lg leading-tight">
                   {isEdit ? 'Edit' : 'Add'} {isMain ? 'Main' : 'Sub'} Category
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {isMain ? 'Top-level category (e.g. Atta, Dairy)' : 'Belongs inside a main category'}
+                <p className="text-sm text-slate-500 mt-0.5">
+                  {isMain ? 'Top-level category shown across the app (e.g. Atta, Dairy)' : 'Nested inside a main category (e.g. Besan, Maida)'}
                 </p>
               </div>
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/70 text-slate-400 transition-colors">
-              <X size={16} />
+            <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/70 text-slate-400 transition-colors">
+              <X size={18} />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && <ErrorBox msg={error} />}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="p-6 sm:p-8 space-y-5 overflow-y-auto">
+            {error && <ErrorBox msg={error} />}
 
-          {/* Parent selector — only for sub categories */}
-          {mode === 'sub' && (
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Main Category *
-              </label>
-              <select
-                value={form.parentId ?? ''}
-                onChange={e => setForm(f => ({ ...f, parentId: Number(e.target.value) }))}
-                className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-700 bg-white outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
-              >
-                <option value="">— Select main category —</option>
-                {mainCategories.map(c => (
-                  <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ` : ''}{c.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+              {/* Left column — core fields */}
+              <div className="lg:col-span-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-5">
+                <h3 className="text-sm font-semibold text-slate-700">Basic Details</h3>
 
-          {/* Name + Icon side by side */}
-          <div className="grid grid-cols-[1fr_80px] gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Name *
-              </label>
-              <Input
-                value={form.name}
-                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder={isMain ? 'e.g. Grocery' : 'e.g. Besan'}
-                className="h-10"
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Icon
-              </label>
-              <Input
-                value={form.icon ?? ''}
-                onChange={e => setForm(f => ({ ...f, icon: e.target.value }))}
-                placeholder={isMain ? '🛒' : '🌾'}
-                maxLength={4}
-                className="h-10 text-center text-xl"
-              />
-            </div>
-          </div>
+                {/* Parent selector — only for sub categories */}
+                {mode === 'sub' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                      Main Category *
+                    </label>
+                    <select
+                      value={form.parentId ?? ''}
+                      onChange={e => setForm(f => ({ ...f, parentId: Number(e.target.value) }))}
+                      className="w-full h-11 border border-slate-200 rounded-xl px-3.5 text-sm text-slate-700 bg-white outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
+                    >
+                      <option value="">— Select main category —</option>
+                      {mainCategories.map(c => (
+                        <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ` : ''}{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-          {/* Image upload */}
-          <ImageUploadField
-            label="Image (optional)"
-            value={form.imageUrl ?? ''}
-            onChange={url => setForm(f => ({ ...f, imageUrl: url }))}
-          />
+                {/* Name + Icon side by side */}
+                <div className="grid grid-cols-[1fr_96px] gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                      Name *
+                    </label>
+                    <Input
+                      value={form.name}
+                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                      placeholder={isMain ? 'e.g. Grocery' : 'e.g. Besan'}
+                      className="h-11 bg-white"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                      Icon
+                    </label>
+                    <Input
+                      value={form.icon ?? ''}
+                      onChange={e => setForm(f => ({ ...f, icon: e.target.value }))}
+                      placeholder={isMain ? '🛒' : '🌾'}
+                      maxLength={4}
+                      className="h-11 text-center text-xl bg-white"
+                    />
+                  </div>
+                </div>
 
-          {/* Sort order + Active toggle */}
-          <div className="flex items-center gap-4 pt-1">
-            <div className="w-28">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Sort Order
-              </label>
-              <Input
-                type="number"
-                value={form.sortOrder ?? 0}
-                onChange={e => setForm(f => ({ ...f, sortOrder: Number(e.target.value) }))}
-                className="h-10"
-              />
-            </div>
-            <label className="flex items-center gap-2.5 cursor-pointer mt-5">
-              <div
-                onClick={() => setForm(f => ({ ...f, isActive: !f.isActive }))}
-                className={`w-10 h-5 rounded-full transition-colors relative ${form.isActive ? 'bg-orange-500' : 'bg-slate-200'}`}
-              >
-                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.isActive ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                {/* Sort order + Active toggle */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                      Sort Order
+                    </label>
+                    <Input
+                      type="number"
+                      value={form.sortOrder ?? 0}
+                      onChange={e => setForm(f => ({ ...f, sortOrder: Number(e.target.value) }))}
+                      className="h-11 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                      Status
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, isActive: !f.isActive }))}
+                      className={`w-full h-11 rounded-xl border flex items-center justify-between px-3.5 transition-colors ${
+                        form.isActive ? 'border-orange-200 bg-orange-50' : 'border-slate-200 bg-white'
+                      }`}
+                    >
+                      <span className={`text-sm font-medium ${form.isActive ? 'text-orange-700' : 'text-slate-500'}`}>
+                        {form.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                      <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${form.isActive ? 'bg-orange-500' : 'bg-slate-300'}`}>
+                        <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.isActive ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                      </div>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <span className="text-sm font-medium text-slate-600">Active</span>
-            </label>
-          </div>
 
-          {/* Home screen visibility — only meaningful for main categories, since
-              only root categories render in either Home section */}
-          {isMain && (
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
-                Show On Home Screen
-              </label>
-              <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.showInFilter}
-                    onChange={e => setForm(f => ({ ...f, showInFilter: e.target.checked }))}
-                    className="accent-[#EA580C] w-4 h-4"
-                  />
-                  <span className="text-sm text-slate-600">Category filter tabs (top of Home)</span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.showInGrid}
-                    onChange={e => setForm(f => ({ ...f, showInGrid: e.target.checked }))}
-                    className="accent-[#EA580C] w-4 h-4"
-                  />
-                  <span className="text-sm text-slate-600">"Shop by Category" grid</span>
-                </label>
+              {/* Right column — image */}
+              <div className="lg:col-span-2 rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+                <h3 className="text-sm font-semibold text-slate-700">Category Image</h3>
+                <p className="text-xs text-slate-400 mb-3">Optional — used as a fallback wherever the icon isn't shown</p>
+                <ImageUploadField
+                  label="Image"
+                  value={form.imageUrl ?? ''}
+                  onChange={url => setForm(f => ({ ...f, imageUrl: url }))}
+                  previewClassName="h-40"
+                />
               </div>
             </div>
-          )}
+
+            {/* Home screen visibility — only meaningful for main categories, since
+                only root categories render in either Home section */}
+            {isMain && (
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Smartphone size={14} className="text-slate-500" />
+                  <h3 className="text-sm font-semibold text-slate-700">Show On Home Screen</h3>
+                </div>
+                <p className="text-xs text-slate-400 mb-3">
+                  Controls where this category appears on the customer's mobile app home screen.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <label
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors bg-white ${
+                      form.showInFilter ? 'border-orange-200 ring-1 ring-orange-100' : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.showInFilter}
+                      onChange={e => setForm(f => ({ ...f, showInFilter: e.target.checked }))}
+                      className="accent-[#EA580C] w-4 h-4 mt-0.5 shrink-0"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-slate-700">Filter tabs</div>
+                      <div className="text-xs text-slate-400">Top of Home screen</div>
+                    </div>
+                  </label>
+                  <label
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors bg-white ${
+                      form.showInGrid ? 'border-orange-200 ring-1 ring-orange-100' : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={form.showInGrid}
+                      onChange={e => setForm(f => ({ ...f, showInGrid: e.target.checked }))}
+                      className="accent-[#EA580C] w-4 h-4 mt-0.5 shrink-0"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-slate-700">Category grid</div>
+                      <div className="text-xs text-slate-400">"Shop by Category" section</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Buttons */}
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" className="flex-1 h-10" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className={`flex-1 h-10 ${!isMain ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`}
-              disabled={saving}
-            >
-              {saving && <Loader2 size={14} className="animate-spin" />}
-              {isEdit ? 'Save Changes' : `Add ${isMain ? 'Main' : 'Sub'} Category`}
-            </Button>
+          <div className="flex items-center justify-between gap-3 px-6 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
+            <p className="text-xs text-slate-400 hidden sm:block">Fields marked * are required</p>
+            <div className="flex gap-3 ml-auto">
+              <Button type="button" variant="outline" className="h-10 px-5" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className={`h-10 px-6 ${!isMain ? 'bg-indigo-600 hover:bg-indigo-700' : ''}`}
+                disabled={saving}
+              >
+                {saving && <Loader2 size={14} className="animate-spin" />}
+                {isEdit ? 'Save Changes' : `Add ${isMain ? 'Main' : 'Sub'} Category`}
+              </Button>
+            </div>
           </div>
         </form>
       </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Download, TrendingUp, ShoppingBag, Package, Store } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { PageHeader } from '../../components/common/PageHeader';
+import { StatCard } from '../../components/common/StatCard';
 import { Button } from '../../components/ui/button';
 
 export function ReportsPage() {
@@ -42,20 +43,10 @@ export function ReportsPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Total Revenue', icon: TrendingUp, color: '#EA580C' },
-          { label: 'Total Orders',  icon: ShoppingBag, color: '#0F766E' },
-          { label: 'Top Product',   icon: Package,     color: '#8B5CF6' },
-          { label: 'Best Store',    icon: Store,       color: '#F59E0B' },
-        ].map(card => (
-          <div key={card.label} className="bg-white rounded-2xl p-4 border border-slate-100">
-            <div className="w-9 h-9 rounded-xl mb-3 flex items-center justify-center" style={{ background: card.color + '15' }}>
-              <card.icon size={16} style={{ color: card.color }} />
-            </div>
-            <div className="text-xl font-bold text-slate-300" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>—</div>
-            <div className="text-xs text-slate-500 mt-0.5">{card.label}</div>
-          </div>
-        ))}
+        <StatCard label="Total Revenue" value="—" icon={TrendingUp} color="#EA580C" />
+        <StatCard label="Total Orders" value="—" icon={ShoppingBag} color="#0F766E" />
+        <StatCard label="Top Product" value="—" icon={Package} color="#8B5CF6" />
+        <StatCard label="Best Store" value="—" icon={Store} color="#F59E0B" />
       </div>
 
       {/* Charts */}
