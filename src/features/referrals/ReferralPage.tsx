@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users2, CheckCircle, XCircle, Clock, Wallet, Search, Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
+import { StatCard } from '../../components/common/StatCard';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { money, formatDate } from '../../lib/utils';
@@ -18,20 +19,6 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
   pending:  <Clock size={11} />,
   rejected: <XCircle size={11} />,
 };
-
-// ── Stat card ─────────────────────────────────────────────
-
-function StatCard({ label, value, icon, color }: { label: string; value: string | number; icon: React.ReactNode; color: string }) {
-  return (
-    <div className={`rounded-2xl p-5 ${color}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium opacity-70">{label}</span>
-        <span className="opacity-60">{icon}</span>
-      </div>
-      <div className="text-2xl font-bold">{value}</div>
-    </div>
-  );
-}
 
 // ── Main Page ─────────────────────────────────────────────
 
@@ -93,11 +80,11 @@ export function ReferralPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <StatCard label="Total"       value={stats?.total ?? '—'}    icon={<Users2 size={16} />}       color="bg-slate-50 text-slate-700" />
-        <StatCard label="Approved"    value={stats?.approved ?? '—'} icon={<CheckCircle size={16} />}  color="bg-green-50 text-green-800" />
-        <StatCard label="Pending"     value={stats?.pending ?? '—'}  icon={<Clock size={16} />}         color="bg-amber-50 text-amber-800" />
-        <StatCard label="Rejected"    value={stats?.rejected ?? '—'} icon={<XCircle size={16} />}      color="bg-red-50 text-red-700" />
-        <StatCard label="Rewards Paid" value={stats ? money(stats.totalRewards) : '—'} icon={<Wallet size={16} />} color="bg-teal-50 text-[#0F766E] col-span-2 lg:col-span-1" />
+        <StatCard label="Total" value={stats?.total ?? '—'} icon={Users2} color="#475569" />
+        <StatCard label="Approved" value={stats?.approved ?? '—'} icon={CheckCircle} color="#16A34A" />
+        <StatCard label="Pending" value={stats?.pending ?? '—'} icon={Clock} color="#F59E0B" />
+        <StatCard label="Rejected" value={stats?.rejected ?? '—'} icon={XCircle} color="#DC2626" />
+        <StatCard label="Rewards Paid" value={stats ? money(stats.totalRewards) : '—'} icon={Wallet} color="#0F766E" className="col-span-2 lg:col-span-1" />
       </div>
 
       {/* Filters */}

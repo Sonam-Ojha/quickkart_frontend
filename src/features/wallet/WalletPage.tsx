@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Wallet, ArrowUpCircle, ArrowDownCircle, Loader2, AlertCircle, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
+import { StatCard } from '../../components/common/StatCard';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { money, formatDateTime } from '../../lib/utils';
@@ -42,18 +43,9 @@ export function WalletPage() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-3 gap-4 mb-5">
-          <div className="bg-green-50 rounded-2xl px-5 py-4">
-            <div className="text-2xl font-bold text-green-700">{money(stats.totalCredits)}</div>
-            <div className="text-xs text-slate-500 mt-0.5">Total Credits</div>
-          </div>
-          <div className="bg-red-50 rounded-2xl px-5 py-4">
-            <div className="text-2xl font-bold text-red-600">{money(stats.totalDebits)}</div>
-            <div className="text-xs text-slate-500 mt-0.5">Total Debits</div>
-          </div>
-          <div className="bg-slate-50 rounded-2xl px-5 py-4">
-            <div className="text-2xl font-bold text-slate-700">{stats.txnCount}</div>
-            <div className="text-xs text-slate-500 mt-0.5">Total Transactions</div>
-          </div>
+          <StatCard label="Total Credits" value={money(stats.totalCredits)} icon={ArrowUpCircle} color="#16A34A" />
+          <StatCard label="Total Debits" value={money(stats.totalDebits)} icon={ArrowDownCircle} color="#DC2626" />
+          <StatCard label="Total Transactions" value={stats.txnCount} icon={Wallet} color="#EA580C" />
         </div>
       )}
 

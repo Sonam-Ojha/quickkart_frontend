@@ -363,6 +363,7 @@ export function SettingsPage() {
   // Service Hours derived state
   const serviceEnabled = values.service_enabled !== 'false';
   const closedMessage  = values.closed_message ?? '';
+  const reopensAt      = values.reopens_at ?? '';
 
   return (
     <div className="pb-24">
@@ -573,6 +574,19 @@ export function SettingsPage() {
                       {!serviceEnabled && (
                         <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 p-3 text-xs text-amber-700">
                           ⚠️ Service is manually paused. This overrides operating hours. Toggle on to resume.
+                        </div>
+                      )}
+                      {!serviceEnabled && (
+                        <div className="mt-3">
+                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Reopens at</label>
+                          <Input
+                            value={reopensAt}
+                            onChange={e => set('reopens_at', e.target.value)}
+                            placeholder="6:00 AM"
+                          />
+                          <p className="mt-1.5 text-xs text-slate-400">
+                            Exact time shown on the app & web closed screen (e.g. "6:00 AM"). Leave blank to hide it.
+                          </p>
                         </div>
                       )}
                     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Users, Eye, Ban, CheckCircle, Loader2, AlertCircle, Wallet, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
+import { StatCard } from '../../components/common/StatCard';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { money, formatDate } from '../../lib/utils';
@@ -132,16 +133,9 @@ export function CustomerListPage() {
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4 mb-5">
-        {[
-          { label: 'Total',   value: total,        color: 'text-slate-700', bg: 'bg-slate-50' },
-          { label: 'Active',  value: activeCount,  color: 'text-green-700', bg: 'bg-green-50' },
-          { label: 'Blocked', value: blockedCount, color: 'text-red-600',   bg: 'bg-red-50'   },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-2xl px-5 py-4`}>
-            <div className={`text-2xl font-bold ${s.color}`}>{loading ? '—' : s.value}</div>
-            <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
-          </div>
-        ))}
+        <StatCard label="Total" value={loading ? '—' : total} icon={Users} color="#475569" />
+        <StatCard label="Active" value={loading ? '—' : activeCount} icon={CheckCircle} color="#16A34A" />
+        <StatCard label="Blocked" value={loading ? '—' : blockedCount} icon={Ban} color="#DC2626" />
       </div>
 
       {/* Filters */}
