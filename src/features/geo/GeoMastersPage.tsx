@@ -527,16 +527,8 @@ function StoresTab() {
                       <button onClick={() => toggle(s)} className={iconBtnClass}>
                         {s.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
                       </button>
-<<<<<<< HEAD
                       <button onClick={() => remove(s.id)} disabled={deleting === s.id}
                         className="p-1.5 rounded hover:bg-red-50 text-red-400">
-=======
-                      <button
-                        onClick={() => remove(s.id)}
-                        disabled={deleting === s.id}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-500 transition-colors"
-                      >
->>>>>>> 8177f72eb993a97fa6078509725d846ad48fee8f
                         {deleting === s.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                       </button>
                     </div>
@@ -549,36 +541,17 @@ function StoresTab() {
       )}
 
       {modal !== null && (
-<<<<<<< HEAD
         <Modal title={modal === 'add' ? 'Add Store' : 'Edit Store'} onClose={() => setModal(null)}>
           {error && <p className="text-red-500 text-sm mb-3 flex items-center gap-1"><AlertCircle size={13} />{error}</p>}
           <div className="space-y-3">
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">Store Name *</label>
               <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sector-15 Noida" />
-=======
-        <Modal title={modal === 'add' ? 'Add Store' : 'Edit Store'} onClose={() => setModal(null)} wide>
-          {error && <p className="text-red-600 text-sm mb-4 flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-lg px-3 py-2"><AlertCircle size={13} />{error}</p>}
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Store Name *</label>
-                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sector-15 Faridabad" />
-              </div>
-              <div>
-                <label className={labelClass}>City *</label>
-                <select value={form.cityId} onChange={e => setForm(f => ({ ...f, cityId: e.target.value }))} className={`w-full ${selectClass}`}>
-                  <option value="">Select city...</option>
-                  {cities.map(c => <option key={c.id} value={c.id}>{c.name}{c.state ? ` (${c.state.name})` : ''}</option>)}
-                </select>
-              </div>
->>>>>>> 8177f72eb993a97fa6078509725d846ad48fee8f
             </div>
             <div>
               <label className={labelClass}>Address *</label>
               <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Full address" />
             </div>
-<<<<<<< HEAD
             <div>
               <label className="text-xs font-medium text-gray-500 mb-1 block">City *</label>
               <select value={form.cityId} onChange={e => setForm(f => ({ ...f, cityId: e.target.value }))}
@@ -588,9 +561,6 @@ function StoresTab() {
               </select>
             </div>
             <div className="grid grid-cols-2 gap-3">
-=======
-            <div className="grid grid-cols-3 gap-4">
->>>>>>> 8177f72eb993a97fa6078509725d846ad48fee8f
               <div>
                 <label className={labelClass}>Latitude *</label>
                 <Input type="number" step="any" value={form.lat} onChange={e => setForm(f => ({ ...f, lat: e.target.value }))} placeholder="28.4089" />
