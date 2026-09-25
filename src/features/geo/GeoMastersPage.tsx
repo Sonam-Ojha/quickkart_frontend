@@ -9,7 +9,7 @@ import api from '../../lib/api';
 interface Country { id: number; name: string; code: string; isActive: boolean }
 interface State   { id: number; countryId: number; name: string; code: string; isActive: boolean; country?: Country }
 interface City    { id: number; stateId: number; name: string; isActive: boolean; state?: State & { country?: Country } }
-interface DarkStore {
+interface GeoStore {
   id: number; name: string; address: string; city: string;
   cityId: number | null; lat: number | null; lng: number | null;
   radius: number; isActive: boolean;
@@ -412,13 +412,13 @@ interface StoreForm {
 const blankStore = (): StoreForm => ({ name: '', address: '', cityId: '', lat: '', lng: '', radius: '5', isActive: true });
 
 function StoresTab() {
-  const [rows, setRows]       = useState<DarkStore[]>([]);
-  const [cities, setCities]   = useState<City[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [modal, setModal]     = useState<null | 'add' | DarkStore>(null);
-  const [form, setForm]       = useState<StoreForm>(blankStore());
-  const [saving, setSaving]   = useState(false);
-  const [error, setError]     = useState('');
+  const [rows, setRows]         = useState<GeoStore[]>([]);
+  const [cities, setCities]     = useState<City[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [modal, setModal]       = useState<null | 'add' | GeoStore>(null);
+  const [form, setForm]         = useState<StoreForm>(blankStore());
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState('');
   const [deleting, setDeleting] = useState<number | null>(null);
 
   const load = () => {
@@ -437,12 +437,12 @@ function StoresTab() {
     setForm({ ...blankStore(), cityId: cities[0]?.id?.toString() ?? '' });
     setError(''); setModal('add');
   };
-  const openEdit = (s: DarkStore) => {
+  const openEdit = (s: GeoStore) => {
     setForm({
       name: s.name, address: s.address,
       cityId: s.cityId ? String(s.cityId) : '',
-      lat: s.lat != null ? String(s.lat) : '',
-      lng: s.lng != null ? String(s.lng) : '',
+      lat:    s.lat  != null ? String(s.lat)  : '',
+      lng:    s.lng  != null ? String(s.lng)  : '',
       radius: String(s.radius ?? 5),
       isActive: s.isActive,
     });
@@ -451,7 +451,7 @@ function StoresTab() {
 
   const save = async () => {
     if (!form.name || !form.address) { setError('Name and address are required'); return; }
-    if (!form.lat || !form.lng)      { setError('Latitude and longitude are required'); return; }
+    if (!form.lat  || !form.lng)     { setError('Latitude and longitude are required'); return; }
     if (!form.cityId)                { setError('Please select a city'); return; }
     setSaving(true); setError('');
     const payload = {
@@ -463,16 +463,13 @@ function StoresTab() {
     };
     try {
       if (modal === 'add') await api.post('/api/admin/dark-stores', payload);
-      else                 await api.put(`/api/admin/dark-stores/${(modal as DarkStore).id}`, payload);
+      else                 await api.put(`/api/admin/dark-stores/${(modal as GeoStore).id}`, payload);
       setModal(null); load();
     } catch (e: any) { setError(e?.response?.data?.message ?? 'Save failed'); }
     finally { setSaving(false); }
   };
 
-  const toggle = async (s: DarkStore) => {
-    await api.patch(`/api/admin/dark-stores/${s.id}/toggle`);
-    load();
-  };
+  const toggle = async (s: GeoStore) => { await api.patch(`/api/admin/dark-stores/${s.id}/toggle`); load(); };
 
   const remove = async (id: number) => {
     setDeleting(id);
@@ -481,7 +478,7 @@ function StoresTab() {
     finally { setDeleting(null); }
   };
 
-  const cityLabel = (s: DarkStore) =>
+  const cityLabel = (s: GeoStore) =>
     s.cityMaster
       ? `${s.cityMaster.name}${s.cityMaster.state ? ', ' + s.cityMaster.state.name : ''}`
       : s.city || '—';
@@ -530,11 +527,8 @@ function StoresTab() {
                       <button onClick={() => toggle(s)} className={iconBtnClass}>
                         {s.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
                       </button>
-                      <button
-                        onClick={() => remove(s.id)}
-                        disabled={deleting === s.id}
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 hover:text-red-500 transition-colors"
-                      >
+                      <button onClick={() => remove(s.id)} disabled={deleting === s.id}
+                        className="p-1.5 rounded hover:bg-red-50 text-red-400">
                         {deleting === s.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
                       </button>
                     </div>
@@ -547,27 +541,26 @@ function StoresTab() {
       )}
 
       {modal !== null && (
-        <Modal title={modal === 'add' ? 'Add Store' : 'Edit Store'} onClose={() => setModal(null)} wide>
-          {error && <p className="text-red-600 text-sm mb-4 flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-lg px-3 py-2"><AlertCircle size={13} />{error}</p>}
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Store Name *</label>
-                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sector-15 Faridabad" />
-              </div>
-              <div>
-                <label className={labelClass}>City *</label>
-                <select value={form.cityId} onChange={e => setForm(f => ({ ...f, cityId: e.target.value }))} className={`w-full ${selectClass}`}>
-                  <option value="">Select city...</option>
-                  {cities.map(c => <option key={c.id} value={c.id}>{c.name}{c.state ? ` (${c.state.name})` : ''}</option>)}
-                </select>
-              </div>
+        <Modal title={modal === 'add' ? 'Add Store' : 'Edit Store'} onClose={() => setModal(null)}>
+          {error && <p className="text-red-500 text-sm mb-3 flex items-center gap-1"><AlertCircle size={13} />{error}</p>}
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">Store Name *</label>
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Sector-15 Noida" />
             </div>
             <div>
               <label className={labelClass}>Address *</label>
               <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Full address" />
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs font-medium text-gray-500 mb-1 block">City *</label>
+              <select value={form.cityId} onChange={e => setForm(f => ({ ...f, cityId: e.target.value }))}
+                className="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="">Select city...</option>
+                {cities.map(c => <option key={c.id} value={c.id}>{c.name}{c.state ? ` (${c.state.name})` : ''}</option>)}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={labelClass}>Latitude *</label>
                 <Input type="number" step="any" value={form.lat} onChange={e => setForm(f => ({ ...f, lat: e.target.value }))} placeholder="28.4089" />

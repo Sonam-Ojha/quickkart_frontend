@@ -110,4 +110,17 @@ export const catalogApi = {
 
   bulkDeleteProducts: (ids: number[]) =>
     api.delete<{ deleted: number }>('/api/admin/catalog/products/bulk', { data: { ids } }).then(r => r.data),
+
+  getStoreVisibility: (productId: number) =>
+    api.get<{ visibility: StoreVisibilityItem[] }>(`/api/admin/catalog/products/${productId}/store-visibility`).then(r => r.data.visibility),
+
+  setStoreVisibility: (productId: number, visibility: StoreVisibilityItem[]) =>
+    api.put(`/api/admin/catalog/products/${productId}/store-visibility`, { visibility }).then(r => r.data),
 };
+
+export interface StoreVisibilityItem {
+  storeId: number;
+  storeName: string;
+  cityId: number | null;
+  isEnabled: boolean;
+}

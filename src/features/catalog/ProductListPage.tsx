@@ -2,14 +2,16 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import {
   Plus, Search, Package, Edit2, Trash2, Loader2, AlertCircle, X,
-  FileSpreadsheet, Upload, Download, PlusCircle, CheckCircle2,
+  FileSpreadsheet, Upload, Download, PlusCircle, CheckCircle2, Eye,
+  Globe, MapPin, Building2, Store,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { money } from '../../lib/utils';
 import { usePermission } from '../../hooks/usePermission';
-import { catalogApi, Product, ProductPayload, Category } from './api';
+import { catalogApi, Product, ProductPayload, Category, StoreVisibilityItem } from './api';
+import api from '../../lib/api';
 import ImageUploadField from '../../components/common/ImageUploadField';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -713,6 +715,173 @@ function DeleteConfirm({ name, onConfirm, onClose, loading }: {
   );
 }
 
+// ── Store Visibility Modal ────────────────────────────────────────────────────
+
+interface GeoCity  { id: number; name: string; stateId: number; state?: { id: number; name: string; country?: { id: number; name: string } } }
+
+function StoreVisibilityModal({ product, onClose }: { product: Product; onClose: () => void }) {
+  const [visibility, setVisibility] = useState<StoreVisibilityItem[]>([]);
+  const [cities, setCities]         = useState<GeoCity[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [saving, setSaving]         = useState(false);
+  const [error, setError]           = useState('');
+
+  // Filter state
+  const [filterCountry, setFilterCountry] = useState('');
+  const [filterState,   setFilterState]   = useState('');
+  const [filterCity,    setFilterCity]    = useState('');
+
+  useEffect(() => {
+    Promise.all([
+      catalogApi.getStoreVisibility(product.id),
+      api.get('/api/admin/geo/cities').then(r => r.data.cities as GeoCity[]),
+    ]).then(([vis, c]) => {
+      setVisibility(vis);
+      setCities(c);
+    }).catch(() => setError('Failed to load')).finally(() => setLoading(false));
+  }, [product.id]);
+
+  // Derive country/state lists from cities
+  const countries = Array.from(new Map(
+    cities.flatMap(c => c.state?.country ? [[c.state.country.id, c.state.country]] : [])
+  ).values());
+  const states = Array.from(new Map(
+    cities
+      .filter(c => !filterCountry || c.state?.country?.id === Number(filterCountry))
+      .flatMap(c => c.state ? [[c.state.id, c.state]] : [])
+  ).values());
+  const filteredCities = cities.filter(c => {
+    if (filterState   && c.stateId !== Number(filterState))              return false;
+    if (filterCountry && c.state?.country?.id !== Number(filterCountry)) return false;
+    return true;
+  });
+
+  // Filter visibility by selected city
+  const visibleItems = filterCity
+    ? visibility.filter(v => v.cityId === Number(filterCity))
+    : filterState
+      ? visibility.filter(v => filteredCities.some(c => c.id === v.cityId))
+      : filterCountry
+        ? visibility.filter(v => filteredCities.some(c => c.id === v.cityId))
+        : visibility;
+
+  const toggle = (storeId: number) => {
+    setVisibility(prev => prev.map(v => v.storeId === storeId ? { ...v, isEnabled: !v.isEnabled } : v));
+  };
+
+  const toggleAll = (enabled: boolean) => {
+    const ids = new Set(visibleItems.map(v => v.storeId));
+    setVisibility(prev => prev.map(v => ids.has(v.storeId) ? { ...v, isEnabled: enabled } : v));
+  };
+
+  const save = async () => {
+    setSaving(true); setError('');
+    try {
+      await catalogApi.setStoreVisibility(product.id, visibility);
+      onClose();
+    } catch { setError('Save failed'); }
+    finally { setSaving(false); }
+  };
+
+  const enabledCount = visibleItems.filter(v => v.isEnabled).length;
+
+  return (
+    <Backdrop onClose={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl flex flex-col max-h-[85vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+          <div>
+            <h3 className="font-semibold text-slate-800">Store Visibility</h3>
+            <p className="text-xs text-slate-400 mt-0.5 truncate max-w-xs">{product.name}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
+        </div>
+
+        {/* Filters */}
+        <div className="px-5 pt-4 pb-3 border-b border-slate-50 shrink-0">
+          <p className="text-xs font-medium text-slate-500 mb-2">Filter by location</p>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="text-[10px] text-slate-400 flex items-center gap-1 mb-1"><Globe size={10} />Country</label>
+              <select value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setFilterState(''); setFilterCity(''); }}
+                className="w-full border rounded-lg px-2 py-1.5 text-xs text-gray-700 bg-white">
+                <option value="">All</option>
+                {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 flex items-center gap-1 mb-1"><MapPin size={10} />State</label>
+              <select value={filterState} onChange={e => { setFilterState(e.target.value); setFilterCity(''); }}
+                className="w-full border rounded-lg px-2 py-1.5 text-xs text-gray-700 bg-white">
+                <option value="">All</option>
+                {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] text-slate-400 flex items-center gap-1 mb-1"><Building2 size={10} />City</label>
+              <select value={filterCity} onChange={e => setFilterCity(e.target.value)}
+                className="w-full border rounded-lg px-2 py-1.5 text-xs text-gray-700 bg-white">
+                <option value="">All</option>
+                {filteredCities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Store List */}
+        <div className="flex-1 overflow-y-auto px-5 py-3">
+          {loading ? (
+            <div className="flex justify-center py-10"><Loader2 className="animate-spin text-slate-300" /></div>
+          ) : error ? (
+            <p className="text-sm text-red-500 text-center py-8">{error}</p>
+          ) : visibleItems.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-8">No stores match the filter</p>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-slate-500">
+                  <span className="font-semibold text-slate-700">{enabledCount}</span> / {visibleItems.length} enabled
+                </span>
+                <div className="flex gap-2">
+                  <button onClick={() => toggleAll(true)}  className="text-xs text-green-600 hover:underline">Enable all</button>
+                  <span className="text-slate-300">·</span>
+                  <button onClick={() => toggleAll(false)} className="text-xs text-red-500 hover:underline">Disable all</button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {visibleItems.map(v => (
+                  <div key={v.storeId} className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${v.isEnabled ? 'border-green-100 bg-green-50/40' : 'border-slate-100 bg-slate-50/50'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${v.isEnabled ? 'bg-green-100' : 'bg-slate-100'}`}>
+                        <Store size={13} className={v.isEnabled ? 'text-green-600' : 'text-slate-400'} />
+                      </div>
+                      <span className="text-sm font-medium text-slate-700">{v.storeName}</span>
+                    </div>
+                    <button
+                      onClick={() => toggle(v.storeId)}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${v.isEnabled ? 'bg-green-500' : 'bg-slate-300'}`}
+                    >
+                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${v.isEnabled ? 'left-5' : 'left-0.5'}`} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-slate-100 shrink-0 flex gap-3">
+          <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
+          <Button className="flex-1" onClick={save} disabled={saving || loading}>
+            {saving ? <Loader2 size={14} className="animate-spin mr-1" /> : null} Save
+          </Button>
+        </div>
+      </div>
+    </Backdrop>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 type ModalState =
@@ -736,6 +905,7 @@ export function ProductListPage() {
   const [modal, setModal] = useState<ModalState>({ type: 'none' });
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [visibilityTarget, setVisibilityTarget] = useState<Product | null>(null);
 
   const loadCategories = useCallback(async () => {
     try { setCategories(await catalogApi.getCategories()); } catch {}
@@ -920,6 +1090,9 @@ export function ProductListPage() {
                     <Button variant="outline" size="sm" className="flex-1" onClick={() => setModal({ type: 'single', product })}>
                       <Edit2 size={12} /> Edit
                     </Button>
+                    <Button variant="ghost" size="icon" className="text-blue-500 hover:bg-blue-50" title="Store Visibility" onClick={() => setVisibilityTarget(product)}>
+                      <Eye size={14} />
+                    </Button>
                     <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50" onClick={() => setDeleteTarget(product)}>
                       <Trash2 size={14} />
                     </Button>
@@ -947,6 +1120,7 @@ export function ProductListPage() {
       {modal.type === 'excel'  && <ExcelImportModal categories={categories} onClose={closeModal} onSave={afterSave} />}
 
       {deleteTarget && <DeleteConfirm name={deleteTarget.name} onConfirm={handleDelete} onClose={() => setDeleteTarget(null)} loading={deleting} />}
+      {visibilityTarget && <StoreVisibilityModal product={visibilityTarget} onClose={() => setVisibilityTarget(null)} />}
     </div>
   );
 }
