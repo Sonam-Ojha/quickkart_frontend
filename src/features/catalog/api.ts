@@ -2,6 +2,9 @@ import api from '../../lib/api';
 
 // ── Types ─────────────────────────────────────────────────
 
+// Which app tab a category belongs to: 'grocery' → Category tab, 'fresh' → Fresh tab
+export type CategorySection = 'grocery' | 'fresh';
+
 export interface Category {
   id: number;
   name: string;
@@ -12,6 +15,7 @@ export interface Category {
   isActive: boolean;
   showInFilter: boolean;
   showInGrid: boolean;
+  section: CategorySection;
 }
 
 export interface CategoryPayload {
@@ -23,6 +27,7 @@ export interface CategoryPayload {
   isActive?: boolean;
   showInFilter?: boolean;
   showInGrid?: boolean;
+  section?: CategorySection;
 }
 
 export interface Product {
@@ -62,8 +67,10 @@ export interface ProductsResponse {
 
 export const catalogApi = {
   // Categories
-  getCategories: () =>
-    api.get<{ categories: Category[] }>('/api/admin/catalog/categories').then(r => r.data.categories),
+  // section omitted → every category (e.g. product category dropdowns)
+  getCategories: (section?: CategorySection) =>
+    api.get<{ categories: Category[] }>('/api/admin/catalog/categories', { params: section ? { section } : undefined })
+      .then(r => r.data.categories),
 
   createCategory: (data: CategoryPayload) =>
     api.post<{ category: Category }>('/api/admin/catalog/categories', data).then(r => r.data.category),

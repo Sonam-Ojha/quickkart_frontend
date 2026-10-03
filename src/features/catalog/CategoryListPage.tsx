@@ -9,7 +9,7 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { usePermission } from '../../hooks/usePermission';
-import { catalogApi, Category, CategoryPayload } from './api';
+import { catalogApi, Category, CategoryPayload, CategorySection } from './api';
 import ImageUploadField from '../../components/common/ImageUploadField';
 
 // ── Shared tiny components ────────────────────────────────────────────────────
@@ -87,9 +87,10 @@ function DeleteConfirm({ name, onConfirm, onClose, loading }: {
 // mode: 'main' → no parent selector   |   mode: 'sub' → parent selector required
 
 function CategoryModal({
-  mode, category, mainCategories, onClose, onSave,
+  mode, section, category, mainCategories, onClose, onSave,
 }: {
   mode: 'main' | 'sub';
+  section: CategorySection;
   category?: Category | null;
   mainCategories: Category[];
   onClose: () => void;
@@ -117,6 +118,7 @@ function CategoryModal({
       const payload = {
         ...form,
         parentId: mode === 'main' ? null : form.parentId,
+        section,
       };
       category
         ? await catalogApi.updateCategory(category.id, payload)
@@ -146,7 +148,9 @@ function CategoryModal({
                   {isEdit ? 'Edit' : 'Add'} {isMain ? 'Main' : 'Sub'} Category
                 </h2>
                 <p className="text-sm text-slate-500 mt-0.5">
-                  {isMain ? 'Top-level category shown across the app (e.g. Atta, Dairy)' : 'Nested inside a main category (e.g. Besan, Maida)'}
+                  {section === 'fresh'
+                    ? (isMain ? 'Shown in the left rail of the app\'s Fresh tab (e.g. Sabji, Fruits)' : 'Nested inside a Fresh category (e.g. Leafy Greens, Exotic)')
+                    : (isMain ? 'Top-level category shown in the app\'s Category tab (e.g. Atta, Dairy)' : 'Nested inside a main category (e.g. Besan, Maida)')}
                 </p>
               </div>
             </div>
@@ -193,7 +197,7 @@ function CategoryModal({
                     <Input
                       value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder={isMain ? 'e.g. Grocery' : 'e.g. Besan'}
+                      placeholder={section === 'fresh' ? (isMain ? 'e.g. Sabji' : 'e.g. Leafy Greens') : (isMain ? 'e.g. Grocery' : 'e.g. Besan')}
                       className="h-11 bg-white"
                       autoFocus
                     />
@@ -519,8 +523,14 @@ type ModalState =
   | { type: 'none' }
   | { type: 'form'; mode: 'main' | 'sub'; category?: Category | null };
 
-export function CategoryListPage() {
+const SECTION_COPY: Record<CategorySection, { title: string; example: string }> = {
+  grocery: { title: 'Categories',       example: 'First add Main Category (e.g. Atta), then Sub Categories under it (e.g. Besan, Maida), then assign products to sub categories.' },
+  fresh:   { title: 'Fresh Categories', example: 'These power the app\'s Fresh tab. Add Main Categories (e.g. Sabji, Fruits) — each becomes a rail item — then optional Sub Categories, then assign products.' },
+};
+
+export function CategoryListPage({ section = 'grocery' }: { section?: CategorySection }) {
   const { can } = usePermission();
+  const copy = SECTION_COPY[section];
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [loading, setLoading]  = useState(true);
   const [error, setError]      = useState('');
@@ -541,10 +551,10 @@ export function CategoryListPage() {
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
-    try { setAllCategories(await catalogApi.getCategories()); }
+    try { setAllCategories(await catalogApi.getCategories(section)); }
     catch (err: any) { setError(err?.response?.data?.message ?? 'Failed to load categories'); }
     finally { setLoading(false); }
-  }, []);
+  }, [section]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -595,9 +605,9 @@ export function CategoryListPage() {
   return (
     <div>
       <PageHeader
-        title="Categories"
+        title={copy.title}
         subtitle={loading ? 'Loading...' : `${mainCategories.length} main · ${subCategories.length} sub`}
-        breadcrumbs={[{ label: 'Home' }, { label: 'Catalog' }, { label: 'Categories' }]}
+        breadcrumbs={[{ label: 'Home' }, { label: 'Catalog' }, { label: copy.title }]}
         action={
           can('catalog.edit') && (
             <div className="flex items-center gap-2">
@@ -634,7 +644,7 @@ export function CategoryListPage() {
           <ChevronRight size={12} className="inline mx-1" />
           <span className="font-medium">Products</span>
           <span className="text-blue-600 ml-2">
-            — First add Main Category (e.g. Atta), then Sub Categories under it (e.g. Besan, Maida), then assign products to sub categories.
+            — {copy.example}
           </span>
         </div>
       </div>
@@ -699,6 +709,7 @@ export function CategoryListPage() {
       {modal.type === 'form' && (
         <CategoryModal
           mode={modal.mode}
+          section={section}
           category={modal.category}
           mainCategories={mainCategories}
           onClose={closeModal}

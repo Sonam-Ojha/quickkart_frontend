@@ -15,6 +15,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Catalog', href: '#', icon: 'Package', permission: 'catalog.view',
     children: [
       { label: 'Categories', href: '/catalog/categories', icon: 'Tag' },
+      { label: 'Fresh',      href: '/catalog/fresh',      icon: 'Leaf' },
       { label: 'Products',   href: '/catalog/products',   icon: 'Box' },
       { label: 'Inventory',  href: '/catalog/inventory',  icon: 'Warehouse' },
     ]

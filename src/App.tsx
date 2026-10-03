@@ -55,6 +55,7 @@ export default function App() {
 
               <Route element={<ProtectedRoute permission="catalog.view" />}>
                 <Route path="catalog/categories" element={<CategoryListPage />} />
+                <Route path="catalog/fresh" element={<CategoryListPage key="fresh" section="fresh" />} />
                 <Route path="catalog/products" element={<ProductListPage />} />
                 <Route path="catalog/inventory" element={<InventoryPage />} />
               </Route>
