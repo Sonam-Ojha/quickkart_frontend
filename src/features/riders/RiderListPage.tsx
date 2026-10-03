@@ -45,9 +45,9 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
           <h2 className="font-semibold text-lg text-slate-800">{rider ? 'Edit Rider' : 'Add Rider'}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-5">
           {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Name *</label>
               <Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Rider name" />
@@ -65,7 +65,7 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
               {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Vehicle Type</label>
               <select value={form.vehicleType} onChange={e => set('vehicleType', e.target.value as any)}
@@ -93,7 +93,7 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
               required={!rider}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Rating</label>
               <Input type="number" step="0.1" min="1" max="5" value={form.rating ?? 5} onChange={e => set('rating', Number(e.target.value))} />
@@ -193,7 +193,7 @@ export function RiderListPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-48 max-w-xs">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search riders..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
@@ -202,7 +202,7 @@ export function RiderListPage() {
           <option value="">All Stores</option>
           {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {['all', 'pending_verification', 'active', 'inactive', 'suspended'].map(s => (
             <button key={s} onClick={() => setStatusFilter(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${statusFilter === s ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
@@ -220,9 +220,9 @@ export function RiderListPage() {
           <p className="font-medium">No riders found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {riders.map(rider => (
-            <div key={rider.id} className="bg-white rounded-2xl border border-slate-100 p-5 hover:border-slate-200 hover:shadow-sm transition-all group">
+            <div key={rider.id} className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 hover:border-slate-200 hover:shadow-sm transition-all group">
               <div className="flex items-start gap-3 mb-4">
                 <div className="relative shrink-0">
                   <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#EA580C] to-[#0F766E] flex items-center justify-center text-white font-bold">
@@ -293,7 +293,7 @@ export function RiderListPage() {
               )}
 
               {can('riders.edit') && (
-                <div className="flex gap-2 pt-3 border-t border-slate-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-2 pt-3 border-t border-slate-50 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity">
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => setKycRider(rider)}>
                     <ShieldCheck size={12} /> KYC
                   </Button>

@@ -26,19 +26,19 @@ const STATUS_COLORS: Record<string, string> = {
 function KpiCard({ label, value, icon: Icon, color }: { label: string; value: string; icon: React.ElementType; color: string }) {
   return (
     <div
-      className="rounded-2xl p-5 border transition-shadow hover:shadow-sm"
+      className="rounded-2xl p-4 sm:p-5 border transition-shadow hover:shadow-sm min-w-0"
       style={{ background: `linear-gradient(155deg, ${color}17, ${color}08)`, borderColor: color + '2A' }}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: color + '22' }}>
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: color + '22' }}>
           <Icon size={18} style={{ color }} />
         </div>
         <span className="flex items-center gap-1 text-xs font-semibold text-green-600">
           <ArrowUp size={12} /> Live
         </span>
       </div>
-      <div className="text-2xl font-bold text-slate-900 mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{value}</div>
-      <div className="text-sm font-medium text-slate-600">{label}</div>
+      <div className="text-xl sm:text-2xl font-bold text-slate-900 mb-1 truncate" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{value}</div>
+      <div className="text-xs sm:text-sm font-medium text-slate-600 truncate">{label}</div>
     </div>
   );
 }
@@ -67,23 +67,23 @@ export function DashboardPage() {
   const avgDelivery = 18;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h1 className="text-lg sm:text-xl font-bold text-slate-900" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {userName} 👋
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">Here's what's happening today</p>
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-2">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+        <div className="self-start sm:self-auto flex items-center gap-2 text-xs sm:text-sm text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-1.5 sm:py-2 whitespace-nowrap">
+          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
           Live · Today, {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
         </div>
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard label="Orders Today"   value={String(kpis?.todayOrders ?? 0)}       icon={ShoppingBag} color="#EA580C" />
         <KpiCard label="Revenue Today"  value={money(kpis?.todayRevenue ?? 0)}        icon={TrendingUp}  color="#0F766E" />
         <KpiCard label="Total Customers" value={String(kpis?.totalCustomers ?? 0)}    icon={Package}     color="#8B5CF6" />
@@ -91,8 +91,8 @@ export function DashboardPage() {
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-100">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 min-w-0">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="font-semibold text-slate-900">Orders this week</h3>
@@ -103,17 +103,17 @@ export function DashboardPage() {
             </span>
           </div>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={data?.weeklyChart ?? []}>
+            <LineChart data={data?.weeklyChart ?? []} margin={{ top: 5, right: 8, left: -8, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
               <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
+              <YAxis width={32} allowDecimals={false} tick={{ fontSize: 11, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={{ borderRadius: '10px', border: '1px solid #E2E8F0', fontSize: '12px' }} />
               <Line type="monotone" dataKey="orders" stroke="#EA580C" strokeWidth={2.5} dot={{ fill: '#EA580C', r: 4 }} activeDot={{ r: 6 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-slate-100">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 min-w-0">
           <h3 className="font-semibold text-slate-900 mb-1">Order Status</h3>
           <p className="text-xs text-slate-400 mb-4">Today's distribution</p>
           {pieData.length === 0 ? (
@@ -144,9 +144,9 @@ export function DashboardPage() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-100 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-100 overflow-hidden min-w-0">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-50">
             <h3 className="font-semibold text-slate-900">Recent Orders</h3>
             <span className="text-xs text-slate-400">{data?.recentOrders.length ?? 0} latest</span>
           </div>
@@ -155,7 +155,7 @@ export function DashboardPage() {
           ) : (
             <div className="divide-y divide-slate-50">
               {data.recentOrders.map(order => (
-                <div key={order.id} className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50/50 transition-colors">
+                <div key={order.id} className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3 hover:bg-slate-50/50 transition-colors">
                   <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
                     <ShoppingBag size={14} className="text-[#EA580C]" />
                   </div>
@@ -175,8 +175,8 @@ export function DashboardPage() {
           )}
         </div>
 
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 overflow-hidden min-w-0">
+          <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-50">
             <h3 className="font-semibold text-slate-900">Top Products</h3>
             <Package size={16} className="text-slate-400" />
           </div>
@@ -185,8 +185,8 @@ export function DashboardPage() {
           ) : (
             <div className="divide-y divide-slate-50">
               {data.topProducts.map((p, i) => (
-                <div key={p.id} className="flex items-center gap-3 px-5 py-3">
-                  <span className="w-5 text-xs font-bold text-slate-400">#{i + 1}</span>
+                <div key={p.id} className="flex items-center gap-3 px-4 sm:px-5 py-3">
+                  <span className="w-6 shrink-0 text-xs font-bold text-slate-400">#{i + 1}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-slate-800 truncate">{p.name}</div>
                     <div className="text-xs text-slate-400">{p.totalQty} orders</div>

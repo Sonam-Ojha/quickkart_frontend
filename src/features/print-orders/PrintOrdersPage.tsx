@@ -349,10 +349,10 @@ export function PrintOrdersPage() {
       )}
 
       {/* Status filter */}
-      <div className="flex gap-2 flex-wrap mb-5">
+      <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 sm:flex-wrap">
         {STATUS_FILTER.map(s => (
           <button key={s} onClick={() => setStatus(s)}
-            className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize', status === s ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200')}>
+            className={cn('shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize', status === s ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200')}>
             {s === 'all' ? 'All' : STATUS_LABEL[s as PrintOrder['status']]}
           </button>
         ))}
@@ -361,64 +361,66 @@ export function PrintOrdersPage() {
       {error && <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
 
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Order</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Specs</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Time</th>
-              <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading...
-              </td></tr>
-            ) : orders.length === 0 ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <Printer size={36} className="mx-auto mb-3 text-slate-200" />
-                <p className="font-medium">No print orders yet</p>
-              </td></tr>
-            ) : orders.map(order => (
-              <tr key={order.id} className="hover:bg-slate-50/50 cursor-pointer transition-colors" onClick={() => setSelected(order)}>
-                <td className="px-5 py-3.5 font-semibold text-slate-800">#{order.id}</td>
-                <td className="px-5 py-3.5">
-                  <div className="font-medium text-slate-700">{order.customer?.name ?? '—'}</div>
-                  <div className="text-xs text-slate-400">{order.customer?.mobile}</div>
-                </td>
-                <td className="px-5 py-3.5 hidden md:table-cell text-slate-500 text-xs">
-                  {order.color === 'bw' ? 'B&W' : 'Color'} · {order.paper} · {order.sides === 'single' ? '1-side' : '2-side'} · {order.copies}x · {order.totalPages}pg · {getFiles(order).length} file{getFiles(order).length !== 1 ? 's' : ''}
-                </td>
-                <td className="px-5 py-3.5 font-semibold text-slate-800">{money(order.grandTotal)}</td>
-                <td className="px-5 py-3.5">
-                  <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full border', STATUS_STYLES[order.status])}>
-                    {STATUS_LABEL[order.status]}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{formatDateTime(order.created_at)}</td>
-                <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
-                  <div className="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setViewOrder(order)}>
-                      <Eye size={13} /> View
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setSelected(order)}>
-                      <Info size={13} /> Details
-                    </Button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto" data-scroll>
+          <table className="[&_th]:whitespace-nowrap w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Order</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Specs</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Time</th>
+                <th className="text-right px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading...
+                </td></tr>
+              ) : orders.length === 0 ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <Printer size={36} className="mx-auto mb-3 text-slate-200" />
+                  <p className="font-medium">No print orders yet</p>
+                </td></tr>
+              ) : orders.map(order => (
+                <tr key={order.id} className="hover:bg-slate-50/50 cursor-pointer transition-colors" onClick={() => setSelected(order)}>
+                  <td className="px-3 sm:px-5 py-3.5 font-semibold text-slate-800">#{order.id}</td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <div className="font-medium text-slate-700">{order.customer?.name ?? '—'}</div>
+                    <div className="text-xs text-slate-400">{order.customer?.mobile}</div>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell text-slate-500 text-xs">
+                    {order.color === 'bw' ? 'B&W' : 'Color'} · {order.paper} · {order.sides === 'single' ? '1-side' : '2-side'} · {order.copies}x · {order.totalPages}pg · {getFiles(order).length} file{getFiles(order).length !== 1 ? 's' : ''}
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 font-semibold text-slate-800">{money(order.grandTotal)}</td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full border', STATUS_STYLES[order.status])}>
+                      {STATUS_LABEL[order.status]}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{formatDateTime(order.created_at)}</td>
+                  <td className="px-3 sm:px-5 py-3.5" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setViewOrder(order)}>
+                        <Eye size={13} /> View
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setSelected(order)}>
+                        <Info size={13} /> Details
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {pages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/30">
+          <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/30">
             <span className="text-xs text-slate-400">Page {page} of {pages} · {total} orders</span>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-wrap">
               <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 1}><ChevronLeft size={14} /></Button>
               <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === pages}><ChevronRight size={14} /></Button>
             </div>

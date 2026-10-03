@@ -137,9 +137,9 @@ function CategoryModal({
       <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
 
         {/* Coloured header strip */}
-        <div className={`px-6 sm:px-8 pt-6 pb-6 shrink-0 ${isMain ? 'bg-gradient-to-r from-orange-50 to-amber-50' : 'bg-gradient-to-r from-indigo-50 to-violet-50'}`}>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
+        <div className={`px-4 sm:px-8 pt-5 sm:pt-6 pb-5 sm:pb-6 shrink-0 ${isMain ? 'bg-gradient-to-r from-orange-50 to-amber-50' : 'bg-gradient-to-r from-indigo-50 to-violet-50'}`}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isMain ? 'bg-orange-100' : 'bg-indigo-100'}`}>
                 {isMain ? <FolderOpen size={24} className="text-orange-600" /> : <Folder size={24} className="text-indigo-600" />}
               </div>
@@ -161,12 +161,12 @@ function CategoryModal({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="p-6 sm:p-8 space-y-5 overflow-y-auto">
+          <div className="p-4 sm:p-8 space-y-5 overflow-y-auto">
             {error && <ErrorBox msg={error} />}
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
               {/* Left column — core fields */}
-              <div className="lg:col-span-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-5">
+              <div className="lg:col-span-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5 space-y-5">
                 <h3 className="text-sm font-semibold text-slate-700">Basic Details</h3>
 
                 {/* Parent selector — only for sub categories */}
@@ -252,7 +252,7 @@ function CategoryModal({
               </div>
 
               {/* Right column — image */}
-              <div className="lg:col-span-2 rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+              <div className="lg:col-span-2 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5">
                 <h3 className="text-sm font-semibold text-slate-700">Category Image</h3>
                 <p className="text-xs text-slate-400 mb-3">Optional — used as a fallback wherever the icon isn't shown</p>
                 <ImageUploadField
@@ -267,7 +267,7 @@ function CategoryModal({
             {/* Home screen visibility — only meaningful for main categories, since
                 only root categories render in either Home section */}
             {isMain && (
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5">
                 <div className="flex items-center gap-2 mb-1">
                   <Smartphone size={14} className="text-slate-500" />
                   <h3 className="text-sm font-semibold text-slate-700">Show On Home Screen</h3>
@@ -314,7 +314,7 @@ function CategoryModal({
           </div>
 
           {/* Buttons */}
-          <div className="flex items-center justify-between gap-3 px-6 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
             <p className="text-xs text-slate-400 hidden sm:block">Fields marked * are required</p>
             <div className="flex gap-3 ml-auto">
               <Button type="button" variant="outline" className="h-10 px-5" onClick={onClose}>
@@ -368,76 +368,78 @@ function CategoryTable({
   }
 
   return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="border-b border-slate-100 bg-slate-50/50">
-          <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Name</th>
-          {showParent && (
-            <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">
-              Main Category
-            </th>
-          )}
-          <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Sort</th>
-          <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-          {canEdit && <th className="px-5 py-3" />}
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-slate-50">
-        {rows.map(cat => (
-          <tr key={cat.id} className="hover:bg-slate-50/50 transition-colors">
-            <td className="px-5 py-3.5">
-              <div className="flex items-center gap-3">
-                <CategoryThumb imageUrl={cat.imageUrl} icon={cat.icon} name={cat.name} />
-                <span className="font-medium text-slate-800">{cat.name}</span>
-              </div>
-            </td>
+    <div className="overflow-x-auto" data-scroll>
+      <table className="[&_th]:whitespace-nowrap w-full text-sm">
+        <thead>
+          <tr className="border-b border-slate-100 bg-slate-50/50">
+            <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Name</th>
             {showParent && (
-              <td className="px-5 py-3.5 hidden md:table-cell">
-                <span className="text-slate-500 text-sm">
-                  {cat.parentId ? (parentMap[cat.parentId] ?? '—') : '—'}
-                </span>
-              </td>
+              <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">
+                Main Category
+              </th>
             )}
-            <td className="px-5 py-3.5 hidden md:table-cell">
-              <span className="text-slate-400">{cat.sortOrder}</span>
-            </td>
-            <td className="px-5 py-3.5">
-              <button
-                onClick={() => canEdit && onToggle(cat)}
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
-                  cat.isActive
-                    ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${cat.isActive ? 'bg-green-500' : 'bg-slate-400'}`} />
-                {cat.isActive ? 'Active' : 'Inactive'}
-              </button>
-            </td>
-            {canEdit && (
-              <td className="px-5 py-3.5">
-                <div className="flex gap-1 justify-end">
-                  <button
-                    onClick={() => onEdit(cat)}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                    title="Edit"
-                  >
-                    <Edit2 size={13} />
-                  </button>
-                  <button
-                    onClick={() => onDelete(cat)}
-                    className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+            <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Sort</th>
+            <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+            {canEdit && <th className="px-3 sm:px-5 py-3" />}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-50">
+          {rows.map(cat => (
+            <tr key={cat.id} className="hover:bg-slate-50/50 transition-colors">
+              <td className="px-3 sm:px-5 py-3.5">
+                <div className="flex items-center gap-3">
+                  <CategoryThumb imageUrl={cat.imageUrl} icon={cat.icon} name={cat.name} />
+                  <span className="font-medium text-slate-800">{cat.name}</span>
                 </div>
               </td>
-            )}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+              {showParent && (
+                <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
+                  <span className="text-slate-500 text-sm">
+                    {cat.parentId ? (parentMap[cat.parentId] ?? '—') : '—'}
+                  </span>
+                </td>
+              )}
+              <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
+                <span className="text-slate-400">{cat.sortOrder}</span>
+              </td>
+              <td className="px-3 sm:px-5 py-3.5">
+                <button
+                  onClick={() => canEdit && onToggle(cat)}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                    cat.isActive
+                      ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${cat.isActive ? 'bg-green-500' : 'bg-slate-400'}`} />
+                  {cat.isActive ? 'Active' : 'Inactive'}
+                </button>
+              </td>
+              {canEdit && (
+                <td className="px-3 sm:px-5 py-3.5">
+                  <div className="flex gap-1 justify-end">
+                    <button
+                      onClick={() => onEdit(cat)}
+                      className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                      title="Edit"
+                    >
+                      <Edit2 size={13} />
+                    </button>
+                    <button
+                      onClick={() => onDelete(cat)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -460,9 +462,9 @@ function FilterBar({
 }) {
   const hasFilter = search || status || parentId;
   return (
-    <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-slate-100 bg-slate-50/40">
+    <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-3 border-b border-slate-100 bg-slate-50/40">
       {/* Search */}
-      <div className="relative flex-1 min-w-[180px] max-w-xs">
+      <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[180px] sm:max-w-xs">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
         <input
           value={search}
@@ -610,7 +612,7 @@ export function CategoryListPage({ section = 'grocery' }: { section?: CategorySe
         breadcrumbs={[{ label: 'Home' }, { label: 'Catalog' }, { label: copy.title }]}
         action={
           can('catalog.edit') && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {activeTab === 'main' ? (
                 <Button size="sm" onClick={() => setModal({ type: 'form', mode: 'main', category: null })}>
                   <Plus size={14} /> Add Main Category
@@ -632,7 +634,7 @@ export function CategoryListPage({ section = 'grocery' }: { section?: CategorySe
       )}
 
       {/* ── Info banner explaining hierarchy ── */}
-      <div className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700 flex items-start gap-3">
+      <div className="mb-4 p-3 sm:p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs sm:text-sm text-blue-700 flex items-start gap-3">
         <div className="shrink-0 mt-0.5 text-blue-500">
           <FolderOpen size={16} />
         </div>
@@ -651,12 +653,12 @@ export function CategoryListPage({ section = 'grocery' }: { section?: CategorySe
 
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
         {/* Tab Bar */}
-        <div className="flex border-b border-slate-100 bg-slate-50/60">
+        <div className="flex border-b border-slate-100 bg-slate-50/60 overflow-x-auto">
           {tabs.map(({ id, label, Icon, count }) => (
             <button
               key={id}
               onClick={() => handleTabChange(id)}
-              className={`flex items-center gap-2 px-6 py-3.5 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex flex-1 sm:flex-none justify-center sm:justify-start items-center gap-2 px-3 sm:px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === id
                   ? 'border-[#EA580C] text-[#EA580C] bg-white'
                   : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100/60'

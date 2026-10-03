@@ -41,7 +41,7 @@ function SetStockModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <h2 className="font-semibold text-slate-800">{row ? 'Edit Stock' : 'Add Product to Store'}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
@@ -164,7 +164,7 @@ export function InventoryPage() {
             {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
-        <div className="flex-1 min-w-48 max-w-xs">
+        <div className="w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-xs">
           <label className="text-xs font-medium text-slate-600 mb-1 block">Search</label>
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -204,87 +204,89 @@ export function InventoryPage() {
             <p className="text-sm mt-1">Add products to this store using the button above</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Product</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Category</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Stock</th>
-                {can('catalog.edit') && <th className="px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-right">Actions</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {inventory.map(row => (
-                <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
-                        {row.product.imageUrl
-                          ? <img src={row.product.imageUrl} alt="" className="w-full h-full object-cover" />
-                          : <Package size={16} className="text-slate-300" />}
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800 text-sm">{row.product.name}</p>
-                        <p className="text-xs text-slate-400">{row.product.brand}{row.product.brand && row.product.unit ? ' · ' : ''}{row.product.unit}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5 hidden md:table-cell">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 font-medium">
-                      {row.product.category?.name ?? '—'}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-semibold text-sm ${row.stockQty === 0 ? 'text-red-500' : row.stockQty < LOW_STOCK_THRESHOLD ? 'text-amber-600' : 'text-slate-800'}`}>
-                        {row.stockQty}
-                      </span>
-                      {row.stockQty === 0 && (
-                        <span className="text-xs bg-red-50 text-red-500 px-1.5 py-0.5 rounded-full font-medium">Out of stock</span>
-                      )}
-                      {row.stockQty > 0 && row.stockQty < LOW_STOCK_THRESHOLD && (
-                        <span className="flex items-center gap-0.5 text-xs bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full font-medium">
-                          <AlertTriangle size={10} /> Low
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  {can('catalog.edit') && (
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => handleAdjust(row, -1)}
-                          disabled={adjusting === row.id || row.stockQty === 0}
-                          className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-500 disabled:opacity-40 transition-colors"
-                        >
-                          <Minus size={12} />
-                        </button>
-                        <button
-                          onClick={() => handleAdjust(row, 1)}
-                          disabled={adjusting === row.id}
-                          className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-500 disabled:opacity-40 transition-colors"
-                        >
-                          <Plus size={12} />
-                        </button>
-                        <button
-                          onClick={() => setModal({ open: true, row })}
-                          className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors ml-1"
-                        >
-                          <Edit2 size={12} />
-                        </button>
-                        <button
-                          onClick={() => handleRemove(row)}
-                          className="w-7 h-7 rounded-lg hover:bg-red-50 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+          <div className="overflow-x-auto" data-scroll>
+            <table className="[&_th]:whitespace-nowrap w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/50">
+                  <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Product</th>
+                  <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Category</th>
+                  <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Stock</th>
+                  {can('catalog.edit') && <th className="px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide text-right">Actions</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {inventory.map(row => (
+                  <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-3 sm:px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
+                          {row.product.imageUrl
+                            ? <img src={row.product.imageUrl} alt="" className="w-full h-full object-cover" />
+                            : <Package size={16} className="text-slate-300" />}
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800 text-sm">{row.product.name}</p>
+                          <p className="text-xs text-slate-400">{row.product.brand}{row.product.brand && row.product.unit ? ' · ' : ''}{row.product.unit}</p>
+                        </div>
                       </div>
                     </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 font-medium">
+                        {row.product.category?.name ?? '—'}
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-5 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold text-sm ${row.stockQty === 0 ? 'text-red-500' : row.stockQty < LOW_STOCK_THRESHOLD ? 'text-amber-600' : 'text-slate-800'}`}>
+                          {row.stockQty}
+                        </span>
+                        {row.stockQty === 0 && (
+                          <span className="text-xs bg-red-50 text-red-500 px-1.5 py-0.5 rounded-full font-medium">Out of stock</span>
+                        )}
+                        {row.stockQty > 0 && row.stockQty < LOW_STOCK_THRESHOLD && (
+                          <span className="flex items-center gap-0.5 text-xs bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded-full font-medium">
+                            <AlertTriangle size={10} /> Low
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    {can('catalog.edit') && (
+                      <td className="px-3 sm:px-5 py-3.5">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleAdjust(row, -1)}
+                            disabled={adjusting === row.id || row.stockQty === 0}
+                            className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-500 disabled:opacity-40 transition-colors"
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <button
+                            onClick={() => handleAdjust(row, 1)}
+                            disabled={adjusting === row.id}
+                            className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-500 disabled:opacity-40 transition-colors"
+                          >
+                            <Plus size={12} />
+                          </button>
+                          <button
+                            onClick={() => setModal({ open: true, row })}
+                            className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors ml-1"
+                          >
+                            <Edit2 size={12} />
+                          </button>
+                          <button
+                            onClick={() => handleRemove(row)}
+                            className="w-7 h-7 rounded-lg hover:bg-red-50 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

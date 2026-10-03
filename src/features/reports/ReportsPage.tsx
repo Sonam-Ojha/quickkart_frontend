@@ -22,7 +22,7 @@ export function ReportsPage() {
       />
 
       {/* Date range */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 sm:flex-wrap">
         {[
           { value: 'today',        label: 'Today' },
           { value: 'this_week',    label: 'This Week' },
@@ -32,7 +32,7 @@ export function ReportsPage() {
           <button
             key={opt.value}
             onClick={() => setDateRange(opt.value)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               dateRange === opt.value ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'
             }`}
           >
@@ -42,7 +42,7 @@ export function ReportsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <StatCard label="Total Revenue" value="—" icon={TrendingUp} color="#EA580C" />
         <StatCard label="Total Orders" value="—" icon={ShoppingBag} color="#0F766E" />
         <StatCard label="Top Product" value="—" icon={Package} color="#8B5CF6" />

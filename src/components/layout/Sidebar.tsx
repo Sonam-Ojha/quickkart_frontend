@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingBag, MapPin, Package, Tag, Box, Warehouse,
   Image, Ticket, Users2, Store, Bike, Users, MessageSquare, CreditCard,
   Wallet, Bell, BarChart2, Shield, Settings, ChevronDown, ChevronRight,
-  Zap, Printer, HelpCircle, FileText, Globe2, Leaf
+  Zap, Printer, HelpCircle, FileText, Globe2, Leaf, X
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { NAV_ITEMS } from '../../config/navigation';
@@ -18,9 +18,11 @@ const iconMap: Record<string, React.ElementType> = {
 
 interface SidebarProps {
   collapsed: boolean;
+  mobileOpen: boolean;
+  onClose: () => void;
 }
 
-export function Sidebar({ collapsed }: SidebarProps) {
+export function Sidebar({ collapsed, mobileOpen, onClose }: SidebarProps) {
   const { can } = usePermission();
   const location = useLocation();
   const [openGroups, setOpenGroups] = useState<string[]>(['/catalog']);
@@ -39,7 +41,10 @@ export function Sidebar({ collapsed }: SidebarProps) {
     <aside
       className={cn(
         'flex flex-col h-full bg-[#0F1923] transition-all duration-300 select-none shrink-0',
-        collapsed ? 'w-16' : 'w-60'
+        // Mobile: off-canvas drawer. Desktop: static column.
+        'fixed inset-y-0 left-0 z-40 w-64 max-w-[80vw] lg:static lg:z-auto lg:max-w-none lg:translate-x-0',
+        mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full',
+        collapsed ? 'lg:w-16' : 'lg:w-60'
       )}
     >
       {/* Logo */}
@@ -55,6 +60,13 @@ export function Sidebar({ collapsed }: SidebarProps) {
             <span className="block text-[10px] text-slate-400 leading-none">Admin Panel</span>
           </div>
         )}
+        <button
+          onClick={onClose}
+          className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 lg:hidden"
+          aria-label="Close menu"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* Nav */}
@@ -69,8 +81,9 @@ export function Sidebar({ collapsed }: SidebarProps) {
               <div key={item.href}>
                 <button
                   onClick={() => toggleGroup(item.href)}
+                  title={collapsed ? item.label : undefined}
                   className={cn(
-                    'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+                    'w-full flex items-center gap-3 px-3 py-2.5 lg:py-2 rounded-lg text-sm transition-colors',
                     isGroupActive
                       ? 'text-white bg-white/10'
                       : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -91,7 +104,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
                         key={child.href}
                         to={child.href}
                         className={({ isActive }) => cn(
-                          'flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs transition-colors',
+                          'flex items-center gap-2.5 px-2 py-2 lg:py-1.5 rounded-lg text-sm lg:text-xs transition-colors',
                           isActive
                             ? 'text-[#EA580C] bg-orange-500/10 font-semibold'
                             : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -116,7 +129,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
               to={item.href}
               end={item.href === '/'}
               className={({ isActive }) => cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+                'flex items-center gap-3 px-3 py-2.5 lg:py-2 rounded-lg text-sm transition-colors',
                 isActive
                   ? 'text-white bg-[#EA580C]/20 text-[#FB923C] font-semibold'
                   : 'text-slate-400 hover:text-white hover:bg-white/5'

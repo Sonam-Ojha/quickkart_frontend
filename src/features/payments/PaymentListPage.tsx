@@ -68,7 +68,7 @@ export function PaymentListPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-48 max-w-sm">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-sm">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search txn, order ID or customer..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
@@ -76,7 +76,7 @@ export function PaymentListPage() {
           className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 capitalize">
           {GATEWAYS.map(g => <option key={g} value={g}>{g === 'all' ? 'All Gateways' : g}</option>)}
         </select>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {STATUSES.map(s => (
             <button key={s.v} onClick={() => setStatus(s.v)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${status === s.v ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
@@ -89,46 +89,48 @@ export function PaymentListPage() {
       {error && <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
 
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Txn ID</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Order</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Customer</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Gateway</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Time</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading payments...
-              </td></tr>
-            ) : payments.length === 0 ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <CreditCard size={36} className="mx-auto mb-3 text-slate-200" /><p className="font-medium">No transactions found</p>
-              </td></tr>
-            ) : payments.map(p => (
-              <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-5 py-3.5 font-mono text-xs text-slate-500">{p.txnId || `PAY-${p.id}`}</td>
-                <td className="px-5 py-3.5 font-semibold text-slate-800">#{p.orderId}</td>
-                <td className="px-5 py-3.5 hidden md:table-cell text-sm text-slate-600">{p.order?.customer?.name ?? '—'}</td>
-                <td className="px-5 py-3.5 hidden md:table-cell">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${GATEWAY_COLORS[p.gateway] ?? 'bg-slate-100 text-slate-600'}`}>{p.gateway}</span>
-                </td>
-                <td className="px-5 py-3.5 font-semibold text-slate-800">{money(p.amount)}</td>
-                <td className="px-5 py-3.5"><StatusBadge status={p.status} /></td>
-                <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{formatDateTime(p.created_at)}</td>
+        <div className="overflow-x-auto" data-scroll>
+          <table className="[&_th]:whitespace-nowrap w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Txn ID</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Order</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Customer</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Gateway</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Time</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading payments...
+                </td></tr>
+              ) : payments.length === 0 ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <CreditCard size={36} className="mx-auto mb-3 text-slate-200" /><p className="font-medium">No transactions found</p>
+                </td></tr>
+              ) : payments.map(p => (
+                <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3 sm:px-5 py-3.5 font-mono text-xs text-slate-500">{p.txnId || `PAY-${p.id}`}</td>
+                  <td className="px-3 sm:px-5 py-3.5 font-semibold text-slate-800">#{p.orderId}</td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell text-sm text-slate-600">{p.order?.customer?.name ?? '—'}</td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${GATEWAY_COLORS[p.gateway] ?? 'bg-slate-100 text-slate-600'}`}>{p.gateway}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 font-semibold text-slate-800">{money(p.amount)}</td>
+                  <td className="px-3 sm:px-5 py-3.5"><StatusBadge status={p.status} /></td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{formatDateTime(p.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {pages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/30">
+          <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/30">
             <span className="text-xs text-slate-400">Page {page} of {pages}</span>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-wrap">
               <Button variant="outline" size="sm" onClick={() => setPage(p => p-1)} disabled={page===1}><ChevronLeft size={14}/></Button>
               <Button variant="outline" size="sm" onClick={() => setPage(p => p+1)} disabled={page===pages}><ChevronRight size={14}/></Button>
             </div>

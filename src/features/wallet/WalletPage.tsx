@@ -42,7 +42,7 @@ export function WalletPage() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-5 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
           <StatCard label="Total Credits" value={money(stats.totalCredits)} icon={ArrowUpCircle} color="#16A34A" />
           <StatCard label="Total Debits" value={money(stats.totalDebits)} icon={ArrowDownCircle} color="#DC2626" />
           <StatCard label="Total Transactions" value={stats.txnCount} icon={Wallet} color="#EA580C" />
@@ -51,11 +51,11 @@ export function WalletPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-48 max-w-xs">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search by user or note..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {[{v:'all',l:'All'},{v:'credit',l:'Credits'},{v:'debit',l:'Debits'}].map(t => (
             <button key={t.v} onClick={() => setType(t.v)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${type === t.v ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
@@ -72,58 +72,60 @@ export function WalletPage() {
       {error && <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
 
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">User</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Type</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Source</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Balance After</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Note</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Time</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading transactions...
-              </td></tr>
-            ) : txns.length === 0 ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <Wallet size={36} className="mx-auto mb-3 text-slate-200" /><p className="font-medium">No transactions found</p>
-              </td></tr>
-            ) : txns.map(t => (
-              <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-5 py-3.5">
-                  <div className="font-medium text-slate-800 text-sm">{t.user?.name ?? '—'}</div>
-                  <div className="text-xs text-slate-400">{t.user?.email ?? ''}</div>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${t.type === 'credit' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                    {t.type === 'credit' ? <ArrowUpCircle size={11} /> : <ArrowDownCircle size={11} />}
-                    {t.type}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span className={`font-semibold text-sm ${t.type === 'credit' ? 'text-green-700' : 'text-red-600'}`}>
-                    {t.type === 'credit' ? '+' : '-'}{money(t.amount)}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5 hidden md:table-cell">
-                  <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full capitalize">{t.source?.replace('_',' ')}</span>
-                </td>
-                <td className="px-5 py-3.5 hidden lg:table-cell text-sm font-medium text-slate-700">{money(t.balanceAfter)}</td>
-                <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400 max-w-[160px] truncate">{t.note ?? '—'}</td>
-                <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{formatDateTime(t.created_at)}</td>
+        <div className="overflow-x-auto" data-scroll>
+          <table className="[&_th]:whitespace-nowrap w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">User</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Type</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Source</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Balance After</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Note</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Time</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading transactions...
+                </td></tr>
+              ) : txns.length === 0 ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <Wallet size={36} className="mx-auto mb-3 text-slate-200" /><p className="font-medium">No transactions found</p>
+                </td></tr>
+              ) : txns.map(t => (
+                <tr key={t.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <div className="font-medium text-slate-800 text-sm">{t.user?.name ?? '—'}</div>
+                    <div className="text-xs text-slate-400">{t.user?.email ?? ''}</div>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${t.type === 'credit' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                      {t.type === 'credit' ? <ArrowUpCircle size={11} /> : <ArrowDownCircle size={11} />}
+                      {t.type}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <span className={`font-semibold text-sm ${t.type === 'credit' ? 'text-green-700' : 'text-red-600'}`}>
+                      {t.type === 'credit' ? '+' : '-'}{money(t.amount)}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
+                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full capitalize">{t.source?.replace('_',' ')}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell text-sm font-medium text-slate-700">{money(t.balanceAfter)}</td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400 max-w-[160px] truncate">{t.note ?? '—'}</td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{formatDateTime(t.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {pages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/30">
+          <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/30">
             <span className="text-xs text-slate-400">Page {page} of {pages}</span>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-wrap">
               <Button variant="outline" size="sm" onClick={() => setPage(p => p-1)} disabled={page===1}><ChevronLeft size={14}/></Button>
               <Button variant="outline" size="sm" onClick={() => setPage(p => p+1)} disabled={page===pages}><ChevronRight size={14}/></Button>
             </div>

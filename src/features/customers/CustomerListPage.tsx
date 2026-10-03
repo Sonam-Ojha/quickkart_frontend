@@ -19,7 +19,7 @@ function CustomerDrawer({ customer, onClose, onToggleBlock }: { customer: Custom
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           {/* Avatar + name */}
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#0F766E] to-[#EA580C] flex items-center justify-center text-white text-2xl font-bold mb-3">
@@ -132,7 +132,7 @@ export function CustomerListPage() {
       />
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-5 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
         <StatCard label="Total" value={loading ? '—' : total} icon={Users} color="#475569" />
         <StatCard label="Active" value={loading ? '—' : activeCount} icon={CheckCircle} color="#16A34A" />
         <StatCard label="Blocked" value={loading ? '—' : blockedCount} icon={Ban} color="#DC2626" />
@@ -140,7 +140,7 @@ export function CustomerListPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-48 max-w-xs">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             placeholder="Search by name, email or mobile..."
@@ -149,7 +149,7 @@ export function CustomerListPage() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {STATUS_OPTIONS.map(opt => (
             <button
               key={opt.value}
@@ -174,95 +174,97 @@ export function CustomerListPage() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Contact</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Wallet</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Joined</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-              <th className="px-5 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              <tr>
-                <td colSpan={6} className="py-20 text-center text-slate-400">
-                  <Loader2 size={22} className="animate-spin mx-auto mb-2" />
-                  Loading customers...
-                </td>
+        <div className="overflow-x-auto" data-scroll>
+          <table className="[&_th]:whitespace-nowrap w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Contact</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Wallet</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Joined</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                <th className="px-3 sm:px-5 py-3" />
               </tr>
-            ) : customers.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-20 text-center text-slate-400">
-                  <Users size={36} className="mx-auto mb-3 text-slate-200" />
-                  <p className="font-medium">No customers found</p>
-                </td>
-              </tr>
-            ) : customers.map(c => (
-              <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0F766E] to-[#EA580C] flex items-center justify-center text-white text-xs font-bold shrink-0">
-                      {c.name[0]}
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-20 text-center text-slate-400">
+                    <Loader2 size={22} className="animate-spin mx-auto mb-2" />
+                    Loading customers...
+                  </td>
+                </tr>
+              ) : customers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-20 text-center text-slate-400">
+                    <Users size={36} className="mx-auto mb-3 text-slate-200" />
+                    <p className="font-medium">No customers found</p>
+                  </td>
+                </tr>
+              ) : customers.map(c => (
+                <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0F766E] to-[#EA580C] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                        {c.name[0]}
+                      </div>
+                      <div>
+                        <div className="font-medium text-slate-800">{c.name}</div>
+                        <div className="text-xs text-slate-400">{c.email}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-slate-800">{c.name}</div>
-                      <div className="text-xs text-slate-400">{c.email}</div>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
+                    <span className="text-slate-500 text-xs font-mono">{c.mobile ?? '—'}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell">
+                    <span className="font-semibold text-[#0F766E] text-xs">{money(c.walletBalance)}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell">
+                    <span className="text-xs text-slate-400">{formatDate(c.created_at)}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.isActive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                      {c.isActive ? 'Active' : 'Blocked'}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <div className="flex gap-1">
+                      <button
+                        className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                        title="View detail"
+                        onClick={() => setSelected(c)}
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button
+                        className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
+                          c.isActive
+                            ? 'hover:bg-red-50 text-slate-400 hover:text-red-500'
+                            : 'hover:bg-green-50 text-slate-400 hover:text-green-600'
+                        }`}
+                        title={c.isActive ? 'Block' : 'Unblock'}
+                        onClick={() => handleToggleBlock(c)}
+                        disabled={toggling === c.id}
+                      >
+                        {toggling === c.id
+                          ? <Loader2 size={14} className="animate-spin" />
+                          : c.isActive ? <Ban size={14} /> : <CheckCircle size={14} />
+                        }
+                      </button>
                     </div>
-                  </div>
-                </td>
-                <td className="px-5 py-3.5 hidden md:table-cell">
-                  <span className="text-slate-500 text-xs font-mono">{c.mobile ?? '—'}</span>
-                </td>
-                <td className="px-5 py-3.5 hidden lg:table-cell">
-                  <span className="font-semibold text-[#0F766E] text-xs">{money(c.walletBalance)}</span>
-                </td>
-                <td className="px-5 py-3.5 hidden lg:table-cell">
-                  <span className="text-xs text-slate-400">{formatDate(c.created_at)}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.isActive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                    {c.isActive ? 'Active' : 'Blocked'}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <div className="flex gap-1">
-                    <button
-                      className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                      title="View detail"
-                      onClick={() => setSelected(c)}
-                    >
-                      <Eye size={14} />
-                    </button>
-                    <button
-                      className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
-                        c.isActive
-                          ? 'hover:bg-red-50 text-slate-400 hover:text-red-500'
-                          : 'hover:bg-green-50 text-slate-400 hover:text-green-600'
-                      }`}
-                      title={c.isActive ? 'Block' : 'Unblock'}
-                      onClick={() => handleToggleBlock(c)}
-                      disabled={toggling === c.id}
-                    >
-                      {toggling === c.id
-                        ? <Loader2 size={14} className="animate-spin" />
-                        : c.isActive ? <Ban size={14} /> : <CheckCircle size={14} />
-                      }
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {/* Pagination */}
         {pages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/30">
+          <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/30">
             <span className="text-xs text-slate-400">Page {page} of {pages}</span>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-wrap">
               <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 1}>
                 <ChevronLeft size={14} />
               </Button>

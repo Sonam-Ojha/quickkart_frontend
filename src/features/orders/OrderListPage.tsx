@@ -139,7 +139,7 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
         )}
       >
         {/* Header */}
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 bg-white px-5 py-4">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 bg-white px-4 sm:px-5 py-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-bold text-slate-900">Order #{order.id}</h2>
@@ -157,7 +157,7 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
         </div>
 
         {/* Body */}
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
           {error && (
             <div className="flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 p-3 text-sm text-red-600">
               <AlertCircle size={14} className="shrink-0" />{error}
@@ -317,7 +317,7 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
 
         {/* Footer actions */}
         {!isClosed && (
-          <div className="flex shrink-0 gap-2 border-t border-slate-200 bg-white px-5 py-3.5">
+          <div className="flex shrink-0 gap-2 border-t border-slate-200 bg-white px-4 sm:px-5 py-3.5">
             {nextStatus && (
               <Button className="flex-1" onClick={handleAdvance} disabled={updating}>
                 {updating && <Loader2 size={14} className="animate-spin" />}
@@ -427,14 +427,14 @@ export function OrderListPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-48 max-w-sm">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-sm">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search by order ID or customer..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-1.5 overflow-x-auto sm:flex-wrap -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 sm:pb-0 w-[calc(100%+2rem)] sm:w-auto">
           {STATUS_OPTIONS.map(s => (
             <button key={s.value} onClick={() => setStatus(s.value)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${status === s.value ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
+              className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${status === s.value ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
               {s.label}
             </button>
           ))}
@@ -445,67 +445,69 @@ export function OrderListPage() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Order</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Store</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Time</th>
-              <th className="px-5 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading orders...
-              </td></tr>
-            ) : orders.length === 0 ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <ShoppingBag size={36} className="mx-auto mb-3 text-slate-200" />
-                <p className="font-medium">No orders found</p>
-              </td></tr>
-            ) : orders.map(order => (
-              <tr key={order.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => openDetail(order)}>
-                <td className="px-5 py-3.5">
-                  <span className="font-semibold text-slate-800">#{order.id}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#EA580C] to-[#0F766E] flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                      {order.customer?.name?.[0] ?? '?'}
-                    </div>
-                    <span className="font-medium text-slate-700">{order.customer?.name ?? '—'}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-3.5 hidden md:table-cell">
-                  <span className="text-slate-500 text-xs">{order.store?.name ?? '—'}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span className="font-semibold text-slate-800">{money(order.total)}</span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <StatusBadge status={order.status} />
-                </td>
-                <td className="px-5 py-3.5 hidden lg:table-cell">
-                  <span className="text-slate-400 text-xs">{formatDateTime(order.created_at)}</span>
-                </td>
-                <td className="px-5 py-3.5" onClick={e => e.stopPropagation()}>
-                  <button onClick={() => openDetail(order)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
-                    <Eye size={15} />
-                  </button>
-                </td>
+        <div className="overflow-x-auto" data-scroll>
+          <table className="[&_th]:whitespace-nowrap w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Order</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Store</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Time</th>
+                <th className="px-3 sm:px-5 py-3" />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading orders...
+                </td></tr>
+              ) : orders.length === 0 ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <ShoppingBag size={36} className="mx-auto mb-3 text-slate-200" />
+                  <p className="font-medium">No orders found</p>
+                </td></tr>
+              ) : orders.map(order => (
+                <tr key={order.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => openDetail(order)}>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <span className="font-semibold text-slate-800">#{order.id}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#EA580C] to-[#0F766E] flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                        {order.customer?.name?.[0] ?? '?'}
+                      </div>
+                      <span className="font-medium text-slate-700 whitespace-nowrap">{order.customer?.name ?? '—'}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
+                    <span className="text-slate-500 text-xs">{order.store?.name ?? '—'}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <span className="font-semibold text-slate-800">{money(order.total)}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <StatusBadge status={order.status} />
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell">
+                    <span className="text-slate-400 text-xs">{formatDateTime(order.created_at)}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => openDetail(order)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+                      <Eye size={15} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {pages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/30">
+          <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/30">
             <span className="text-xs text-slate-400">Page {page} of {pages} · {total} orders</span>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-wrap">
               <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 1}><ChevronLeft size={14} /></Button>
               <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page === pages}><ChevronRight size={14} /></Button>
             </div>
