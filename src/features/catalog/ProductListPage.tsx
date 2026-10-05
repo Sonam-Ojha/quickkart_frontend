@@ -122,7 +122,6 @@ function ProductModal({ product, categories, onClose, onSave }: {
   const mains = categories.filter(c => !c.parentId);
   const subs  = categories.filter(c =>  c.parentId);
   const hasHierarchy = mains.length > 0 && subs.length > 0;
-
   // Determine initial main category from product's sub-category
   const getInitialMainId = () => {
     if (!product?.categoryId) return mains[0]?.id ?? 0;
@@ -340,6 +339,7 @@ function ProductModal({ product, categories, onClose, onSave }: {
                     </div>
                   </div>
                 </div>
+
               </div>
 
               {/* Right column — image */}

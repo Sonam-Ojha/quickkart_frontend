@@ -16,6 +16,7 @@ function StoreModal({ store, onClose, onSave }: { store?: DarkStore | null; onCl
     city: store?.city ?? '',
     lat: store?.lat != null ? Number(store.lat) : undefined,
     lng: store?.lng != null ? Number(store.lng) : undefined,
+    radius: store?.radius != null ? Number(store.radius) : 10,
     isActive: store?.isActive ?? true,
   });
   const [saving, setSaving] = useState(false);
@@ -64,6 +65,34 @@ function StoreModal({ store, onClose, onSave }: { store?: DarkStore | null; onCl
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Longitude</label>
               <Input type="number" step="any" value={form.lng ?? ''} onChange={e => set('lng', e.target.value ? Number(e.target.value) : undefined)} placeholder="77.3178" />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-600 mb-1 block">
+              Delivery Area (store se kitne km tak order milega?)
+            </label>
+            <div className="flex gap-2 flex-wrap mb-2">
+              {[3, 5, 10, 15, 20].map(km => (
+                <button
+                  key={km}
+                  type="button"
+                  onClick={() => set('radius', km)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                    form.radius === km
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'
+                  }`}
+                >
+                  {km} km
+                </button>
+              ))}
+            </div>
+            <div className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
+              {form.radius && form.radius <= 3  && '🏘️ Sirf aas-paas ki colony tak — chhote mohalle ke liye'}
+              {form.radius && form.radius === 5  && '🏙️ Nearby areas tak — ek-do sector cover hoga'}
+              {form.radius && form.radius === 10 && '🗺️ Pura sheher ka zyaada-tar hissa cover hoga (recommended)'}
+              {form.radius && form.radius === 15 && '📍 Bade sheher + surrounding areas cover honge'}
+              {form.radius && form.radius === 20 && '🚀 Bahut bada area — poora district ya multiple cities'}
             </div>
           </div>
           <label className="flex items-center gap-2 cursor-pointer">

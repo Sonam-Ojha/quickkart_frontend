@@ -123,6 +123,14 @@ export const catalogApi = {
 
   setStoreVisibility: (productId: number, visibility: StoreVisibilityItem[]) =>
     api.put(`/api/admin/catalog/products/${productId}/store-visibility`, { visibility }).then(r => r.data),
+
+  setInitialStock: (storeId: number, productId: number, stockQty: number) =>
+    api.post(`/api/admin/inventory/store/${storeId}`, { productId, stockQty }).then(r => r.data),
+
+  getProductInventory: (productId: number) =>
+    api.get<{ inventory: { storeId: number; storeName: string; stockQty: number }[] }>(
+      `/api/admin/inventory/product/${productId}`
+    ).then(r => r.data.inventory),
 };
 
 export interface StoreVisibilityItem {

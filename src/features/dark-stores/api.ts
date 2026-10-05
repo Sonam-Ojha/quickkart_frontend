@@ -7,6 +7,7 @@ export interface DarkStore {
   city: string;
   lat: number | string | null;
   lng: number | string | null;
+  radius: number | null;
   isActive: boolean;
 }
 
@@ -16,6 +17,7 @@ export interface DarkStorePayload {
   city: string;
   lat?: number;
   lng?: number;
+  radius?: number;
   isActive?: boolean;
 }
 
