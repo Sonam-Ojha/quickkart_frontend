@@ -114,7 +114,7 @@ function EditProfileTab({ profile, onSaved }: { profile: ProfileData; onSaved: (
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
           <label className="text-xs font-medium text-slate-600 mb-1 block">Full Name *</label>
           <Input value={form.name ?? ''} onChange={e => set('name', e.target.value)} placeholder="Your name" />
@@ -300,7 +300,7 @@ export function ProfilePage() {
           {/* ── Left: Account card ── */}
           <div className="lg:col-span-1 space-y-4">
             {/* Avatar + identity */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 text-center">
+            <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 text-center">
               <div className="flex justify-center mb-3">
                 <Avatar name={profile.name} avatar={profile.avatar} size="lg" />
               </div>
@@ -312,7 +312,7 @@ export function ProfilePage() {
             </div>
 
             {/* Account info */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-5">
+            <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5">
               <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Account Info</h3>
               <InfoRow icon={Mail} label="Email" value={profile.email} />
               <InfoRow icon={Phone} label="Mobile" value={profile.mobile ?? <span className="text-slate-400 italic">Not set</span>} />
@@ -331,7 +331,7 @@ export function ProfilePage() {
             </div>
 
             {/* Wallet & Referral */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 space-y-3">
+            <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 space-y-3">
               <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl">
                 <div className="w-9 h-9 rounded-xl bg-[#0F766E] flex items-center justify-center shrink-0">
                   <Wallet size={16} className="text-white" />

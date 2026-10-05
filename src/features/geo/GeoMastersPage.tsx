@@ -60,12 +60,12 @@ function EmptyRow({ text }: { text: string }) {
 function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className={`bg-white rounded-2xl shadow-xl w-full ${wide ? 'max-w-xl' : 'max-w-md'}`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div className={`bg-white rounded-2xl shadow-xl w-full ${wide ? 'max-w-xl' : 'max-w-md'} max-h-[90vh] overflow-y-auto`}>
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-100">
           <h3 className="font-semibold text-slate-800 text-lg">{title}</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-4 sm:p-6">{children}</div>
       </div>
     </div>
   );
@@ -115,33 +115,35 @@ function CountriesTab() {
         <EmptyRow text="No countries added yet" />
       ) : (
         <TableShell>
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr>
-                <Th>Country</Th>
-                <Th>Code</Th>
-                <Th>Status</Th>
-                <Th right>Actions</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {rows.map(c => (
-                <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3 font-medium text-slate-800">{c.name}</td>
-                  <td className="px-4 py-3 text-slate-500">{c.code}</td>
-                  <td className="px-4 py-3"><ActiveBadge active={c.isActive} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button onClick={() => openEdit(c)} className={iconBtnClass}><Edit2 size={14} /></button>
-                      <button onClick={() => toggle(c)} className={iconBtnClass} title="Toggle active">
-                        {c.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto" data-scroll>
+            <table className="[&_th]:whitespace-nowrap w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <Th>Country</Th>
+                  <Th>Code</Th>
+                  <Th>Status</Th>
+                  <Th right>Actions</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {rows.map(c => (
+                  <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-3 sm:px-4 py-3 font-medium text-slate-800">{c.name}</td>
+                    <td className="px-3 sm:px-4 py-3 text-slate-500">{c.code}</td>
+                    <td className="px-3 sm:px-4 py-3"><ActiveBadge active={c.isActive} /></td>
+                    <td className="px-3 sm:px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button onClick={() => openEdit(c)} className={iconBtnClass}><Edit2 size={14} /></button>
+                        <button onClick={() => toggle(c)} className={iconBtnClass} title="Toggle active">
+                          {c.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </TableShell>
       )}
 
@@ -212,7 +214,7 @@ function StatesTab() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4 gap-3">
+      <div className="flex flex-wrap items-center justify-between mb-4 gap-3">
         <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} className={selectClass}>
           <option value="">All Countries</option>
           {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -224,35 +226,37 @@ function StatesTab() {
         <EmptyRow text="No states found" />
       ) : (
         <TableShell>
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr>
-                <Th>State</Th>
-                <Th>Code</Th>
-                <Th>Country</Th>
-                <Th>Status</Th>
-                <Th right>Actions</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {rows.map(s => (
-                <tr key={s.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3 font-medium text-slate-800">{s.name}</td>
-                  <td className="px-4 py-3 text-slate-500">{s.code ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-500">{s.country?.name ?? '—'}</td>
-                  <td className="px-4 py-3"><ActiveBadge active={s.isActive} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button onClick={() => openEdit(s)} className={iconBtnClass}><Edit2 size={14} /></button>
-                      <button onClick={() => toggle(s)} className={iconBtnClass}>
-                        {s.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto" data-scroll>
+            <table className="[&_th]:whitespace-nowrap w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <Th>State</Th>
+                  <Th>Code</Th>
+                  <Th>Country</Th>
+                  <Th>Status</Th>
+                  <Th right>Actions</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {rows.map(s => (
+                  <tr key={s.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-3 sm:px-4 py-3 font-medium text-slate-800">{s.name}</td>
+                    <td className="px-3 sm:px-4 py-3 text-slate-500">{s.code ?? '—'}</td>
+                    <td className="px-3 sm:px-4 py-3 text-slate-500">{s.country?.name ?? '—'}</td>
+                    <td className="px-3 sm:px-4 py-3"><ActiveBadge active={s.isActive} /></td>
+                    <td className="px-3 sm:px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button onClick={() => openEdit(s)} className={iconBtnClass}><Edit2 size={14} /></button>
+                        <button onClick={() => toggle(s)} className={iconBtnClass}>
+                          {s.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </TableShell>
       )}
 
@@ -331,7 +335,7 @@ function CitiesTab() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4 gap-3">
+      <div className="flex flex-wrap items-center justify-between mb-4 gap-3">
         <select value={filterState} onChange={e => setFilterState(e.target.value)} className={selectClass}>
           <option value="">All States</option>
           {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -343,35 +347,37 @@ function CitiesTab() {
         <EmptyRow text="No cities found" />
       ) : (
         <TableShell>
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr>
-                <Th>City</Th>
-                <Th>State</Th>
-                <Th>Country</Th>
-                <Th>Status</Th>
-                <Th right>Actions</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {rows.map(c => (
-                <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3 font-medium text-slate-800">{c.name}</td>
-                  <td className="px-4 py-3 text-slate-500">{c.state?.name ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-500">{c.state?.country?.name ?? '—'}</td>
-                  <td className="px-4 py-3"><ActiveBadge active={c.isActive} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button onClick={() => openEdit(c)} className={iconBtnClass}><Edit2 size={14} /></button>
-                      <button onClick={() => toggle(c)} className={iconBtnClass}>
-                        {c.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto" data-scroll>
+            <table className="[&_th]:whitespace-nowrap w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <Th>City</Th>
+                  <Th>State</Th>
+                  <Th>Country</Th>
+                  <Th>Status</Th>
+                  <Th right>Actions</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {rows.map(c => (
+                  <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-3 sm:px-4 py-3 font-medium text-slate-800">{c.name}</td>
+                    <td className="px-3 sm:px-4 py-3 text-slate-500">{c.state?.name ?? '—'}</td>
+                    <td className="px-3 sm:px-4 py-3 text-slate-500">{c.state?.country?.name ?? '—'}</td>
+                    <td className="px-3 sm:px-4 py-3"><ActiveBadge active={c.isActive} /></td>
+                    <td className="px-3 sm:px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button onClick={() => openEdit(c)} className={iconBtnClass}><Edit2 size={14} /></button>
+                        <button onClick={() => toggle(c)} className={iconBtnClass}>
+                          {c.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </TableShell>
       )}
 
@@ -493,50 +499,52 @@ function StoresTab() {
         <EmptyRow text="No stores added yet" />
       ) : (
         <TableShell>
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr>
-                <Th>Store</Th>
-                <Th>City / State</Th>
-                <Th>Coordinates</Th>
-                <Th>Radius</Th>
-                <Th>Status</Th>
-                <Th right>Actions</Th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {rows.map(s => (
-                <tr key={s.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-slate-800">{s.name}</p>
-                    <p className="text-xs text-slate-400 truncate max-w-[180px]">{s.address}</p>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500 text-xs">{cityLabel(s)}</td>
-                  <td className="px-4 py-3 text-slate-400 text-xs font-mono">
-                    {s.lat != null && s.lng != null ? `${Number(s.lat).toFixed(4)}, ${Number(s.lng).toFixed(4)}` : '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs bg-orange-50 text-orange-700 font-medium px-2 py-0.5 rounded-full">
-                      {s.radius} km
-                    </span>
-                  </td>
-                  <td className="px-4 py-3"><ActiveBadge active={s.isActive} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button onClick={() => openEdit(s)} className={iconBtnClass}><Edit2 size={14} /></button>
-                      <button onClick={() => toggle(s)} className={iconBtnClass}>
-                        {s.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
-                      </button>
-                      <button onClick={() => remove(s.id)} disabled={deleting === s.id}
-                        className="p-1.5 rounded hover:bg-red-50 text-red-400">
-                        {deleting === s.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto" data-scroll>
+            <table className="[&_th]:whitespace-nowrap w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <Th>Store</Th>
+                  <Th>City / State</Th>
+                  <Th>Coordinates</Th>
+                  <Th>Radius</Th>
+                  <Th>Status</Th>
+                  <Th right>Actions</Th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {rows.map(s => (
+                  <tr key={s.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-3 sm:px-4 py-3">
+                      <p className="font-medium text-slate-800">{s.name}</p>
+                      <p className="text-xs text-slate-400 truncate max-w-[180px]">{s.address}</p>
+                    </td>
+                    <td className="px-3 sm:px-4 py-3 text-slate-500 text-xs">{cityLabel(s)}</td>
+                    <td className="px-3 sm:px-4 py-3 text-slate-400 text-xs font-mono">
+                      {s.lat != null && s.lng != null ? `${Number(s.lat).toFixed(4)}, ${Number(s.lng).toFixed(4)}` : '—'}
+                    </td>
+                    <td className="px-3 sm:px-4 py-3">
+                      <span className="text-xs bg-orange-50 text-orange-700 font-medium px-2 py-0.5 rounded-full">
+                        {s.radius} km
+                      </span>
+                    </td>
+                    <td className="px-3 sm:px-4 py-3"><ActiveBadge active={s.isActive} /></td>
+                    <td className="px-3 sm:px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button onClick={() => openEdit(s)} className={iconBtnClass}><Edit2 size={14} /></button>
+                        <button onClick={() => toggle(s)} className={iconBtnClass}>
+                          {s.isActive ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
+                        </button>
+                        <button onClick={() => remove(s.id)} disabled={deleting === s.id}
+                          className="p-1.5 rounded hover:bg-red-50 text-red-400">
+                          {deleting === s.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </TableShell>
       )}
 
@@ -611,7 +619,7 @@ export default function GeoMastersPage() {
       />
 
       {/* Tab Bar */}
-      <div className="flex gap-1.5 mb-6 overflow-x-auto pb-1">
+      <div className="flex gap-1.5 mb-4 sm:mb-6 overflow-x-auto pb-1">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}

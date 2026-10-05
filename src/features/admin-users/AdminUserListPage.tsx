@@ -78,7 +78,7 @@ export function AdminUserListPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="relative flex-1 min-w-[180px] max-w-xs">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-[180px] sm:max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input
             placeholder="Search by name or email..."
@@ -121,84 +121,86 @@ export function AdminUserListPage() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Admin</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Email</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Role</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Joined</th>
-              <th className="px-5 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {isLoading && (
-              <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-sm text-slate-400">
-                  Loading admins...
-                </td>
+        <div className="overflow-x-auto" data-scroll>
+          <table className="[&_th]:whitespace-nowrap w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Admin</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Email</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Role</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Joined</th>
+                <th className="px-3 sm:px-5 py-3" />
               </tr>
-            )}
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {isLoading && (
+                <tr>
+                  <td colSpan={6} className="px-3 sm:px-5 py-10 text-center text-sm text-slate-400">
+                    Loading admins...
+                  </td>
+                </tr>
+              )}
 
-            {isError && (
-              <tr>
-                <td colSpan={6} className="px-5 py-10 text-center">
-                  <p className="text-sm text-red-500 mb-2">Failed to load admin users</p>
-                  <Button size="sm" variant="outline" onClick={() => refetch()}>Retry</Button>
-                </td>
-              </tr>
-            )}
+              {isError && (
+                <tr>
+                  <td colSpan={6} className="px-3 sm:px-5 py-10 text-center">
+                    <p className="text-sm text-red-500 mb-2">Failed to load admin users</p>
+                    <Button size="sm" variant="outline" onClick={() => refetch()}>Retry</Button>
+                  </td>
+                </tr>
+              )}
 
-            {!isLoading && !isError && filtered.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-sm text-slate-400">
-                  {admins.length === 0 ? 'Koi admin user nahi mila' : 'No results for current filters'}
-                </td>
-              </tr>
-            )}
+              {!isLoading && !isError && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-3 sm:px-5 py-10 text-center text-sm text-slate-400">
+                    {admins.length === 0 ? 'Koi admin user nahi mila' : 'No results for current filters'}
+                  </td>
+                </tr>
+              )}
 
-            {filtered.map((admin, i) => (
-              <tr key={admin.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${AVATAR_COLORS[i % AVATAR_COLORS.length]} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
-                      {admin.name[0].toUpperCase()}
+              {filtered.map((admin, i) => (
+                <tr key={admin.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${AVATAR_COLORS[i % AVATAR_COLORS.length]} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
+                        {admin.name[0].toUpperCase()}
+                      </div>
+                      <span className="font-medium text-slate-800">{admin.name}</span>
                     </div>
-                    <span className="font-medium text-slate-800">{admin.name}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-3.5 hidden md:table-cell">
-                  <div className="flex items-center gap-1.5 text-slate-500 text-xs">
-                    <Mail size={12} />
-                    {admin.email}
-                  </div>
-                </td>
-                <td className="px-5 py-3.5">
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[admin.role] ?? 'bg-slate-100 text-slate-600'}`}>
-                    {ROLE_LABELS[admin.role] ?? admin.role}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <StatusBadge status={admin.isActive ? 'active' : 'inactive'} />
-                </td>
-                <td className="px-5 py-3.5 hidden lg:table-cell">
-                  <span className="text-xs text-slate-400">
-                    {new Date(admin.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5">
-                  <button
-                    onClick={() => setEditAdmin(admin)}
-                    className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    <Edit2 size={13} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
+                    <div className="flex items-center gap-1.5 text-slate-500 text-xs">
+                      <Mail size={12} />
+                      {admin.email}
+                    </div>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ROLE_COLORS[admin.role] ?? 'bg-slate-100 text-slate-600'}`}>
+                      {ROLE_LABELS[admin.role] ?? admin.role}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <StatusBadge status={admin.isActive ? 'active' : 'inactive'} />
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell">
+                    <span className="text-xs text-slate-400">
+                      {new Date(admin.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <button
+                      onClick={() => setEditAdmin(admin)}
+                      className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      <Edit2 size={13} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <InviteAdminModal open={inviteOpen} onClose={() => setInviteOpen(false)} />

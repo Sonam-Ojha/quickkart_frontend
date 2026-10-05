@@ -61,7 +61,7 @@ function RiderModal({ storeId, rider, onClose, onSave }: { storeId: number; ride
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <h2 className="font-semibold text-slate-800">{rider ? 'Edit Rider' : 'Add Rider'}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
@@ -129,7 +129,7 @@ function StockModal({ storeId, row, products, onClose, onSave }: { storeId: numb
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <h2 className="font-semibold text-slate-800">{row ? 'Edit Stock' : 'Add Product'}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
@@ -203,7 +203,7 @@ function RidersTab({ storeId, canEdit }: { storeId: number; canEdit: boolean }) 
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1 min-w-0 sm:max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search riders..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
@@ -251,7 +251,7 @@ function RidersTab({ storeId, canEdit }: { storeId: number; canEdit: boolean }) 
                   {rider.status}
                 </button>
                 {canEdit && (
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity">
                     <button onClick={() => setModal({ open: true, rider })} className="w-6 h-6 rounded hover:bg-slate-200 flex items-center justify-center text-slate-400">
                       <Edit2 size={11} />
                     </button>
@@ -308,7 +308,7 @@ function InventoryTab({ storeId, canEdit }: { storeId: number; canEdit: boolean 
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1 min-w-0 sm:max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search products..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
@@ -328,54 +328,56 @@ function InventoryTab({ storeId, canEdit }: { storeId: number; canEdit: boolean 
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-slate-100">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-slate-50/60 border-b border-slate-100">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Product</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Category</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Stock</th>
-                {canEdit && <th className="px-4 py-3" />}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {rows.map(row => (
-                <tr key={row.id} className="hover:bg-slate-50/40">
-                  <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium text-slate-800">{row.product.name}</p>
-                      <p className="text-xs text-slate-400">{row.product.brand}{row.product.unit ? ` · ${row.product.unit}` : ''}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 hidden md:table-cell">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 font-medium">{row.product.category?.name}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`font-semibold ${row.stockQty === 0 ? 'text-red-500' : row.stockQty < 10 ? 'text-amber-600' : 'text-slate-800'}`}>
-                      {row.stockQty}
-                    </span>
-                    {row.stockQty === 0 && <span className="ml-2 text-xs text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">OOS</span>}
-                    {row.stockQty > 0 && row.stockQty < 10 && <span className="ml-2 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">Low</span>}
-                  </td>
-                  {canEdit && (
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => handleAdjust(row, -1)} disabled={adjusting === row.id || row.stockQty === 0}
-                          className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-500 disabled:opacity-40 text-xs font-bold">−</button>
-                        <button onClick={() => handleAdjust(row, 1)} disabled={adjusting === row.id}
-                          className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-500 disabled:opacity-40 text-xs font-bold">+</button>
-                        <button onClick={() => setModal({ open: true, row })} className="w-6 h-6 rounded hover:bg-slate-100 flex items-center justify-center text-slate-400 ml-1">
-                          <Edit2 size={11} />
-                        </button>
-                        <button onClick={() => handleRemove(row)} className="w-6 h-6 rounded hover:bg-red-50 flex items-center justify-center text-red-400">
-                          <Trash2 size={11} />
-                        </button>
+          <div className="overflow-x-auto" data-scroll>
+            <table className="[&_th]:whitespace-nowrap w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50/60 border-b border-slate-100">
+                  <th className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Product</th>
+                  <th className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Category</th>
+                  <th className="text-left px-3 sm:px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Stock</th>
+                  {canEdit && <th className="px-3 sm:px-4 py-3" />}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {rows.map(row => (
+                  <tr key={row.id} className="hover:bg-slate-50/40">
+                    <td className="px-3 sm:px-4 py-3">
+                      <div>
+                        <p className="font-medium text-slate-800">{row.product.name}</p>
+                        <p className="text-xs text-slate-400">{row.product.brand}{row.product.unit ? ` · ${row.product.unit}` : ''}</p>
                       </div>
                     </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <td className="px-3 sm:px-4 py-3 hidden md:table-cell">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 font-medium">{row.product.category?.name}</span>
+                    </td>
+                    <td className="px-3 sm:px-4 py-3">
+                      <span className={`font-semibold ${row.stockQty === 0 ? 'text-red-500' : row.stockQty < 10 ? 'text-amber-600' : 'text-slate-800'}`}>
+                        {row.stockQty}
+                      </span>
+                      {row.stockQty === 0 && <span className="ml-2 text-xs text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">OOS</span>}
+                      {row.stockQty > 0 && row.stockQty < 10 && <span className="ml-2 text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">Low</span>}
+                    </td>
+                    {canEdit && (
+                      <td className="px-3 sm:px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => handleAdjust(row, -1)} disabled={adjusting === row.id || row.stockQty === 0}
+                            className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-500 disabled:opacity-40 text-xs font-bold">−</button>
+                          <button onClick={() => handleAdjust(row, 1)} disabled={adjusting === row.id}
+                            className="w-6 h-6 rounded border border-slate-200 flex items-center justify-center hover:bg-slate-50 text-slate-500 disabled:opacity-40 text-xs font-bold">+</button>
+                          <button onClick={() => setModal({ open: true, row })} className="w-6 h-6 rounded hover:bg-slate-100 flex items-center justify-center text-slate-400 ml-1">
+                            <Edit2 size={11} />
+                          </button>
+                          <button onClick={() => handleRemove(row)} className="w-6 h-6 rounded hover:bg-red-50 flex items-center justify-center text-red-400">
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -432,7 +434,7 @@ export function DarkStoreDetailPage() {
         subtitle={`${store.address}, ${store.city}`}
         breadcrumbs={[{ label: 'Home' }, { label: 'Dark Stores', href: '/dark-stores' }, { label: store.name }]}
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${store.isActive ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
               {store.isActive ? 'Active' : 'Inactive'}
             </span>
@@ -444,9 +446,9 @@ export function DarkStoreDetailPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-5">
-        <StatCard icon={Users}     label="Active Riders" value={stats?.activeRiders ?? 0}  color="bg-[#0F766E]" />
-        <StatCard icon={Package}   label="Total SKUs"    value={stats?.totalSKUs ?? 0}      color="bg-[#EA580C]" />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-5">
+        <StatCard icon={Users}     label="Active Riders" value={stats?.activeRiders ?? 0}  color="#0F766E" />
+        <StatCard icon={Package}   label="Total SKUs"    value={stats?.totalSKUs ?? 0}      color="#EA580C" />
         {store.lat && store.lng && (
           <div className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-3 col-span-2 md:col-span-1">
             <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
@@ -468,7 +470,7 @@ export function DarkStoreDetailPage() {
             { key: 'inventory', label: 'Inventory', icon: Warehouse },
           ] as { key: Tab; label: string; icon: React.ElementType }[]).map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-colors border-b-2 ${
+              className={`flex flex-1 sm:flex-none justify-center items-center gap-2 px-4 sm:px-5 py-3 sm:py-3.5 text-sm font-medium transition-colors border-b-2 ${
                 tab === t.key
                   ? 'border-[#EA580C] text-[#EA580C] bg-orange-50/50'
                   : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
@@ -477,7 +479,7 @@ export function DarkStoreDetailPage() {
             </button>
           ))}
         </div>
-        <div className="p-5">
+        <div className="p-3 sm:p-5">
           {tab === 'riders'    && <RidersTab    storeId={storeId} canEdit={can('riders.edit')} />}
           {tab === 'inventory' && <InventoryTab storeId={storeId} canEdit={can('catalog.edit')} />}
         </div>

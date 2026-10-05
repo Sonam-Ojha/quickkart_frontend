@@ -71,9 +71,9 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
       <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
 
         {/* Coloured header strip */}
-        <div className={`px-6 sm:px-8 pt-6 pb-6 shrink-0 ${isPromo ? 'bg-gradient-to-r from-indigo-50 to-violet-50' : 'bg-gradient-to-r from-orange-50 to-amber-50'}`}>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
+        <div className={`px-4 sm:px-8 pt-5 sm:pt-6 pb-5 sm:pb-6 shrink-0 ${isPromo ? 'bg-gradient-to-r from-indigo-50 to-violet-50' : 'bg-gradient-to-r from-orange-50 to-amber-50'}`}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isPromo ? 'bg-indigo-100' : 'bg-orange-100'}`}>
                 <Image size={22} className={isPromo ? 'text-indigo-600' : 'text-orange-600'} />
               </div>
@@ -93,11 +93,11 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="p-6 sm:p-8 space-y-5 overflow-y-auto">
+          <div className="p-4 sm:p-8 space-y-5 overflow-y-auto">
             {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
 
             {/* Style & Placement */}
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5 space-y-4">
               <h3 className="text-sm font-semibold text-slate-700">Style &amp; Placement</h3>
 
               <div>
@@ -155,7 +155,7 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
             </div>
 
             {/* Banner Image */}
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-1">
                 <ImagePlus size={14} className="text-slate-500" />
                 <h3 className="text-sm font-semibold text-slate-700">Banner Image</h3>
@@ -195,7 +195,7 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
 
             {/* Customize-only fields */}
             {mode === 'customize' && (
-              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Text &amp; Color</h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -229,7 +229,7 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
             )}
 
             {/* Click destination & schedule */}
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5 space-y-4">
               <div className="flex items-center gap-2 mb-1">
                 <MousePointerClick size={14} className="text-slate-500" />
                 <h3 className="text-sm font-semibold text-slate-700">Click Destination &amp; Schedule</h3>
@@ -279,7 +279,7 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
           </div>
 
           {/* Buttons */}
-          <div className="flex items-center justify-end gap-3 px-6 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
+          <div className="flex items-center justify-end gap-3 px-4 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
             <Button type="button" variant="outline" className="h-10 px-5" onClick={onClose}>Cancel</Button>
             <Button type="submit" className="h-10 px-6" disabled={saving}>
               {saving && <Loader2 size={14} className="animate-spin" />}
@@ -347,12 +347,12 @@ export function BannerListPage() {
       />
 
       {/* Filter tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 sm:flex-wrap">
         {(['all', 'hero', 'promo'] as const).map(s => (
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               filterSection === s
                 ? 'bg-orange-500 text-white'
                 : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-300'
@@ -380,7 +380,7 @@ export function BannerListPage() {
           <p className="text-sm mt-1">Click "Add Banner" to create one</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {filtered.map(banner => {
             const bg = BG_OPTIONS.find(o => o.value === banner.bgType) ?? BG_OPTIONS[0];
             const noBg = banner.bgType == null;

@@ -196,26 +196,26 @@ function ShiftEditor({ shifts, onChange }: { shifts: Shift[]; onChange: (s: Shif
       ) : (
         <div className="space-y-2">
           {shifts.map((s, i) => (
-            <div key={i} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+            <div key={i} className="flex flex-wrap sm:flex-nowrap items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
               <Input
                 value={s.name}
                 onChange={e => update(i, 'name', e.target.value)}
                 placeholder="Shift name"
-                className="h-8 flex-1 text-sm"
+                className="h-8 w-full sm:w-auto sm:flex-1 text-sm"
               />
-              <div className="flex items-center gap-1">
+              <div className="flex flex-1 sm:flex-none items-center gap-1 min-w-0">
                 <input
                   type="time"
                   value={s.open}
                   onChange={e => update(i, 'open', e.target.value)}
-                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
+                  className="h-8 min-w-0 flex-1 sm:flex-none rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
                 />
                 <span className="text-xs text-slate-400">–</span>
                 <input
                   type="time"
                   value={s.close}
                   onChange={e => update(i, 'close', e.target.value)}
-                  className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
+                  className="h-8 min-w-0 flex-1 sm:flex-none rounded-lg border border-slate-200 bg-white px-2 text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
                 />
               </div>
               <button
@@ -245,7 +245,7 @@ function SettingsSkeleton() {
           <div key={i} className="h-14 animate-pulse rounded-xl bg-slate-100" />
         ))}
       </div>
-      <div className="flex-1 space-y-5 rounded-2xl border border-slate-100 bg-white p-6">
+      <div className="flex-1 space-y-5 rounded-2xl border border-slate-100 bg-white p-4 sm:p-6">
         <div className="h-12 w-1/3 animate-pulse rounded-lg bg-slate-100" />
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="h-16 animate-pulse rounded-lg bg-slate-100" />
@@ -406,7 +406,7 @@ export function SettingsPage() {
         <div className="flex flex-col gap-5 lg:flex-row">
 
           {/* ── Left nav rail ── */}
-          <nav className="self-start lg:sticky lg:top-2 lg:w-72 lg:shrink-0">
+          <nav className="min-w-0 lg:self-start lg:sticky lg:top-2 lg:w-72 lg:shrink-0">
             <div className="flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-100 bg-white p-2 lg:flex-col lg:overflow-visible">
               {TABS.map(({ id, label, desc, Icon }) => {
                 const active = activeTab === id;
@@ -441,7 +441,7 @@ export function SettingsPage() {
             <div className="rounded-2xl border border-slate-100 bg-white">
 
               {/* Section header */}
-              <div className="flex items-start gap-3 border-b border-slate-100 p-6">
+              <div className="flex items-start gap-3 border-b border-slate-100 p-4 sm:p-6">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-[#EA580C]">
                   <activeMeta.Icon size={18} />
                 </span>
@@ -453,7 +453,7 @@ export function SettingsPage() {
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
 
                 {/* Field grid */}
                 {activeTab !== 'why' && activeTab !== 'service' && (

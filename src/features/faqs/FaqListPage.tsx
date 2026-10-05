@@ -167,12 +167,12 @@ export function FaqListPage() {
       />
 
       {/* Page filter tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 sm:flex-wrap">
         {PAGE_OPTIONS.map(o => (
           <button
             key={o.value}
             onClick={() => setFilterPage(o.value)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               filterPage === o.value
                 ? 'bg-orange-500 text-white'
                 : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-300'

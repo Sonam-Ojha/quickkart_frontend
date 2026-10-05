@@ -129,7 +129,7 @@ export function KycModal({ rider, onClose, onChanged }: {
                   <div className="mt-3 flex gap-2">
                     <input autoFocus value={reason} onChange={e => setReason(e.target.value)}
                       placeholder="Why is it being rejected?"
-                      className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
+                      className="flex-1 min-w-0 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400" />
                     <Button size="sm" variant="outline" className="text-red-600"
                       disabled={!reason.trim() || busy === doc.id}
                       onClick={() => review(doc, { status: 'rejected', rejectionReason: reason.trim() })}>

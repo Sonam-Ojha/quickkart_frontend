@@ -45,7 +45,7 @@ function Backdrop({ children, onClose }: { children: React.ReactNode; onClose: (
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
-    <div className="flex items-center justify-between p-5 border-b border-slate-100 sticky top-0 bg-white z-10 rounded-t-2xl">
+    <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 sticky top-0 bg-white z-10 rounded-t-2xl">
       <h2 className="font-semibold text-slate-800">{title}</h2>
       <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
     </div>
@@ -181,9 +181,9 @@ function ProductModal({ product, categories, onClose, onSave }: {
       <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
 
         {/* Coloured header strip */}
-        <div className="px-6 sm:px-8 pt-6 pb-6 shrink-0 bg-gradient-to-r from-orange-50 to-amber-50">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
+        <div className="px-4 sm:px-8 pt-5 sm:pt-6 pb-5 sm:pb-6 shrink-0 bg-gradient-to-r from-orange-50 to-amber-50">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-orange-100">
                 <Package size={24} className="text-orange-600" />
               </div>
@@ -203,13 +203,13 @@ function ProductModal({ product, categories, onClose, onSave }: {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="p-6 sm:p-8 space-y-5 overflow-y-auto">
+          <div className="p-4 sm:p-8 space-y-5 overflow-y-auto">
             {error && <ErrorBox msg={error} />}
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
               {/* Left column — core fields */}
               <div className="lg:col-span-3 space-y-5">
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5 space-y-4">
                   <h3 className="text-sm font-semibold text-slate-700">Basic Details</h3>
 
                   <div>
@@ -227,7 +227,7 @@ function ProductModal({ product, categories, onClose, onSave }: {
 
                   {/* Category selection — Main → Sub */}
                   {hasHierarchy ? (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
                           Main Category *
@@ -265,7 +265,7 @@ function ProductModal({ product, categories, onClose, onSave }: {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
                         Brand
@@ -281,7 +281,7 @@ function ProductModal({ product, categories, onClose, onSave }: {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
+                <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5 space-y-4">
                   <h3 className="text-sm font-semibold text-slate-700">Pricing &amp; Visibility</h3>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -305,7 +305,7 @@ function ProductModal({ product, categories, onClose, onSave }: {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
                         Homepage Tag
@@ -343,7 +343,7 @@ function ProductModal({ product, categories, onClose, onSave }: {
               </div>
 
               {/* Right column — image */}
-              <div className="lg:col-span-2 rounded-2xl border border-slate-100 bg-slate-50/60 p-5">
+              <div className="lg:col-span-2 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5">
                 <h3 className="text-sm font-semibold text-slate-700">Product Image</h3>
                 <p className="text-xs text-slate-400 mb-3">Shown on the product card and detail page in the customer app</p>
                 <ImageUploadField
@@ -357,7 +357,7 @@ function ProductModal({ product, categories, onClose, onSave }: {
           </div>
 
           {/* Buttons */}
-          <div className="flex items-center justify-between gap-3 px-6 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-8 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
             <p className="text-xs text-slate-400 hidden sm:block">Fields marked * are required</p>
             <div className="flex gap-3 ml-auto">
               <Button type="button" variant="outline" className="h-10 px-5" onClick={onClose}>Cancel</Button>
@@ -410,7 +410,7 @@ function MultiAddModal({ categories, onClose, onSave }: {
     <Backdrop onClose={onClose}>
       <div className="bg-white rounded-2xl w-full max-w-6xl shadow-xl max-h-[90vh] flex flex-col">
         <ModalHeader title={`Add Multiple Products (${rows.length})`} onClose={onClose} />
-        <div className="flex-1 overflow-auto p-5">
+        <div className="flex-1 overflow-auto p-4 sm:p-5">
           {error && <ErrorBox msg={error} />}
 
           {/* Scrollable table */}
@@ -460,7 +460,7 @@ function MultiAddModal({ categories, onClose, onSave }: {
                       className="accent-[#EA580C] w-4 h-4 cursor-pointer" />
                   </div>
                   <button onClick={() => removeRow(row._id)}
-                    className="p-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 text-slate-300 hover:text-red-500 transition-all">
+                    className="p-1 rounded-lg [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 hover:bg-red-50 text-slate-300 hover:text-red-500 transition-all">
                     <X size={14} />
                   </button>
                 </div>
@@ -576,7 +576,7 @@ function ExcelImportModal({ categories, onClose, onSave }: {
     <Backdrop onClose={onClose}>
       <div className="bg-white rounded-2xl w-full max-w-4xl shadow-xl max-h-[90vh] flex flex-col">
         <ModalHeader title="Import Products from Excel" onClose={onClose} />
-        <div className="flex-1 overflow-auto p-5">
+        <div className="flex-1 overflow-auto p-4 sm:p-5">
           {error && <ErrorBox msg={error} />}
 
           {step === 'upload' ? (
@@ -639,36 +639,38 @@ function ExcelImportModal({ categories, onClose, onSave }: {
                   className="text-xs text-slate-500 hover:text-slate-700 underline">Re-upload</button>
               </div>
               <div className="border border-slate-100 rounded-xl overflow-hidden overflow-x-auto">
-                <table className="w-full text-sm min-w-[700px]">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-100">
-                      {['#', 'Name', 'Category', 'Brand', 'Unit', 'MRP', 'Price', 'Tag', 'Active'].map(h => (
-                        <th key={h} className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 whitespace-nowrap">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {rows.map((row, i) => (
-                      <tr key={row._id} className="hover:bg-slate-50/50">
-                        <td className="px-3 py-2 text-slate-400 text-xs">{i + 1}</td>
-                        <td className="px-3 py-2 font-medium text-slate-800">
-                          {row.name || <span className="text-red-400 text-xs">missing!</span>}
-                        </td>
-                        <td className="px-3 py-2 text-slate-600">{catName(row.categoryId)}</td>
-                        <td className="px-3 py-2 text-slate-500">{row.brand || '—'}</td>
-                        <td className="px-3 py-2 text-slate-500">{row.unit || '—'}</td>
-                        <td className="px-3 py-2 text-slate-700">₹{row.mrp}</td>
-                        <td className="px-3 py-2 text-slate-700">₹{row.price}</td>
-                        <td className="px-3 py-2 text-xs text-slate-500">{row.tag || '—'}</td>
-                        <td className="px-3 py-2">
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${row.isActive ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                            {row.isActive ? 'Yes' : 'No'}
-                          </span>
-                        </td>
+                <div className="overflow-x-auto" data-scroll>
+                  <table className="[&_th]:whitespace-nowrap w-full text-sm min-w-[700px]">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-100">
+                        {['#', 'Name', 'Category', 'Brand', 'Unit', 'MRP', 'Price', 'Tag', 'Active'].map(h => (
+                          <th key={h} className="text-left px-3 py-2.5 text-xs font-semibold text-slate-500 whitespace-nowrap">{h}</th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {rows.map((row, i) => (
+                        <tr key={row._id} className="hover:bg-slate-50/50">
+                          <td className="px-3 py-2 text-slate-400 text-xs">{i + 1}</td>
+                          <td className="px-3 py-2 font-medium text-slate-800">
+                            {row.name || <span className="text-red-400 text-xs">missing!</span>}
+                          </td>
+                          <td className="px-3 py-2 text-slate-600">{catName(row.categoryId)}</td>
+                          <td className="px-3 py-2 text-slate-500">{row.brand || '—'}</td>
+                          <td className="px-3 py-2 text-slate-500">{row.unit || '—'}</td>
+                          <td className="px-3 py-2 text-slate-700">₹{row.mrp}</td>
+                          <td className="px-3 py-2 text-slate-700">₹{row.price}</td>
+                          <td className="px-3 py-2 text-xs text-slate-500">{row.tag || '—'}</td>
+                          <td className="px-3 py-2">
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${row.isActive ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                              {row.isActive ? 'Yes' : 'No'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -800,7 +802,7 @@ function StoreVisibilityModal({ product, onClose }: { product: Product; onClose:
         {/* Filters */}
         <div className="px-5 pt-4 pb-3 border-b border-slate-50 shrink-0">
           <p className="text-xs font-medium text-slate-500 mb-2">Filter by location</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
               <label className="text-[10px] text-slate-400 flex items-center gap-1 mb-1"><Globe size={10} />Country</label>
               <select value={filterCountry} onChange={e => { setFilterCountry(e.target.value); setFilterState(''); setFilterCity(''); }}
@@ -955,7 +957,7 @@ export function ProductListPage() {
         breadcrumbs={[{ label: 'Home' }, { label: 'Catalog' }, { label: 'Products' }]}
         action={
           can('catalog.edit') && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" variant="outline" onClick={() => setModal({ type: 'excel' })}>
                 <FileSpreadsheet size={14} /> Import Excel
               </Button>
@@ -978,7 +980,7 @@ export function ProductListPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4">
-        <div className="relative flex-1 min-w-48 max-w-xs">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search products..." className="pl-9" value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }} />
@@ -1046,7 +1048,7 @@ export function ProductListPage() {
           <p className="text-sm mt-1">Try a different search or import from Excel</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {products.map(product => (
             <div key={product.id} className={`relative bg-white rounded-2xl border overflow-hidden hover:shadow-sm transition-all group ${
               product.isActive ? 'border-slate-100 hover:border-orange-200' : 'border-red-300 hover:border-red-400'

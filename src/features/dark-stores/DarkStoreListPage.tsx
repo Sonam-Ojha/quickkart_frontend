@@ -38,7 +38,7 @@ function StoreModal({ store, onClose, onSave }: { store?: DarkStore | null; onCl
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-slate-100">
           <h2 className="font-semibold text-slate-800">{store ? 'Edit Store' : 'Add Dark Store'}</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
@@ -198,7 +198,7 @@ export function DarkStoreListPage() {
           <p className="text-sm mt-1">Click "Add Store" to create one</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {stores.map(store => (
             <div key={store.id} className={`bg-white rounded-2xl border overflow-hidden transition-all hover:shadow-sm group ${store.isActive ? 'border-slate-100' : 'border-slate-100 opacity-70'}`}>
               <div className={`h-24 flex items-center justify-center ${store.isActive ? 'bg-gradient-to-br from-teal-50 to-emerald-50' : 'bg-slate-50'}`}>

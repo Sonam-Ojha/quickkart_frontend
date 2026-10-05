@@ -61,7 +61,7 @@ function CouponModal({ coupon, onClose, onSave }: { coupon?: Coupon | null; onCl
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Code *</label>
               <Input value={form.code} onChange={e => set('code', e.target.value.toUpperCase())} placeholder="SAVE50" className="font-mono uppercase" />
@@ -76,7 +76,7 @@ function CouponModal({ coupon, onClose, onSave }: { coupon?: Coupon | null; onCl
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">
                 {form.type === 'percent' ? 'Discount %' : 'Discount ₹'} *
@@ -91,7 +91,7 @@ function CouponModal({ coupon, onClose, onSave }: { coupon?: Coupon | null; onCl
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Min Order ₹</label>
               <Input type="number" min="0" value={form.minOrder ?? 0} onChange={e => set('minOrder', Number(e.target.value))} placeholder="paise" />
@@ -107,7 +107,7 @@ function CouponModal({ coupon, onClose, onSave }: { coupon?: Coupon | null; onCl
             <Input type="number" min="1" value={form.usageLimit ?? ''} onChange={e => set('usageLimit', e.target.value ? Number(e.target.value) : undefined)} placeholder="Leave empty for unlimited" />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Valid From *</label>
               <Input type="date" value={form.validFrom} onChange={e => set('validFrom', e.target.value)} />
@@ -197,12 +197,12 @@ export function CouponListPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-48 max-w-xs">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search code..." className="pl-9 font-mono uppercase" value={search}
             onChange={e => setSearch(e.target.value.toUpperCase())} />
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {[{ v: 'all', l: 'All' }, { v: 'active', l: 'Active' }, { v: 'inactive', l: 'Inactive' }].map(opt => (
             <button key={opt.v} onClick={() => setStatus(opt.v)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${status === opt.v ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
@@ -228,19 +228,19 @@ export function CouponListPage() {
           <p className="font-medium">No coupons found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {coupons.map(c => (
             <div key={c.id} className={`bg-white rounded-2xl border overflow-hidden ${c.isActive ? 'border-slate-100' : 'border-slate-100 opacity-60'}`}>
               {/* Header */}
-              <div className={`px-5 pt-5 pb-4 relative ${c.type === 'percent' ? 'bg-gradient-to-r from-orange-50 to-amber-50' : 'bg-gradient-to-r from-teal-50 to-emerald-50'}`}>
-                <div className="flex items-start justify-between">
-                  <div>
+              <div className={`px-4 sm:px-5 pt-4 sm:pt-5 pb-4 relative ${c.type === 'percent' ? 'bg-gradient-to-r from-orange-50 to-amber-50' : 'bg-gradient-to-r from-teal-50 to-emerald-50'}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${c.type === 'percent' ? 'bg-orange-100 text-[#EA580C]' : 'bg-teal-100 text-[#0F766E]'}`}>
                       {c.type === 'percent' ? 'Percentage' : 'Flat Discount'}
                     </span>
-                    <h3 className="font-bold text-2xl text-slate-800 mt-2 font-mono tracking-wider">{c.code}</h3>
+                    <h3 className="font-bold text-xl sm:text-2xl text-slate-800 mt-2 font-mono tracking-wider break-all">{c.code}</h3>
                   </div>
-                  <div className={`text-3xl font-bold ${c.type === 'percent' ? 'text-[#EA580C]' : 'text-[#0F766E]'}`} style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  <div className={`shrink-0 text-2xl sm:text-3xl font-bold ${c.type === 'percent' ? 'text-[#EA580C]' : 'text-[#0F766E]'}`} style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                     {c.type === 'percent' ? `${c.value}%` : money(c.value)}
                   </div>
                 </div>
@@ -253,7 +253,7 @@ export function CouponListPage() {
               </div>
 
               {/* Body */}
-              <div className="px-5 pt-6 pb-4">
+              <div className="px-4 sm:px-5 pt-6 pb-4">
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div>
                     <div className="text-[10px] text-slate-400 uppercase tracking-wide">Min Order</div>

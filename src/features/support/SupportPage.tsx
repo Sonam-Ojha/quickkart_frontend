@@ -73,7 +73,7 @@ function TicketDrawer({ ticket: init, onClose, onUpdate }: { ticket: SupportTick
             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLOR[ticket.status]}`}>
               {ticket.status.replace('_', ' ')}
             </span>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-wrap">
               {ticket.status !== 'in_progress' && (
                 <Button size="sm" variant="outline" onClick={() => handleStatus('in_progress')} disabled={updating}>
                   {updating ? <Loader2 size={12} className="animate-spin" /> : 'In Progress'}
@@ -165,7 +165,7 @@ export function SupportPage() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-5">
           <StatCard label="Total" value={stats.total} icon={Inbox} color="#475569" />
           <StatCard label="Open" value={stats.open} icon={AlertCircle} color="#DC2626" />
           <StatCard label="In Progress" value={stats.in_progress} icon={Clock} color="#F59E0B" />
@@ -175,11 +175,11 @@ export function SupportPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
-        <div className="relative flex-1 min-w-48 max-w-xs">
+        <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-xs">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <Input placeholder="Search by name, email or ID..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {[{v:'all',l:'All'},{v:'open',l:'Open'},{v:'in_progress',l:'In Progress'},{v:'resolved',l:'Resolved'}].map(s => (
             <button key={s.v} onClick={() => setStatus(s.v)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${status === s.v ? 'bg-[#EA580C] text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-orange-200'}`}>
@@ -196,55 +196,57 @@ export function SupportPage() {
       {error && <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
 
       <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">#</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Category</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Order</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Date</th>
-              <th className="px-5 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {loading ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading tickets...
-              </td></tr>
-            ) : tickets.length === 0 ? (
-              <tr><td colSpan={7} className="py-20 text-center text-slate-400">
-                <MessageSquare size={36} className="mx-auto mb-3 text-slate-200" /><p className="font-medium">No tickets found</p>
-              </td></tr>
-            ) : tickets.map(t => (
-              <tr key={t.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setSelected(t)}>
-                <td className="px-5 py-3.5 font-semibold text-slate-700">#{t.id}</td>
-                <td className="px-5 py-3.5">
-                  <div className="font-medium text-slate-800">{t.customer?.name ?? '—'}</div>
-                  <div className="text-xs text-slate-400">{t.customer?.email ?? ''}</div>
-                </td>
-                <td className="px-5 py-3.5 hidden md:table-cell">
-                  <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full capitalize">{t.category}</span>
-                </td>
-                <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-500">{t.order ? `#${t.order.id}` : '—'}</td>
-                <td className="px-5 py-3.5">
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${STATUS_STYLE[t.status]}`}>
-                    {t.status.replace('_', ' ')}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{formatDateTime(t.created_at)}</td>
-                <td className="px-5 py-3.5">
-                  <MessageSquare size={14} className="text-slate-300 hover:text-[#EA580C] transition-colors" />
-                </td>
+        <div className="overflow-x-auto" data-scroll>
+          <table className="[&_th]:whitespace-nowrap w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">#</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Customer</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Category</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Order</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
+                <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Date</th>
+                <th className="px-3 sm:px-5 py-3" />
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <Loader2 size={22} className="animate-spin mx-auto mb-2" />Loading tickets...
+                </td></tr>
+              ) : tickets.length === 0 ? (
+                <tr><td colSpan={7} className="py-20 text-center text-slate-400">
+                  <MessageSquare size={36} className="mx-auto mb-3 text-slate-200" /><p className="font-medium">No tickets found</p>
+                </td></tr>
+              ) : tickets.map(t => (
+                <tr key={t.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setSelected(t)}>
+                  <td className="px-3 sm:px-5 py-3.5 font-semibold text-slate-700">#{t.id}</td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <div className="font-medium text-slate-800">{t.customer?.name ?? '—'}</div>
+                    <div className="text-xs text-slate-400">{t.customer?.email ?? ''}</div>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
+                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full capitalize">{t.category}</span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell text-xs text-slate-500">{t.order ? `#${t.order.id}` : '—'}</td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${STATUS_STYLE[t.status]}`}>
+                      {t.status.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{formatDateTime(t.created_at)}</td>
+                  <td className="px-3 sm:px-5 py-3.5">
+                    <MessageSquare size={14} className="text-slate-300 hover:text-[#EA580C] transition-colors" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {pages > 1 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/30">
+          <div className="flex items-center justify-between gap-3 px-3 sm:px-5 py-3 border-t border-slate-100 bg-slate-50/30">
             <span className="text-xs text-slate-400">Page {page} of {pages}</span>
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 flex-wrap">
               <Button variant="outline" size="sm" onClick={() => setPage(p => p-1)} disabled={page===1}><ChevronLeft size={14}/></Button>
               <Button variant="outline" size="sm" onClick={() => setPage(p => p+1)} disabled={page===pages}><ChevronRight size={14}/></Button>
             </div>

@@ -9,24 +9,24 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, action, breadcrumbs }: PageHeaderProps) {
   return (
-    <div className="flex items-start justify-between mb-6">
-      <div>
+    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4 sm:mb-6">
+      <div className="min-w-0">
         {breadcrumbs && breadcrumbs.length > 0 && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400 mb-1.5">
             {breadcrumbs.map((b, i) => (
-              <span key={i} className="flex items-centers gap-1.5">
+              <span key={i} className="flex items-center gap-1.5">
                 {i > 0 && <span>/</span>}
                 <span className={b.href ? 'text-[#EA580C] cursor-pointer hover:underline' : ''}>{b.label}</span>
               </span>
             ))}
           </div>
         )}
-        <h1 className="text-xl font-bold text-slate-900" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-lg sm:text-xl font-bold text-slate-900" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           {title}
         </h1>
         {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
       </div>
-      {action && <div>{action}</div>}
+      {action && <div className="flex flex-wrap items-center gap-2 shrink-0">{action}</div>}
     </div>
   );
 }

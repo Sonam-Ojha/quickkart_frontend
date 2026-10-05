@@ -245,10 +245,10 @@ export function NotificationComposer() {
         subtitle="Send notifications to app users via FCM"
         breadcrumbs={[{ label: 'Home' }, { label: 'Notifications' }]}
       />
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
         {/* Form */}
         <div className="lg:col-span-8 space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-100 p-5">
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5">
             <h3 className="font-semibold text-slate-800 mb-4">Compose Message</h3>
             <div className="space-y-4">
               <div>
@@ -277,7 +277,7 @@ export function NotificationComposer() {
                     <button
                       key={s.value}
                       onClick={() => setSegment(s.value)}
-                      className={`p-3 rounded-xl border text-left transition-colors ${
+                      className={`p-2.5 sm:p-3 rounded-xl border text-left transition-colors ${
                         segment === s.value ? 'border-[#EA580C] bg-orange-50' : 'border-slate-200 hover:border-orange-200'
                       }`}
                     >
@@ -315,7 +315,7 @@ export function NotificationComposer() {
 
         {/* Preview */}
         <div className="lg:col-span-4">
-          <div className="bg-white rounded-2xl border border-slate-100 p-5 sticky top-4">
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 sm:p-5 lg:sticky lg:top-4">
             <h3 className="font-semibold text-slate-800 mb-4 text-sm">Preview</h3>
 
             {/* Channel tabs */}

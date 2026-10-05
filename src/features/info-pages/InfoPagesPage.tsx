@@ -68,10 +68,10 @@ function Modal({ page, onClose, onSave }: { page: Partial<InfoPage> | null; onCl
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 flex flex-col gap-4">
+      <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 flex flex-col gap-4">
         <h2 className="text-lg font-semibold">{form.id ? 'Edit Page' : 'New Page'}</h2>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs font-medium text-slate-600 mb-1 block">Slug *</label>
             <select className="w-full border border-slate-200 rounded px-2 py-2 text-sm"
@@ -141,40 +141,42 @@ export default function InfoPagesPage() {
       />
 
       <div className="mt-6 bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
-            <tr>
-              <th className="px-4 py-3 text-left">Title</th>
-              <th className="px-4 py-3 text-left">Slug</th>
-              <th className="px-4 py-3 text-left">Sections</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {pages.map(p => (
-              <tr key={p.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium">{p.title}</td>
-                <td className="px-4 py-3 text-slate-500 font-mono text-xs">{p.slug}</td>
-                <td className="px-4 py-3 text-slate-500">{p.sections?.length ?? 0}</td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${p.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                    {p.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-2">
-                    <button onClick={() => setEditing(p)} className="p-1.5 text-slate-400 hover:text-indigo-600"><Pencil size={14} /></button>
-                    <button onClick={() => remove(p.id)} className="p-1.5 text-slate-400 hover:text-red-500"><Trash2 size={14} /></button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto" data-scroll>
+          <table className="[&_th]:whitespace-nowrap w-full text-sm">
+            <thead className="bg-slate-50 text-slate-500 text-xs uppercase">
+              <tr>
+                <th className="px-3 sm:px-4 py-3 text-left">Title</th>
+                <th className="px-3 sm:px-4 py-3 text-left">Slug</th>
+                <th className="px-3 sm:px-4 py-3 text-left">Sections</th>
+                <th className="px-3 sm:px-4 py-3 text-left">Status</th>
+                <th className="px-3 sm:px-4 py-3" />
               </tr>
-            ))}
-            {pages.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">No pages yet</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {pages.map(p => (
+                <tr key={p.id} className="hover:bg-slate-50">
+                  <td className="px-3 sm:px-4 py-3 font-medium">{p.title}</td>
+                  <td className="px-3 sm:px-4 py-3 text-slate-500 font-mono text-xs">{p.slug}</td>
+                  <td className="px-3 sm:px-4 py-3 text-slate-500">{p.sections?.length ?? 0}</td>
+                  <td className="px-3 sm:px-4 py-3">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${p.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                      {p.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-3 sm:px-4 py-3">
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => setEditing(p)} className="p-1.5 text-slate-400 hover:text-indigo-600"><Pencil size={14} /></button>
+                      <button onClick={() => remove(p.id)} className="p-1.5 text-slate-400 hover:text-red-500"><Trash2 size={14} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {pages.length === 0 && (
+                <tr><td colSpan={5} className="px-3 sm:px-4 py-8 text-center text-slate-400">No pages yet</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {editing !== false && (
