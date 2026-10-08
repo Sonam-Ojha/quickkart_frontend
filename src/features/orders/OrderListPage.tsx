@@ -4,7 +4,7 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { cn, money, formatDateTime } from '../../lib/utils';
+import { cn, rupees, formatDateTime } from '../../lib/utils';
 import { orderApi, Order, OrderStats, OrderStatus } from './api';
 import { riderApi, Rider } from '../riders/api';
 
@@ -258,9 +258,9 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium text-slate-700">{item.product.name}</div>
-                      <div className="text-xs text-slate-400">{item.quantity} × {money(item.unitPrice)}</div>
+                      <div className="text-xs text-slate-400">{item.quantity} × {rupees(item.unitPrice)}</div>
                     </div>
-                    <span className="shrink-0 text-sm font-semibold text-slate-800">{money(item.total)}</span>
+                    <span className="shrink-0 text-sm font-semibold text-slate-800">{rupees(item.total)}</span>
                   </div>
                 ))}
               </div>
@@ -279,13 +279,13 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
                 <div key={r.label} className="flex justify-between text-sm">
                   <span className="text-slate-500">{r.label}</span>
                   <span className={cn('font-medium', r.value < 0 ? 'text-green-600' : 'text-slate-700')}>
-                    {r.value < 0 ? `- ${money(Math.abs(r.value))}` : money(r.value)}
+                    {r.value < 0 ? `- ${rupees(Math.abs(r.value))}` : rupees(r.value)}
                   </span>
                 </div>
               ))}
               <div className="flex justify-between border-t border-slate-200 pt-2 text-sm font-bold">
                 <span className="text-slate-800">Total</span>
-                <span className="text-[#EA580C]">{money(order.total)}</span>
+                <span className="text-[#EA580C]">{rupees(order.total)}</span>
               </div>
             </div>
           </section>
@@ -421,7 +421,7 @@ export function OrderListPage() {
           <OrderStatCard label="Active"    value={String(stats.active)}     icon={Truck}        color="#2563EB" />
           <OrderStatCard label="Delivered" value={String(stats.delivered)}  icon={CheckCircle}  color="#16A34A" />
           <OrderStatCard label="Cancelled" value={String(stats.cancelled)}  icon={XCircle}      color="#DC2626" />
-          <OrderStatCard label="Revenue"   value={money(stats.revenue)}     icon={IndianRupee}  color="#0F766E" />
+          <OrderStatCard label="Revenue"   value={rupees(stats.revenue)}     icon={IndianRupee}  color="#0F766E" />
         </div>
       )}
 
@@ -485,7 +485,7 @@ export function OrderListPage() {
                     <span className="text-slate-500 text-xs">{order.store?.name ?? '—'}</span>
                   </td>
                   <td className="px-3 sm:px-5 py-3.5">
-                    <span className="font-semibold text-slate-800">{money(order.total)}</span>
+                    <span className="font-semibold text-slate-800">{rupees(order.total)}</span>
                   </td>
                   <td className="px-3 sm:px-5 py-3.5">
                     <StatusBadge status={order.status} />

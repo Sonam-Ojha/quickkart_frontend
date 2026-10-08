@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, TrendingUp, Clock, Bike, Package, ArrowUp, Loader2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { money } from '../../lib/utils';
+import { rupees } from '../../lib/utils';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import api from '../../lib/api';
 import { useAuthStore } from '../../store/auth.store';
@@ -85,7 +85,7 @@ export function DashboardPage() {
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard label="Orders Today"   value={String(kpis?.todayOrders ?? 0)}       icon={ShoppingBag} color="#EA580C" />
-        <KpiCard label="Revenue Today"  value={money(kpis?.todayRevenue ?? 0)}        icon={TrendingUp}  color="#0F766E" />
+        <KpiCard label="Revenue Today"  value={rupees(kpis?.todayRevenue ?? 0)}        icon={TrendingUp}  color="#0F766E" />
         <KpiCard label="Total Customers" value={String(kpis?.totalCustomers ?? 0)}    icon={Package}     color="#8B5CF6" />
         <KpiCard label="Active Riders"  value={String(kpis?.activeRiders ?? 0)}       icon={Bike}        color="#F59E0B" />
       </div>
@@ -166,7 +166,7 @@ export function DashboardPage() {
                     <div className="text-xs text-slate-500 truncate">{order.customer?.name} · {order.store?.name}</div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-sm font-semibold text-slate-800">{money(order.total)}</div>
+                    <div className="text-sm font-semibold text-slate-800">{rupees(order.total)}</div>
                     <StatusBadge status={order.status} />
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export function DashboardPage() {
                     <div className="text-sm font-medium text-slate-800 truncate">{p.name}</div>
                     <div className="text-xs text-slate-400">{p.totalQty} orders</div>
                   </div>
-                  <span className="text-sm font-semibold text-[#0F766E] shrink-0">{money(p.totalRevenue)}</span>
+                  <span className="text-sm font-semibold text-[#0F766E] shrink-0">{rupees(p.totalRevenue)}</span>
                 </div>
               ))}
             </div>

@@ -39,6 +39,9 @@ export interface Rider {
   totalDeliveries: number;
   totalEarnings: number;
   status: RiderStatus;
+  serviceLat?: number | string | null;
+  serviceLng?: number | string | null;
+  serviceRadius?: number | string;
   kycAadhaarStatus?: DocStatus;
   kycPanStatus?: DocStatus;
   kycLicenseStatus?: DocStatus;
@@ -54,6 +57,10 @@ export interface RiderPayload {
   password?: string;
   rating?: number;
   status?: RiderStatus;
+  /** Service area — the rider gets orders from stores inside this circle. */
+  serviceLat?: number | null;
+  serviceLng?: number | null;
+  serviceRadius?: number;
 }
 
 export const riderApi = {

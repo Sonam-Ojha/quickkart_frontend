@@ -20,6 +20,9 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
     password: '',
     rating: rider?.rating ?? 5,
     status: rider?.status ?? 'active',
+    serviceLat: rider?.serviceLat != null ? Number(rider.serviceLat) : null,
+    serviceLng: rider?.serviceLng != null ? Number(rider.serviceLng) : null,
+    serviceRadius: rider?.serviceRadius != null ? Number(rider.serviceRadius) : 5,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -29,6 +32,7 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.mobile || !form.storeId) { setError('Name, mobile and store are required'); return; }
+    if ((form.serviceLat == null) !== (form.serviceLng == null)) { setError('Service area ke liye latitude aur longitude dono bharo'); return; }
     setSaving(true); setError('');
     try {
       rider ? await riderApi.update(rider.id, form) : await riderApi.create(form);
@@ -64,6 +68,36 @@ function RiderModal({ rider, stores, onClose, onSave }: { rider?: Rider | null; 
               <option value="">Select store</option>
               {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-600 mb-1 block">
+              Service Area (rider ko kin stores ke orders milenge?)
+            </label>
+            <div className="grid grid-cols-2 gap-3 mb-2">
+              <Input type="number" step="any" value={form.serviceLat ?? ''} onChange={e => set('serviceLat', e.target.value ? Number(e.target.value) : null)} placeholder="Latitude e.g. 28.6139" />
+              <Input type="number" step="any" value={form.serviceLng ?? ''} onChange={e => set('serviceLng', e.target.value ? Number(e.target.value) : null)} placeholder="Longitude e.g. 77.2090" />
+            </div>
+            <div className="flex gap-2 flex-wrap mb-2">
+              {[3, 5, 10, 15, 20].map(km => (
+                <button
+                  key={km}
+                  type="button"
+                  onClick={() => set('serviceRadius', km)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                    form.serviceRadius === km
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'
+                  }`}
+                >
+                  {km} km
+                </button>
+              ))}
+            </div>
+            <div className="text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2">
+              {form.serviceLat != null && form.serviceLng != null
+                ? `📍 Is point se ${form.serviceRadius} km ke andar jo bhi store hai, uske orders is rider ko jayenge`
+                : '🏪 Area set nahi hai — rider ko sirf upar chune gaye store ke orders milenge'}
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
@@ -264,7 +298,7 @@ export function RiderListPage() {
                 <div className="text-center p-2 bg-slate-50 rounded-xl">
                   <div className="flex items-center justify-center gap-0.5 mb-0.5">
                     <TrendingUp size={10} className="text-green-600" />
-                    <span className="font-bold text-sm text-slate-800">₹{Math.round((rider.totalEarnings ?? 0) / 100)}</span>
+                    <span className="font-bold text-sm text-slate-800">₹{Math.round(rider.totalEarnings ?? 0)}</span>
                   </div>
                   <div className="text-[10px] text-slate-400">Earned</div>
                 </div>

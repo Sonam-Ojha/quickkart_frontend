@@ -5,7 +5,7 @@ import { StatusBadge } from '../../components/common/StatusBadge';
 import { StatCard } from '../../components/common/StatCard';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { money, formatDateTime } from '../../lib/utils';
+import { rupees, formatDateTime } from '../../lib/utils';
 import { paymentApi, Payment, PaymentStats } from './api';
 
 const GATEWAYS = ['all','razorpay','paytm','phonepe','upi','wallet','cod'];
@@ -62,7 +62,7 @@ export function PaymentListPage() {
           <StatCard label="Pending" value={stats.pending} icon={Clock} color="#F59E0B" />
           <StatCard label="Failed" value={stats.failed} icon={XCircle} color="#DC2626" />
           <StatCard label="Refunded" value={stats.refunded} icon={RotateCcw} color="#8B5CF6" />
-          <StatCard label="Revenue" value={money(stats.revenue)} icon={TrendingUp} color="#0F766E" />
+          <StatCard label="Revenue" value={rupees(stats.revenue)} icon={TrendingUp} color="#0F766E" />
         </div>
       )}
 
@@ -119,7 +119,7 @@ export function PaymentListPage() {
                   <td className="px-3 sm:px-5 py-3.5 hidden md:table-cell">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${GATEWAY_COLORS[p.gateway] ?? 'bg-slate-100 text-slate-600'}`}>{p.gateway}</span>
                   </td>
-                  <td className="px-3 sm:px-5 py-3.5 font-semibold text-slate-800">{money(p.amount)}</td>
+                  <td className="px-3 sm:px-5 py-3.5 font-semibold text-slate-800">{rupees(p.amount)}</td>
                   <td className="px-3 sm:px-5 py-3.5"><StatusBadge status={p.status} /></td>
                   <td className="px-3 sm:px-5 py-3.5 hidden lg:table-cell text-xs text-slate-400">{formatDateTime(p.created_at)}</td>
                 </tr>
