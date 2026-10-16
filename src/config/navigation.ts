@@ -33,7 +33,8 @@ export const NAV_ITEMS: NavItem[] = [
     ]
   },
   { label: 'Riders',        href: '/riders',          icon: 'Bike',            permission: 'riders.view' },
-  { label: 'Customers',     href: '/customers',       icon: 'Users',           permission: 'customers.view' },
+  { label: 'Customers',          href: '/customers',          icon: 'Users',    permission: 'customers.view' },
+  { label: 'Account Deletions',  href: '/account-deletions',  icon: 'UserX',    permission: 'customers.view' },
   { label: 'Support',       href: '/support',         icon: 'MessageSquare',   permission: 'support.view' },
   { label: 'Payments',      href: '/payments',        icon: 'CreditCard',      permission: 'payments.view' },
   { label: 'Wallet',        href: '/wallet',          icon: 'Wallet',          permission: 'wallet.view' },

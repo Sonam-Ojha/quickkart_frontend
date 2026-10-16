@@ -31,6 +31,7 @@ import { SupportPage } from './features/support/SupportPage';
 import { FaqListPage } from './features/faqs/FaqListPage';
 import InfoPagesPage from './features/info-pages/InfoPagesPage';
 import GeoMastersPage from './features/geo/GeoMastersPage';
+import { AccountDeletionsPage } from './features/account-deletions/AccountDeletionsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } }
@@ -119,6 +120,7 @@ export default function App() {
                 <Route path="settings" element={<SettingsPage />} />
               </Route>
 
+              <Route path="account-deletions" element={<AccountDeletionsPage />} />
               <Route path="profile" element={<ProfilePage />} />
 
               <Route path="*" element={<Navigate to="/" replace />} />
