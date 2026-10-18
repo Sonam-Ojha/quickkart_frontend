@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Loader2, Check, FileText, ExternalLink, AlertCircle, ShieldCheck } from 'lucide-react';
+import { X, Loader2, Check, FileText, ExternalLink, AlertCircle, ShieldCheck, Eye } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { riderApi, Rider, RiderDocument, REQUIRED_DOCS, DOC_LABEL } from './api';
 
@@ -8,6 +8,48 @@ const DOC_BADGE: Record<string, string> = {
   uploaded: 'bg-amber-50 text-amber-700',
   rejected: 'bg-red-50 text-red-600',
 };
+
+const isImage = (url: string) => /\.(png|jpe?g|webp|gif|heic)$/i.test(url.split('?')[0]);
+
+/** Full-size preview of one KYC file, over the review modal: images inline,
+ *  PDFs (and anything else) in the browser's own viewer. */
+function DocViewer({ doc, onClose }: { doc: RiderDocument; onClose: () => void }) {
+  const url = doc.viewUrl ?? doc.fileUrl;
+  const [failed, setFailed] = useState(false);
+  return (
+    // stopPropagation: this sits inside the KYC modal's backdrop, which would
+    // otherwise close too.
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]"
+      onClick={e => { e.stopPropagation(); onClose(); }}>
+      <div className="bg-white rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+          <div className="font-semibold text-slate-800">{DOC_LABEL[doc.docType] ?? doc.docType}</div>
+          <div className="flex items-center gap-3">
+            <a href={url} target="_blank" rel="noreferrer"
+              className="text-xs text-[#EA580C] hover:underline inline-flex items-center gap-1">
+              Open in new tab <ExternalLink size={10} />
+            </a>
+            <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
+          </div>
+        </div>
+        <div className="flex-1 bg-slate-50 flex items-center justify-center overflow-auto">
+          {failed ? (
+            <div className="text-center text-slate-500 text-sm p-6">
+              <AlertCircle size={28} className="mx-auto mb-2 text-red-400" />
+              Couldn’t load this file. The link may have expired — close and reopen the KYC panel.
+            </div>
+          ) : isImage(url) ? (
+            <img src={url} alt={DOC_LABEL[doc.docType] ?? doc.docType}
+              onError={() => setFailed(true)}
+              className="max-w-full max-h-full object-contain" />
+          ) : (
+            <iframe src={url} title={DOC_LABEL[doc.docType] ?? doc.docType} className="w-full h-full border-0" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /** Reviews one rider's KYC. Verifying the last required document activates
  *  the rider server-side; `onChanged` refreshes the list behind the modal. */
@@ -23,6 +65,7 @@ export function KycModal({ rider, onClose, onChanged }: {
   const [rejecting, setRejecting] = useState<number | null>(null);
   const [reason, setReason] = useState('');
   const [status, setStatus] = useState(rider.status);
+  const [viewing, setViewing] = useState<RiderDocument | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -109,10 +152,10 @@ export function KycModal({ rider, onClose, onChanged }: {
                   <div className="font-medium text-slate-800 text-sm">
                     {DOC_LABEL[doc.docType] ?? doc.docType}
                   </div>
-                  <a href={doc.fileUrl} target="_blank" rel="noreferrer"
+                  <button type="button" onClick={() => setViewing(doc)}
                     className="text-xs text-[#EA580C] hover:underline inline-flex items-center gap-1">
-                    Open file <ExternalLink size={10} />
-                  </a>
+                    View document <Eye size={11} />
+                  </button>
                   {doc.status === 'rejected' && doc.rejectionReason && (
                     <p className="text-xs text-red-600 mt-1">Rejected: {doc.rejectionReason}</p>
                   )}
@@ -166,6 +209,7 @@ export function KycModal({ rider, onClose, onChanged }: {
           <Button variant="outline" onClick={onClose}>Close</Button>
         </div>
       </div>
+      {viewing && <DocViewer doc={viewing} onClose={() => setViewing(null)} />}
     </div>
   );
 }

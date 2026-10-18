@@ -40,6 +40,8 @@ export interface Product {
   mrp: number;
   price: number;
   imageUrl: string | null;
+  /** Gallery, cover first. */
+  images?: string[];
   tag: 'deal' | 'bestseller' | 'new' | null;
   isActive: boolean;
 }
@@ -52,6 +54,8 @@ export interface ProductPayload {
   mrp: number;
   price: number;
   imageUrl?: string;
+  /** Full gallery — the server makes images[0] the cover (imageUrl). */
+  images?: string[];
   tag?: 'deal' | 'bestseller' | 'new' | null;
   isActive?: boolean;
 }

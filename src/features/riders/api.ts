@@ -21,6 +21,8 @@ export interface RiderDocument {
   riderId: number;
   docType: string;
   fileUrl: string;
+  /** Short-lived signed link for viewing — KYC files are in a private bucket. */
+  viewUrl?: string;
   status: 'uploaded' | 'verified' | 'rejected';
   rejectionReason: string | null;
   reviewedAt: string | null;

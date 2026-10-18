@@ -13,6 +13,7 @@ import { usePermission } from '../../hooks/usePermission';
 import { catalogApi, Product, ProductPayload, Category, StoreVisibilityItem } from './api';
 import api from '../../lib/api';
 import ImageUploadField from '../../components/common/ImageUploadField';
+import ImageGalleryField from '../../components/common/ImageGalleryField';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -138,6 +139,7 @@ function ProductModal({ product, categories, onClose, onSave }: {
     mrp:        product ? product.mrp   / 100 : 0,
     price:      product ? product.price / 100 : 0,
     imageUrl:   product?.imageUrl   ?? '',
+    images:     product?.images?.length ? product.images : (product?.imageUrl ? [product.imageUrl] : []),
     tag:        product?.tag        ?? null,
     isActive:   product?.isActive   ?? true,
   });
@@ -344,13 +346,11 @@ function ProductModal({ product, categories, onClose, onSave }: {
 
               {/* Right column — image */}
               <div className="lg:col-span-2 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5">
-                <h3 className="text-sm font-semibold text-slate-700">Product Image</h3>
-                <p className="text-xs text-slate-400 mb-3">Shown on the product card and detail page in the customer app</p>
-                <ImageUploadField
-                  label="Image"
-                  value={form.imageUrl ?? ''}
-                  onChange={url => set('imageUrl', url)}
-                  previewClassName="h-40"
+                <h3 className="text-sm font-semibold text-slate-700">Product Images</h3>
+                <p className="text-xs text-slate-400 mb-3">Cover shows on product cards; customers swipe through all of them on the product page</p>
+                <ImageGalleryField
+                  value={form.images ?? []}
+                  onChange={urls => setForm(f => ({ ...f, images: urls, imageUrl: urls[0] ?? '' }))}
                 />
               </div>
             </div>
