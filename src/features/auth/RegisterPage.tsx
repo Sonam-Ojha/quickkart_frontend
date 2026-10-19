@@ -170,7 +170,7 @@ export function RegisterPage() {
                   value={form.name}
                   onChange={set('name')}
                   className={`pl-9 ${fieldErrors.name ? 'border-red-300 focus:ring-red-400' : ''}`}
-                  placeholder="Rishi Dubey"
+                  placeholder="Enter your full name"
                   disabled={success}
                   autoFocus
                 />
@@ -190,7 +190,7 @@ export function RegisterPage() {
                   value={form.email}
                   onChange={set('email')}
                   className={`pl-9 ${fieldErrors.email ? 'border-red-300 focus:ring-red-400' : ''}`}
-                  placeholder="admin@jhatpats.app"
+                  placeholder="Enter your email address"
                   disabled={success}
                 />
               </div>

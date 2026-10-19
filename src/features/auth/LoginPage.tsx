@@ -103,7 +103,7 @@ export function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="pl-9"
-                  placeholder="admin@jhatpats.app"
+                  placeholder="Enter your email address"
                   required
                   autoFocus
                 />
