@@ -7,6 +7,17 @@ export interface OrderStore    { id: number; name: string; city: string; }
 export interface OrderRider    { id: number; name: string; mobile: string; rating: number; }
 export interface OrderProduct  { id: number; name: string; imageUrl: string | null; }
 export interface OrderItem     { id: number; quantity: number; unitPrice: number; total: number; product: OrderProduct; }
+export interface PrintFile     { name: string; url: string; key?: string | null; pages: number; }
+export interface PrintJob {
+  files: PrintFile[];
+  color: 'bw' | 'color';
+  paper: string;
+  sides: 'single' | 'double';
+  copies: number;
+  totalPages: number;
+  ratePerPage?: number;
+}
+export interface OrderAddress  { id: number; label: string | null; line1: string | null; line2: string | null; city: string | null; pincode: string | null; }
 export interface OrderTimeline { id: number; status: OrderStatus; note: string | null; createdAt: string; }
 
 export interface Order {
@@ -17,6 +28,9 @@ export interface Order {
   discount: number;
   total: number;
   cancelReason: string | null;
+  orderType?: 'grocery' | 'print';
+  printJob?: PrintJob | null;
+  address?: OrderAddress | null;
   customer: OrderCustomer;
   store: OrderStore;
   rider: OrderRider | null;
@@ -35,10 +49,10 @@ export interface OrderStats {
 }
 
 export const orderApi = {
-  getStats: () =>
-    api.get<OrderStats>('/api/admin/orders/stats').then(r => r.data),
+  getStats: (type?: 'grocery' | 'print') =>
+    api.get<OrderStats>('/api/admin/orders/stats', { params: { type } }).then(r => r.data),
 
-  getAll: (params?: { status?: string; search?: string; page?: number; limit?: number }) =>
+  getAll: (params?: { status?: string; type?: 'grocery' | 'print'; search?: string; page?: number; limit?: number }) =>
     api.get<{ orders: Order[]; total: number; page: number; pages: number }>(
       '/api/admin/orders', { params }
     ).then(r => r.data),

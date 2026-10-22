@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, UserCheck, Mail, Phone, IndianRupee } from 'lucide-react';
+import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, Printer, UserCheck, Mail, Phone, IndianRupee } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Button } from '../../components/ui/button';
@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/input';
 import { cn, rupees, formatDateTime } from '../../lib/utils';
 import { orderApi, Order, OrderStats, OrderStatus } from './api';
 import { riderApi, Rider } from '../riders/api';
+import { PrintJobSection } from './PrintJobSection';
 
 // ── Status config ──────────────────────────────────────────
 
@@ -213,6 +214,18 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
             </section>
           </div>
 
+          {/* Delivery address */}
+          {order.address && (
+            <section className="rounded-xl border border-slate-200 bg-white p-4">
+              <h3 className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <MapPin size={11} className="shrink-0" /> Deliver to
+              </h3>
+              <div className="text-sm text-slate-700">
+                {[order.address.line1, order.address.line2, order.address.city, order.address.pincode].filter(Boolean).join(', ') || '—'}
+              </div>
+            </section>
+          )}
+
           {/* Assign Rider */}
           {!isClosed && (
             <section className="rounded-xl border border-blue-100 bg-blue-50/60 p-4">
@@ -241,6 +254,9 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
               </div>
             </section>
           )}
+
+          {/* Print job */}
+          {order.orderType === 'print' && order.printJob && <PrintJobSection job={order.printJob} />}
 
           {/* Items */}
           {order.items && order.items.length > 0 && (
@@ -358,7 +374,7 @@ function OrderStatCard({ label, value, icon: Icon, color }: { label: string; val
 
 // ── Main Page ─────────────────────────────────────────────
 
-export function OrderListPage() {
+export function OrderListPage({ type, title = 'Orders' }: { type?: 'grocery' | 'print'; title?: string } = {}) {
   const [orders, setOrders]   = useState<Order[]>([]);
   const [stats, setStats]     = useState<OrderStats | null>(null);
   const [total, setTotal]     = useState(0);
@@ -371,19 +387,19 @@ export function OrderListPage() {
   const [selected, setSelected] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  useEffect(() => { orderApi.getStats().then(setStats).catch(() => {}); }, []);
+  useEffect(() => { orderApi.getStats(type).then(setStats).catch(() => {}); }, [type]);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const data = await orderApi.getAll({ status: status !== 'all' ? status : undefined, search: search || undefined, page, limit: 15 });
+      const data = await orderApi.getAll({ status: status !== 'all' ? status : undefined, type, search: search || undefined, page, limit: 15 });
       setOrders(data.orders);
       setTotal(data.total);
       setPages(data.pages);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Failed to load orders');
     } finally { setLoading(false); }
-  }, [status, search, page]);
+  }, [status, type, search, page]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => { setPage(1); }, [status, search]);
@@ -401,15 +417,15 @@ export function OrderListPage() {
   const handleStatusUpdate = (updated: Order) => {
     setOrders(prev => prev.map(o => o.id === updated.id ? { ...o, ...updated } : o));
     setSelected(prev => prev ? { ...prev, ...updated } : null);
-    orderApi.getStats().then(setStats).catch(() => {});
+    orderApi.getStats(type).then(setStats).catch(() => {});
   };
 
   return (
     <div>
       <PageHeader
-        title="Orders"
+        title={title}
         subtitle={loading ? 'Loading...' : `${total} total orders`}
-        breadcrumbs={[{ label: 'Home' }, { label: 'Orders' }]}
+        breadcrumbs={[{ label: 'Home' }, { label: title }]}
         action={<Button variant="outline" size="sm"><Download size={14} /> Export</Button>}
       />
 
@@ -472,6 +488,11 @@ export function OrderListPage() {
                 <tr key={order.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => openDetail(order)}>
                   <td className="px-3 sm:px-5 py-3.5">
                     <span className="font-semibold text-slate-800">#{order.id}</span>
+                    {order.orderType === 'print' && (
+                      <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-[#C2410C]">
+                        <Printer size={10} /> Print
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 sm:px-5 py-3.5">
                     <div className="flex items-center gap-2.5">
