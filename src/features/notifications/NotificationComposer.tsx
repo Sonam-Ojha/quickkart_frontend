@@ -6,6 +6,7 @@ import {
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { apiClient } from '../../lib/api';
 
 type Channel = 'push' | 'email' | 'sms';
 
@@ -237,6 +238,24 @@ export function NotificationComposer() {
   const [segment, setSegment]     = useState('all');
   const [scheduled, setScheduled] = useState(false);
   const [channel, setChannel]     = useState<Channel>('push');
+  const [sending, setSending]     = useState(false);
+  const [result, setResult]       = useState<string | null>(null);
+
+  const handleSend = async () => {
+    if (!title || !body || sending) return;
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await apiClient.post('/api/admin/notifications/send', { title, body, segment });
+      setResult(`✅ Sent to ${res.data.sent} users`);
+      setTitle('');
+      setBody('');
+    } catch (err: any) {
+      setResult(`❌ ${err?.response?.data?.message ?? 'Failed to send'}`);
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div>
@@ -303,12 +322,17 @@ export function NotificationComposer() {
               {scheduled && <Input type="datetime-local" className="mt-2" />}
             </div>
           </div>
+          {result && (
+            <div className={`text-sm px-3 py-2 rounded-lg ${result.startsWith('✅') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              {result}
+            </div>
+          )}
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1">
               <Clock size={14} /> Save Draft
             </Button>
-            <Button className="flex-1" disabled={!title || !body}>
-              <Send size={14} /> Send Now
+            <Button className="flex-1" disabled={!title || !body || sending} onClick={handleSend}>
+              <Send size={14} /> {sending ? 'Sending...' : 'Send Now'}
             </Button>
           </div>
         </div>
