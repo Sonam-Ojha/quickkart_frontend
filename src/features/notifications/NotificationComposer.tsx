@@ -6,7 +6,7 @@ import {
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { apiClient } from '../../lib/api';
+import api from '../../lib/api';
 
 type Channel = 'push' | 'email' | 'sms';
 
@@ -246,7 +246,7 @@ export function NotificationComposer() {
     setSending(true);
     setResult(null);
     try {
-      const res = await apiClient.post('/api/admin/notifications/send', { title, body, segment });
+      const res = await api.post('/api/admin/notifications/send', { title, body, segment });
       setResult(`✅ Sent to ${res.data.sent} users`);
       setTitle('');
       setBody('');
