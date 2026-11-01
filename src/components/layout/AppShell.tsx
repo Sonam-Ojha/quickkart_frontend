@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { requestNotificationPermission, listenForegroundMessages } from '../../lib/firebase';
+import api from '../../lib/api';
 
 const DESKTOP_QUERY = '(min-width: 1024px)';
 
@@ -23,6 +25,21 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isDesktop = useIsDesktop();
   const location = useLocation();
+
+  // Request FCM permission once per session (handles already-logged-in admins)
+  useEffect(() => {
+    requestNotificationPermission()
+      .then((token) => {
+        console.log('[FCM] token:', token ? token.slice(0, 30) + '...' : 'NULL');
+        if (!token) return;
+        api.post('/api/admin/profile/fcm-token', { token })
+          .then(() => console.log('[FCM] token saved to backend ✓'))
+          .catch(e => console.error('[FCM] token save failed:', e?.response?.data ?? e.message));
+        listenForegroundMessages();
+        console.log('[FCM] foreground listener registered ✓');
+      })
+      .catch(e => console.error('[FCM] permission error:', e));
+  }, []);
 
   // Close the mobile drawer on navigation or when switching to desktop
   useEffect(() => { setMobileOpen(false); }, [location.pathname, isDesktop]);

@@ -32,6 +32,7 @@ import { FaqListPage } from './features/faqs/FaqListPage';
 import InfoPagesPage from './features/info-pages/InfoPagesPage';
 import GeoMastersPage from './features/geo/GeoMastersPage';
 import { AccountDeletionsPage } from './features/account-deletions/AccountDeletionsPage';
+import { LiveTrackingPage } from './features/tracking/LiveTrackingPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } }
@@ -52,6 +53,7 @@ export default function App() {
               <Route element={<ProtectedRoute permission="orders.view" />}>
                 <Route path="orders" element={<OrderListPage />} />
                 <Route path="print-orders" element={<PrintOrdersPage />} />
+                <Route path="tracking" element={<LiveTrackingPage />} />
               </Route>
 
               <Route element={<ProtectedRoute permission="catalog.view" />}>

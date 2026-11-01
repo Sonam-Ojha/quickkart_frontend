@@ -10,10 +10,17 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ permission }: ProtectedRouteProps) {
+  const hydrated = useAuthStore(s => s._hasHydrated);
   const token    = useAuthStore(s => s.token);
   const role     = useAuthStore(s => s.user?.role);
   const logout   = useAuthStore(s => s.logout);
   const { can } = usePermission();
+
+  if (!hydrated) return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="w-6 h-6 border-2 border-[#EA580C] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   if (!token) return <Navigate to="/login" replace />;
 

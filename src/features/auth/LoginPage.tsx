@@ -5,6 +5,8 @@ import { useAuthStore } from '../../store/auth.store';
 import { authApi } from './api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { requestNotificationPermission, listenForegroundMessages } from '../../lib/firebase';
+import api from '../../lib/api';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -23,6 +25,17 @@ export function LoginPage() {
     try {
       const data = await authApi.login({ email, password });
       login(data.user, data.token);
+      // Request browser notification permission and save FCM token
+      requestNotificationPermission().then((token) => {
+        if (token) {
+          api.post('/api/admin/profile/fcm-token', { token }, {
+            baseURL: import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? 'http://localhost:4000' : 'https://api.jhatpats.com'),
+          }).catch((e) => {
+            console.error('[FCM] token save failed:', e?.response?.data ?? e.message);
+          });
+          listenForegroundMessages();
+        }
+      }).catch((e) => console.error('[FCM] permission error:', e));
       navigate('/');
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Login failed. Please try again.');

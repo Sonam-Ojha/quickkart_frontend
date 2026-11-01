@@ -1,8 +1,9 @@
 import React from 'react';
-import { Menu, Search, Bell, ChevronDown, LogOut, User } from 'lucide-react';
+import { Menu, Search, ChevronDown, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/auth.store';
 import { cn } from '../../lib/utils';
+import NotificationBell from '../ui/NotificationBell';
 
 const roleLabels: Record<string, string> = {
   super_admin: 'Super Admin',
@@ -43,10 +44,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
 
       <div className="flex items-center gap-1 sm:gap-2 ml-auto">
         {/* Notifications */}
-        <button className="relative p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
-          <Bell size={17} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EA580C] rounded-full"></span>
-        </button>
+        <NotificationBell />
 
         {/* User menu */}
         <div className="relative">

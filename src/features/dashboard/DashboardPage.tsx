@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, TrendingUp, Clock, Bike, Package, ArrowUp, Loader2 } from 'lucide-react';
+import { ShoppingBag, TrendingUp, Clock, Bike, Package, ArrowUp, Loader2, CalendarDays, X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { rupees } from '../../lib/utils';
 import { StatusBadge } from '../../components/common/StatusBadge';
@@ -43,31 +43,68 @@ function KpiCard({ label, value, icon: Icon, color }: { label: string; value: st
   );
 }
 
+const fmt = (d: Date) => d.toISOString().slice(0, 10);
+const PRESETS = [
+  { label: 'Today',      getDates: () => { const t = fmt(new Date()); return { from: t, to: t }; } },
+  { label: 'Yesterday',  getDates: () => { const d = new Date(); d.setDate(d.getDate()-1); const t = fmt(d); return { from: t, to: t }; } },
+  { label: 'Last 7 days',getDates: () => { const d = new Date(); d.setDate(d.getDate()-6); return { from: fmt(d), to: fmt(new Date()) }; } },
+  { label: 'Last 30 days',getDates: () => { const d = new Date(); d.setDate(d.getDate()-29); return { from: fmt(d), to: fmt(new Date()) }; } },
+  { label: 'This month', getDates: () => { const d = new Date(); return { from: fmt(new Date(d.getFullYear(),d.getMonth(),1)), to: fmt(d) }; } },
+];
+
 export function DashboardPage() {
   const [data, setData]       = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [from, setFrom]       = useState('');
+  const [to, setTo]           = useState('');
+  const [activePreset, setActivePreset] = useState<string>('Today');
   const userName = useAuthStore(s => s.user?.name?.split(' ')[0] ?? 'Admin');
 
-  useEffect(() => {
-    api.get('/api/admin/dashboard')
+  const fetchData = (fromDate = '', toDate = '') => {
+    setLoading(true);
+    const params = fromDate && toDate ? `?from=${fromDate}&to=${toDate}` : '';
+    api.get(`/api/admin/dashboard${params}`)
       .then(r => setData(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    const preset = PRESETS.find(p => p.label === 'Today')!;
+    const { from: f, to: t } = preset.getDates();
+    setFrom(f); setTo(t);
+    fetchData(f, t);
   }, []);
+
+  const applyPreset = (preset: typeof PRESETS[0]) => {
+    const { from: f, to: t } = preset.getDates();
+    setFrom(f); setTo(t); setActivePreset(preset.label);
+    fetchData(f, t);
+  };
+
+  const applyCustom = () => {
+    if (from && to) { setActivePreset('Custom'); fetchData(from, to); }
+  };
+
+  const clearFilter = () => {
+    setActivePreset('Today');
+    const preset = PRESETS.find(p => p.label === 'Today')!;
+    const { from: f, to: t } = preset.getDates();
+    setFrom(f); setTo(t);
+    fetchData(f, t);
+  };
+
+  const periodLabel = activePreset || (from && to ? `${from} → ${to}` : 'Today');
+  const kpiOrderLabel   = `Orders (${periodLabel})`;
+  const kpiRevenueLabel = `Revenue (${periodLabel})`;
+  const chartTitle = `Orders — ${periodLabel}`;
 
   const pieData = data?.statusDist.map(s => ({ name: s.status.replace(/_/g, ' '), value: s.count, color: STATUS_COLORS[s.status] ?? '#94A3B8' })) ?? [];
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-64 text-slate-400">
-      <Loader2 size={28} className="animate-spin mr-3" /> Loading dashboard...
-    </div>
-  );
-
   const kpis = data?.kpis;
-  const avgDelivery = 18;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 relative">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -77,25 +114,57 @@ export function DashboardPage() {
           <p className="text-sm text-slate-500 mt-0.5">Here's what's happening today</p>
         </div>
         <div className="self-start sm:self-auto flex items-center gap-2 text-xs sm:text-sm text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-1.5 sm:py-2 whitespace-nowrap">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-          Live · Today, {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+          {loading ? <Loader2 size={12} className="animate-spin shrink-0 text-orange-500" /> : <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />}
+          {periodLabel === 'Today'
+            ? `Live · Today, ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`
+            : from && to && from === to ? from : from && to ? `${from} → ${to}` : periodLabel}
+        </div>
+      </div>
+
+      {/* Date Filter */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <CalendarDays size={15} className="text-slate-400 shrink-0" />
+          <span className="text-xs font-medium text-slate-500 mr-1">Filter:</span>
+          {PRESETS.map(p => (
+            <button key={p.label} onClick={() => applyPreset(p)}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${activePreset === p.label ? 'bg-[#EA580C] text-white' : 'bg-slate-100 text-slate-600 hover:bg-orange-50 hover:text-[#EA580C]'}`}>
+              {p.label}
+            </button>
+          ))}
+          <div className="flex items-center gap-1.5 ml-auto">
+            <input type="date" value={from} onChange={e => setFrom(e.target.value)}
+              className="text-xs border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#EA580C]" />
+            <span className="text-slate-400 text-xs">to</span>
+            <input type="date" value={to} onChange={e => setTo(e.target.value)}
+              className="text-xs border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#EA580C]" />
+            <button onClick={applyCustom} disabled={!from || !to}
+              className="px-3 py-1 rounded-lg text-xs font-medium bg-[#EA580C] text-white disabled:opacity-40 hover:bg-orange-600 transition-colors">
+              Apply
+            </button>
+            {(activePreset || (from && to)) && (
+              <button onClick={clearFilter} className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <KpiCard label="Orders Today"   value={String(kpis?.todayOrders ?? 0)}       icon={ShoppingBag} color="#EA580C" />
-        <KpiCard label="Revenue Today"  value={rupees(kpis?.todayRevenue ?? 0)}        icon={TrendingUp}  color="#0F766E" />
-        <KpiCard label="Total Customers" value={String(kpis?.totalCustomers ?? 0)}    icon={Package}     color="#8B5CF6" />
-        <KpiCard label="Active Riders"  value={String(kpis?.activeRiders ?? 0)}       icon={Bike}        color="#F59E0B" />
+      <div className={`grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 transition-opacity ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+        <KpiCard label={kpiOrderLabel}   value={String(kpis?.todayOrders ?? 0)}    icon={ShoppingBag} color="#EA580C" />
+        <KpiCard label={kpiRevenueLabel} value={rupees(kpis?.todayRevenue ?? 0)}   icon={TrendingUp}  color="#0F766E" />
+        <KpiCard label="Total Customers" value={String(kpis?.totalCustomers ?? 0)} icon={Package}     color="#8B5CF6" />
+        <KpiCard label="Active Riders"   value={String(kpis?.activeRiders ?? 0)}   icon={Bike}        color="#F59E0B" />
       </div>
 
       {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div className={`grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 transition-opacity ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         <div className="lg:col-span-2 bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 min-w-0">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h3 className="font-semibold text-slate-900">Orders this week</h3>
+              <h3 className="font-semibold text-slate-900">{chartTitle}</h3>
               <p className="text-xs text-slate-400 mt-0.5">Daily order volume</p>
             </div>
             <span className="flex items-center gap-1.5 text-xs text-slate-500">
@@ -144,7 +213,7 @@ export function DashboardPage() {
       </div>
 
       {/* Bottom row */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className={`grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-4 transition-opacity ${loading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-100 overflow-hidden min-w-0">
           <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-50">
             <h3 className="font-semibold text-slate-900">Recent Orders</h3>
