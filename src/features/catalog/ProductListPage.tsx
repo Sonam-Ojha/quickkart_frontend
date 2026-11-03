@@ -17,7 +17,11 @@ import ImageGalleryField from '../../components/common/ImageGalleryField';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface RowDraft extends ProductPayload { _id: string }
+interface RowDraft extends ProductPayload {
+  _id: string;
+  /** Excel import: why this row's category couldn't be matched (blocks import). */
+  _catError?: string;
+}
 
 const TAGS = [
   { value: '',           label: '— None —' },
@@ -500,13 +504,42 @@ function ExcelImportModal({ categories, onClose, onSave }: {
   const [error, setError] = useState('');
   const [step, setStep] = useState<'upload' | 'preview'>('upload');
 
-  // Build a name→id map for Excel import (user writes category name, we resolve ID)
-  const catMap = Object.fromEntries(categories.map(c => [c.name.toLowerCase().trim(), c.id]));
+  // Excel gives category names; match them loosely ("Atta, Rice & Dal" ==
+  // "atta rice and dal") and put the product in its sub-category when one is
+  // given. Nothing unmatched is guessed — the row is flagged instead.
+  const norm = (v: any) => String(v ?? '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+  const mains = categories.filter(c => !c.parentId);
+  const subs  = categories.filter(c =>  c.parentId);
 
-  const resolveCatId = (val: any): number => {
-    if (typeof val === 'number') return val;
-    const str = String(val ?? '').toLowerCase().trim();
-    return catMap[str] ?? categories[0]?.id ?? 0;
+  const resolveCategory = (mainVal: any, subVal: any): { categoryId: number; error?: string } => {
+    const mainName = String(mainVal ?? '').trim();
+    const subName  = String(subVal ?? '').trim();
+    if (typeof mainVal === 'number' && !subName) {
+      return categories.some(c => c.id === mainVal) ? { categoryId: mainVal } : { categoryId: 0, error: `Category id ${mainVal} not found` };
+    }
+    const main = mainName ? mains.find(c => norm(c.name) === norm(mainName)) : undefined;
+    if (subName) {
+      const candidates = subs.filter(c => norm(c.name) === norm(subName));
+      const sub = main ? candidates.find(c => c.parentId === main.id) : candidates.length === 1 ? candidates[0] : undefined;
+      if (sub) return { categoryId: sub.id };
+      if (mainName && !main) return { categoryId: 0, error: `Category "${mainName}" not found` };
+      if (!main && candidates.length > 1) return { categoryId: 0, error: `Sub-category "${subName}" exists under several categories — fill the category column` };
+      return { categoryId: 0, error: main ? `Sub-category "${subName}" not found under "${main.name}"` : `Sub-category "${subName}" not found` };
+    }
+    if (!mainName) return { categoryId: 0, error: 'Category is empty' };
+    // Only a single name given — it may be a main category or a sub-category.
+    if (main) return { categoryId: main.id };
+    const asSub = subs.filter(c => norm(c.name) === norm(mainName));
+    if (asSub.length === 1) return { categoryId: asSub[0].id };
+    return { categoryId: 0, error: `Category "${mainName}" not found` };
+  };
+
+  // Header-insensitive lookup: "Sub Category", "sub_category", "subCategory" all match.
+  const pick = (r: Record<string, any>, ...keys: string[]) => {
+    for (const [k, v] of Object.entries(r)) {
+      if (keys.includes(k.toLowerCase().replace(/[^a-z]/g, '')) && String(v).trim() !== '') return v;
+    }
+    return '';
   };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -520,10 +553,16 @@ function ExcelImportModal({ categories, onClose, onSave }: {
         const ws = wb.Sheets[wb.SheetNames[0]];
         const raw: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
         if (!raw.length) { setError('Excel file is empty'); return; }
-        const parsed: RowDraft[] = raw.map(r => ({
+        const parsed: RowDraft[] = raw.map(r => {
+          const { categoryId, error: catError } = resolveCategory(
+            pick(r, 'categoryid', 'categoryname', 'category', 'maincategory', 'maincategoryname', 'parentcategory'),
+            pick(r, 'subcategory', 'subcategoryname', 'subcat', 'subcategoryid'),
+          );
+          return {
           _id: Math.random().toString(36).slice(2),
           name:       String(r['name']       ?? r['Name']       ?? '').trim(),
-          categoryId: resolveCatId(r['categoryId'] ?? r['categoryName'] ?? r['Category'] ?? r['category'] ?? ''),
+          categoryId,
+          _catError:  catError,
           brand:      String(r['brand']      ?? r['Brand']      ?? '').trim() || undefined,
           unit:       String(r['unit']       ?? r['Unit']       ?? '').trim() || undefined,
           mrp:        Number(r['mrp']        ?? r['MRP']        ?? 0),
@@ -531,7 +570,8 @@ function ExcelImportModal({ categories, onClose, onSave }: {
           imageUrl:   String(r['imageUrl']   ?? r['image_url']  ?? r['Image URL'] ?? '').trim() || undefined,
           tag:        (String(r['tag'] ?? r['Tag'] ?? '').trim().toLowerCase() || null) as any,
           isActive:   String(r['isActive']   ?? r['is_active']  ?? r['Active'] ?? 'true').toLowerCase() !== 'false',
-        })).filter(r => r.name);
+          };
+        }).filter(r => r.name);
         if (!parsed.length) { setError('No valid rows. Make sure "name" column exists.'); return; }
         setRows(parsed);
         setStep('preview');
@@ -544,9 +584,12 @@ function ExcelImportModal({ categories, onClose, onSave }: {
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ['name', 'categoryName', 'brand', 'unit', 'mrp', 'price', 'imageUrl', 'tag', 'isActive'],
-      ['Amul Milk 500ml', categories[0]?.name ?? 'Dairy', 'Amul', '500 ml', 60, 55, 'https://example.com/milk.jpg', 'bestseller', true],
-      ['Lay\'s Classic Salted', categories[1]?.name ?? 'Snacks', 'Lay\'s', '26g', 20, 20, '', 'deal', true],
+      ['name', 'categoryName', 'subCategoryName', 'brand', 'unit', 'mrp', 'price', 'imageUrl', 'tag', 'isActive'],
+      ...subs.slice(0, 2).map((sub, i) => [
+        i === 0 ? 'Amul Milk 500ml' : 'Lay\'s Classic Salted',
+        mains.find(m => m.id === sub.parentId)?.name ?? '', sub.name,
+        i === 0 ? 'Amul' : 'Lay\'s', i === 0 ? '500 ml' : '26g', i === 0 ? 60 : 20, i === 0 ? 55 : 20, '', i === 0 ? 'bestseller' : 'deal', true,
+      ]),
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Products');
@@ -554,11 +597,16 @@ function ExcelImportModal({ categories, onClose, onSave }: {
   };
 
   const handleImport = async () => {
+    const badCat = rows.filter(r => r._catError);
+    if (badCat.length) {
+      setError(`${badCat.length} row${badCat.length === 1 ? '' : 's'} have a category that doesn't match (shown in red). Fix the names in Excel and re-upload — e.g. ${badCat[0]._catError}.`);
+      return;
+    }
     const invalid = rows.findIndex(r => !r.name.trim() || !r.categoryId || !r.mrp || !r.price);
     if (invalid !== -1) { setError(`Row ${invalid + 1}: name, category, mrp, price required`); return; }
     setSaving(true); setError('');
     try {
-      const payload = rows.map(({ _id, ...rest }) => ({
+      const payload = rows.map(({ _id, _catError, ...rest }) => ({
         ...rest,
         mrp: Math.round(Number(rest.mrp) * 100),
         price: Math.round(Number(rest.price) * 100),
@@ -570,7 +618,14 @@ function ExcelImportModal({ categories, onClose, onSave }: {
     } finally { setSaving(false); }
   };
 
-  const catName = (id: number) => categories.find(c => c.id === id)?.name ?? '—';
+  // "Atta, Rice & Dal › Besan" for sub-categories, so the preview shows where each product lands.
+  const catName = (id: number) => {
+    const c = categories.find(x => x.id === id);
+    if (!c) return '—';
+    const parent = c.parentId ? categories.find(x => x.id === c.parentId) : undefined;
+    return parent ? `${parent.name} › ${c.name}` : c.name;
+  };
+  const badCatCount = rows.filter(r => r._catError).length;
 
   return (
     <Backdrop onClose={onClose}>
@@ -597,7 +652,7 @@ function ExcelImportModal({ categories, onClose, onSave }: {
                 <p className="text-xs font-semibold text-slate-600 mb-2">EXCEL COLUMNS</p>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { col: 'name', req: true }, { col: 'categoryName', req: true },
+                    { col: 'name', req: true }, { col: 'categoryName', req: true }, { col: 'subCategoryName', req: false },
                     { col: 'mrp', req: true }, { col: 'price', req: true },
                     { col: 'brand', req: false }, { col: 'unit', req: false },
                     { col: 'imageUrl', req: false }, { col: 'tag', req: false }, { col: 'isActive', req: false },
@@ -607,7 +662,8 @@ function ExcelImportModal({ categories, onClose, onSave }: {
                     </span>
                   ))}
                 </div>
-                <p className="text-xs text-slate-400 mt-2">tag values: deal · bestseller · new · fresh · (leave blank for none)</p>
+                <p className="text-xs text-slate-400 mt-2">Fill <span className="font-mono">subCategoryName</span> to put the product inside that sub-category (recommended).</p>
+                <p className="text-xs text-slate-400 mt-1">tag values: deal · bestseller · new · fresh · (leave blank for none)</p>
               </div>
 
               {/* Available categories */}
@@ -634,7 +690,11 @@ function ExcelImportModal({ categories, onClose, onSave }: {
           ) : (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-700">{rows.length} products ready to import</p>
+                <p className="text-sm font-semibold text-slate-700">
+                  {rows.length} products{badCatCount > 0
+                    ? <span className="text-red-600"> · {badCatCount} with unmatched category</span>
+                    : ' ready to import'}
+                </p>
                 <button onClick={() => { setStep('upload'); setRows([]); if (fileRef.current) fileRef.current.value = ''; }}
                   className="text-xs text-slate-500 hover:text-slate-700 underline">Re-upload</button>
               </div>
@@ -655,7 +715,11 @@ function ExcelImportModal({ categories, onClose, onSave }: {
                           <td className="px-3 py-2 font-medium text-slate-800">
                             {row.name || <span className="text-red-400 text-xs">missing!</span>}
                           </td>
-                          <td className="px-3 py-2 text-slate-600">{catName(row.categoryId)}</td>
+                          <td className="px-3 py-2 text-slate-600">
+                            {row._catError
+                              ? <span className="text-red-600 text-xs font-medium">{row._catError}</span>
+                              : catName(row.categoryId)}
+                          </td>
                           <td className="px-3 py-2 text-slate-500">{row.brand || '—'}</td>
                           <td className="px-3 py-2 text-slate-500">{row.unit || '—'}</td>
                           <td className="px-3 py-2 text-slate-700">₹{row.mrp}</td>
@@ -695,8 +759,8 @@ function ExcelImportModal({ categories, onClose, onSave }: {
 
 // ── Delete Confirm ────────────────────────────────────────────────────────────
 
-function DeleteConfirm({ name, onConfirm, onClose, loading }: {
-  name: string; onConfirm: () => void; onClose: () => void; loading: boolean;
+function DeleteConfirm({ name, title = 'Delete Product?', note, onConfirm, onClose, loading }: {
+  name: string; title?: string; note?: string; onConfirm: () => void; onClose: () => void; loading: boolean;
 }) {
   return (
     <Backdrop onClose={onClose}>
@@ -704,8 +768,9 @@ function DeleteConfirm({ name, onConfirm, onClose, loading }: {
         <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
           <Trash2 size={20} className="text-red-500" />
         </div>
-        <h3 className="font-semibold text-slate-800 mb-1">Delete Product?</h3>
-        <p className="text-sm text-slate-500 mb-5">Are you sure you want to delete <strong>{name}</strong>?</p>
+        <h3 className="font-semibold text-slate-800 mb-1">{title}</h3>
+        <p className={`text-sm text-slate-500 ${note ? 'mb-2' : 'mb-5'}`}>Are you sure you want to delete <strong>{name}</strong>?</p>
+        {note && <p className="text-xs text-slate-400 mb-5">{note}</p>}
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
           <Button className="flex-1 bg-red-500 hover:bg-red-600" onClick={onConfirm} disabled={loading}>
@@ -908,6 +973,11 @@ export function ProductListPage() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [visibilityTarget, setVisibilityTarget] = useState<Product | null>(null);
+  // Bulk delete — selection is per page and resets whenever the list reloads.
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [selectingAll, setSelectingAll] = useState(false);
 
   const loadCategories = useCallback(async () => {
     try { setCategories(await catalogApi.getCategories()); } catch {}
@@ -918,6 +988,7 @@ export function ProductListPage() {
     try {
       const res = await catalogApi.getProducts({ categoryId: categoryFilter, search: search || undefined, activeOnly: activeOnly || undefined, page, limit: LIMIT });
       setProducts(res.products); setTotal(res.total);
+      setSelected(new Set());
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Failed to load products');
     } finally { setLoading(false); }
@@ -942,6 +1013,42 @@ export function ProductListPage() {
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Delete failed');
       setDeleteTarget(null);
+    } finally { setDeleting(false); }
+  };
+
+  const toggleSelect = (id: number) => setSelected(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const allSelected = products.length > 0 && products.every(p => selected.has(p.id));
+  const toggleSelectAll = () => setSelected(allSelected ? new Set() : new Set(products.map(p => p.id)));
+
+  // Every product matching the current search/filters, across all pages.
+  const selectAllMatching = async () => {
+    setSelectingAll(true); setError('');
+    try {
+      const res = await catalogApi.getProducts({ categoryId: categoryFilter, search: search || undefined, activeOnly: activeOnly || undefined, page: 1, limit: Math.max(total, LIMIT) });
+      setSelected(new Set(res.products.map(p => p.id)));
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Could not select all products');
+    } finally { setSelectingAll(false); }
+  };
+
+  const handleBulkDelete = async () => {
+    setDeleting(true); setError(''); setNotice('');
+    try {
+      const res = await catalogApi.bulkDeleteProducts([...selected]) as { deleted: number; archived?: number };
+      const removed = res.deleted + (res.archived ?? 0);
+      let msg = `${removed} product${removed === 1 ? '' : 's'} removed.`;
+      if (res.archived) msg += ` ${res.archived} had past orders, so ${res.archived === 1 ? 'it was' : 'they were'} archived — hidden everywhere, but old orders still show ${res.archived === 1 ? 'it' : 'them'}.`;
+      setNotice(msg);
+      setBulkConfirm(false);
+      // Pages shift after a delete — go back to the first one.
+      if (page !== 1) setPage(1); else loadProducts();
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Bulk delete failed');
+      setBulkConfirm(false);
     } finally { setDeleting(false); }
   };
 
@@ -978,6 +1085,13 @@ export function ProductListPage() {
         </div>
       )}
 
+      {notice && (
+        <div className="flex items-center gap-2 p-3 mb-4 bg-green-50 border border-green-100 rounded-xl text-sm text-green-700">
+          <CheckCircle2 size={14} />{notice}
+          <button onClick={() => setNotice('')} className="ml-auto text-green-600 hover:text-green-800"><X size={14} /></button>
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="relative w-full sm:w-auto sm:flex-1 sm:min-w-48 sm:max-w-xs">
@@ -989,7 +1103,33 @@ export function ProductListPage() {
           <input type="checkbox" checked={activeOnly} onChange={e => { setActiveOnly(e.target.checked); setPage(1); }} className="accent-[#EA580C]" />
           Active only
         </label>
+        {can('catalog.edit') && products.length > 0 && !loading && (
+          <label className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 cursor-pointer">
+            <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="accent-[#EA580C]" />
+            Select all on page
+          </label>
+        )}
       </div>
+
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="sticky top-2 z-20 flex flex-wrap items-center gap-3 p-3 mb-4 bg-orange-50 border border-orange-200 rounded-xl shadow-sm">
+          <span className="text-sm font-semibold text-orange-800">
+            {selected.size >= total && total > products.length ? `All ${total} products selected` : `${selected.size} selected`}
+          </span>
+          {allSelected && selected.size < total && (
+            <button onClick={selectAllMatching} disabled={selectingAll}
+              className="text-sm font-semibold text-[#EA580C] hover:underline disabled:opacity-60 flex items-center gap-1">
+              {selectingAll && <Loader2 size={12} className="animate-spin" />}
+              Select all {total} products
+            </button>
+          )}
+          <button onClick={() => setSelected(new Set())} className="text-sm text-slate-500 hover:text-slate-700 underline">Clear</button>
+          <Button size="sm" className="ml-auto bg-red-500 hover:bg-red-600" onClick={() => setBulkConfirm(true)}>
+            <Trash2 size={14} /> Delete selected
+          </Button>
+        </div>
+      )}
 
       {/* Category filter tabs — Main → Sub hierarchy */}
       {(() => {
@@ -1051,8 +1191,15 @@ export function ProductListPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {products.map(product => (
             <div key={product.id} className={`relative bg-white rounded-2xl border overflow-hidden hover:shadow-sm transition-all group ${
-              product.isActive ? 'border-slate-100 hover:border-orange-200' : 'border-red-300 hover:border-red-400'
+              selected.has(product.id) ? 'border-orange-400 ring-2 ring-orange-200'
+                : product.isActive ? 'border-slate-100 hover:border-orange-200' : 'border-red-300 hover:border-red-400'
             }`}>
+              {can('catalog.edit') && (
+                <label className="absolute top-2 left-2 z-10 w-7 h-7 flex items-center justify-center bg-white/90 rounded-lg shadow-sm cursor-pointer" title="Select">
+                  <input type="checkbox" checked={selected.has(product.id)} onChange={() => toggleSelect(product.id)}
+                    className="w-4 h-4 accent-[#EA580C] cursor-pointer" />
+                </label>
+              )}
               <ProductThumb imageUrl={product.imageUrl} name={product.name} isActive={product.isActive} />
               <div className="p-4">
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700">
@@ -1121,6 +1268,13 @@ export function ProductListPage() {
       {modal.type === 'multi'  && <MultiAddModal categories={categories} onClose={closeModal} onSave={afterSave} />}
       {modal.type === 'excel'  && <ExcelImportModal categories={categories} onClose={closeModal} onSave={afterSave} />}
 
+      {bulkConfirm && (
+        <DeleteConfirm
+          title="Delete Products?"
+          name={`${selected.size} selected product${selected.size === 1 ? '' : 's'}`}
+          note="Their stock entries are removed too. Products that already have orders are archived (hidden) so old orders stay intact."
+          onConfirm={handleBulkDelete} onClose={() => setBulkConfirm(false)} loading={deleting} />
+      )}
       {deleteTarget && <DeleteConfirm name={deleteTarget.name} onConfirm={handleDelete} onClose={() => setDeleteTarget(null)} loading={deleting} />}
       {visibilityTarget && <StoreVisibilityModal product={visibilityTarget} onClose={() => setVisibilityTarget(null)} />}
     </div>
