@@ -120,7 +120,7 @@ export const catalogApi = {
     api.patch<{ updated: number }>('/api/admin/catalog/products/bulk', { ids, data }).then(r => r.data),
 
   bulkDeleteProducts: (ids: number[]) =>
-    api.delete<{ deleted: number }>('/api/admin/catalog/products/bulk', { data: { ids } }).then(r => r.data),
+    api.delete<{ deleted: number; skipped: number; message?: string }>('/api/admin/catalog/products/bulk', { data: { ids } }).then(r => r.data),
 
   getStoreVisibility: (productId: number) =>
     api.get<{ visibility: StoreVisibilityItem[] }>(`/api/admin/catalog/products/${productId}/store-visibility`).then(r => r.data.visibility),

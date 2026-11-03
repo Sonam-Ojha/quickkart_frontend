@@ -908,6 +908,9 @@ export function ProductListPage() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [visibilityTarget, setVisibilityTarget] = useState<Product | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkConfirm, setBulkConfirm] = useState(false);
 
   const loadCategories = useCallback(async () => {
     try { setCategories(await catalogApi.getCategories()); } catch {}
@@ -945,6 +948,26 @@ export function ProductListPage() {
     } finally { setDeleting(false); }
   };
 
+  const toggleSelect = (id: number) =>
+    setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  const toggleSelectAll = () =>
+    setSelected(prev => prev.size === products.length ? new Set() : new Set(products.map(p => p.id)));
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    try {
+      const res = await catalogApi.bulkDeleteProducts([...selected]);
+      setSelected(new Set()); setBulkConfirm(false); loadProducts();
+      if (res?.skipped > 0 && res.deleted === 0) {
+        setError(`These ${res.skipped} product(s) cannot be deleted because they are linked to existing orders or inventory. Please deactivate them instead.`);
+      } else if (res?.skipped > 0) {
+        setError(`${res.deleted} product(s) deleted successfully. ${res.skipped} product(s) were skipped as they are linked to existing orders or inventory — please deactivate those instead.`);
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Bulk delete failed');
+      setBulkConfirm(false);
+    } finally { setBulkDeleting(false); }
+  };
+
   const closeModal = () => setModal({ type: 'none' });
   const afterSave  = () => { closeModal(); loadProducts(); };
   const totalPages = Math.ceil(total / LIMIT);
@@ -975,6 +998,18 @@ export function ProductListPage() {
       {error && (
         <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
           <AlertCircle size={14} />{error}
+        </div>
+      )}
+
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 px-4 py-2.5 mb-4 bg-orange-50 border border-orange-200 rounded-xl">
+          <span className="text-sm font-semibold text-orange-700">{selected.size} selected</span>
+          <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 ml-auto"
+            onClick={() => setBulkConfirm(true)}>
+            <Trash2 size={13} /> Delete Selected
+          </Button>
+          <button onClick={() => setSelected(new Set())} className="text-slate-400 hover:text-slate-600"><X size={15} /></button>
         </div>
       )}
 
@@ -1036,6 +1071,21 @@ export function ProductListPage() {
         );
       })()}
 
+      {/* Select-all row */}
+      {can('catalog.edit') && products.length > 0 && (
+        <div className="flex items-center gap-2 mb-3">
+          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="accent-[#EA580C] w-4 h-4"
+              checked={products.length > 0 && selected.size === products.length}
+              onChange={toggleSelectAll}
+            />
+            Select all ({products.length})
+          </label>
+        </div>
+      )}
+
       {/* Product grid */}
       {loading ? (
         <div className="flex items-center justify-center py-20 text-slate-400">
@@ -1051,8 +1101,19 @@ export function ProductListPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {products.map(product => (
             <div key={product.id} className={`relative bg-white rounded-2xl border overflow-hidden hover:shadow-sm transition-all group ${
+              selected.has(product.id) ? 'border-orange-400 ring-1 ring-orange-300' :
               product.isActive ? 'border-slate-100 hover:border-orange-200' : 'border-red-300 hover:border-red-400'
             }`}>
+              {can('catalog.edit') && (
+                <div className="absolute top-2 left-2 z-10">
+                  <input
+                    type="checkbox"
+                    className="accent-[#EA580C] w-4 h-4 cursor-pointer"
+                    checked={selected.has(product.id)}
+                    onChange={() => toggleSelect(product.id)}
+                  />
+                </div>
+              )}
               <ProductThumb imageUrl={product.imageUrl} name={product.name} isActive={product.isActive} />
               <div className="p-4">
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700">
@@ -1122,6 +1183,23 @@ export function ProductListPage() {
       {modal.type === 'excel'  && <ExcelImportModal categories={categories} onClose={closeModal} onSave={afterSave} />}
 
       {deleteTarget && <DeleteConfirm name={deleteTarget.name} onConfirm={handleDelete} onClose={() => setDeleteTarget(null)} loading={deleting} />}
+      {bulkConfirm && (
+        <Backdrop onClose={() => setBulkConfirm(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl p-6 text-center">
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Trash2 size={20} className="text-red-500" />
+            </div>
+            <h3 className="font-semibold text-slate-800 mb-1">Delete {selected.size} Products?</h3>
+            <p className="text-sm text-slate-500 mb-5">This will permanently delete the selected products. This action cannot be undone.</p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setBulkConfirm(false)}>Cancel</Button>
+              <Button className="flex-1 bg-red-500 hover:bg-red-600" onClick={handleBulkDelete} disabled={bulkDeleting}>
+                {bulkDeleting && <Loader2 size={14} className="animate-spin" />} Delete All
+              </Button>
+            </div>
+          </div>
+        </Backdrop>
+      )}
       {visibilityTarget && <StoreVisibilityModal product={visibilityTarget} onClose={() => setVisibilityTarget(null)} />}
     </div>
   );
