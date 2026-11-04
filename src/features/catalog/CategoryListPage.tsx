@@ -59,8 +59,8 @@ function CategoryThumb({ imageUrl, icon, name }: { imageUrl?: string | null; ico
 
 // ── Delete Confirm ────────────────────────────────────────────────────────────
 
-function DeleteConfirm({ name, onConfirm, onClose, loading }: {
-  name: string; onConfirm: () => void; onClose: () => void; loading: boolean;
+function DeleteConfirm({ name, title = 'Delete Category?', note, onConfirm, onClose, loading }: {
+  name: string; title?: string; note?: string; onConfirm: () => void; onClose: () => void; loading: boolean;
 }) {
   return (
     <Backdrop onClose={onClose}>
@@ -68,10 +68,11 @@ function DeleteConfirm({ name, onConfirm, onClose, loading }: {
         <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
           <Trash2 size={20} className="text-red-500" />
         </div>
-        <h3 className="font-semibold text-slate-800 mb-1">Delete Category?</h3>
-        <p className="text-sm text-slate-500 mb-5">
+        <h3 className="font-semibold text-slate-800 mb-1">{title}</h3>
+        <p className={`text-sm text-slate-500 ${note ? 'mb-2' : 'mb-5'}`}>
           Are you sure you want to delete <strong>{name}</strong>? This cannot be undone.
         </p>
+        {note && <p className="text-xs text-slate-400 mb-5">{note}</p>}
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
           <Button className="flex-1 bg-red-500 hover:bg-red-600" onClick={onConfirm} disabled={loading}>
@@ -347,6 +348,9 @@ function CategoryTable({
   onDelete,
   onToggle,
   isFiltered,
+  selected,
+  onSelect,
+  onSelectAll,
 }: {
   rows: Category[];
   showParent: boolean;
@@ -356,7 +360,11 @@ function CategoryTable({
   onDelete: (c: Category) => void;
   onToggle: (c: Category) => void;
   isFiltered?: boolean;
+  selected: Set<number>;
+  onSelect: (id: number) => void;
+  onSelectAll: () => void;
 }) {
+  const allSelected = rows.length > 0 && rows.every(c => selected.has(c.id));
   if (rows.length === 0) {
     return (
       <div className="text-center py-16 text-slate-400">
@@ -372,6 +380,12 @@ function CategoryTable({
       <table className="[&_th]:whitespace-nowrap w-full text-sm">
         <thead>
           <tr className="border-b border-slate-100 bg-slate-50/50">
+            {canEdit && (
+              <th className="w-10 pl-3 sm:pl-5 py-3">
+                <input type="checkbox" checked={allSelected} onChange={onSelectAll} title="Select all shown"
+                  className="accent-[#EA580C] w-4 h-4 cursor-pointer align-middle" />
+              </th>
+            )}
             <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Name</th>
             {showParent && (
               <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">
@@ -385,7 +399,13 @@ function CategoryTable({
         </thead>
         <tbody className="divide-y divide-slate-50">
           {rows.map(cat => (
-            <tr key={cat.id} className="hover:bg-slate-50/50 transition-colors">
+            <tr key={cat.id} className={`transition-colors ${selected.has(cat.id) ? 'bg-orange-50/60' : 'hover:bg-slate-50/50'}`}>
+              {canEdit && (
+                <td className="w-10 pl-3 sm:pl-5 py-3.5">
+                  <input type="checkbox" checked={selected.has(cat.id)} onChange={() => onSelect(cat.id)}
+                    className="accent-[#EA580C] w-4 h-4 cursor-pointer align-middle" />
+                </td>
+              )}
               <td className="px-3 sm:px-5 py-3.5">
                 <div className="flex items-center gap-3">
                   <CategoryThumb imageUrl={cat.imageUrl} icon={cat.icon} name={cat.name} />
@@ -540,6 +560,10 @@ export function CategoryListPage({ section = 'grocery' }: { section?: CategorySe
   const [modal, setModal]      = useState<ModalState>({ type: 'none' });
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // Bulk delete
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkConfirm, setBulkConfirm] = useState(false);
+  const [notice, setNotice] = useState('');
 
   // Filters
   const [search,   setSearch]   = useState('');
@@ -549,11 +573,11 @@ export function CategoryListPage({ section = 'grocery' }: { section?: CategorySe
   const clearFilters = () => { setSearch(''); setStatus(''); setParentId(''); };
 
   // Reset filters when switching tabs
-  const handleTabChange = (tab: ActiveTab) => { setActiveTab(tab); clearFilters(); };
+  const handleTabChange = (tab: ActiveTab) => { setActiveTab(tab); clearFilters(); setSelected(new Set()); };
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
-    try { setAllCategories(await catalogApi.getCategories(section)); }
+    try { setAllCategories(await catalogApi.getCategories(section)); setSelected(new Set()); }
     catch (err: any) { setError(err?.response?.data?.message ?? 'Failed to load categories'); }
     finally { setLoading(false); }
   }, [section]);
@@ -581,6 +605,33 @@ export function CategoryListPage({ section = 'grocery' }: { section?: CategorySe
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Delete failed');
       setDeleteTarget(null);
+    } finally { setDeleting(false); }
+  };
+
+  const toggleSelect = (id: number) => setSelected(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+
+  const handleBulkDelete = async () => {
+    setDeleting(true); setError(''); setNotice('');
+    try {
+      const res = await catalogApi.bulkDeleteCategories([...selected]) as {
+        deleted: number; archived?: number; skipped?: { name: string; reason: string }[];
+      };
+      const removed = res.deleted + (res.archived ?? 0);
+      const skipped = res.skipped ?? [];
+      if (removed > 0) setNotice(`${removed} categor${removed === 1 ? 'y' : 'ies'} deleted.`);
+      if (skipped.length) {
+        const list = skipped.slice(0, 3).map(s => s.reason).join('; ');
+        setError(`${skipped.length} not deleted: ${list}${skipped.length > 3 ? ` (+${skipped.length - 3} more)` : ''}.`);
+      }
+      setBulkConfirm(false);
+      load();
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Bulk delete failed');
+      setBulkConfirm(false);
     } finally { setDeleting(false); }
   };
 
@@ -630,6 +681,23 @@ export function CategoryListPage({ section = 'grocery' }: { section?: CategorySe
       {error && (
         <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
           <AlertCircle size={14} />{error}
+        </div>
+      )}
+
+      {notice && (
+        <div className="flex items-center gap-2 p-3 mb-4 bg-green-50 border border-green-100 rounded-xl text-sm text-green-700">
+          <CheckCircle2 size={14} />{notice}
+          <button onClick={() => setNotice('')} className="ml-auto text-green-600 hover:text-green-800"><X size={14} /></button>
+        </div>
+      )}
+
+      {selected.size > 0 && (
+        <div className="sticky top-2 z-20 flex flex-wrap items-center gap-3 p-3 mb-4 bg-orange-50 border border-orange-200 rounded-xl shadow-sm">
+          <span className="text-sm font-semibold text-orange-800">{selected.size} selected</span>
+          <button onClick={() => setSelected(new Set())} className="text-sm text-slate-500 hover:text-slate-700 underline">Clear</button>
+          <Button size="sm" className="ml-auto bg-red-500 hover:bg-red-600" onClick={() => setBulkConfirm(true)}>
+            <Trash2 size={14} /> Delete selected
+          </Button>
         </div>
       )}
 
@@ -703,6 +771,10 @@ export function CategoryListPage({ section = 'grocery' }: { section?: CategorySe
             onDelete={setDeleteTarget}
             onToggle={handleToggle}
             isFiltered={!!(search || status || parentId)}
+            selected={selected}
+            onSelect={toggleSelect}
+            onSelectAll={() => setSelected(prev =>
+              filteredRows.length > 0 && filteredRows.every(c => prev.has(c.id)) ? new Set() : new Set(filteredRows.map(c => c.id)))}
           />
         )}
       </div>
@@ -716,6 +788,17 @@ export function CategoryListPage({ section = 'grocery' }: { section?: CategorySe
           mainCategories={mainCategories}
           onClose={closeModal}
           onSave={afterSave}
+        />
+      )}
+
+      {bulkConfirm && (
+        <DeleteConfirm
+          title="Delete Categories?"
+          name={`${selected.size} selected categor${selected.size === 1 ? 'y' : 'ies'}`}
+          note="Categories that still have products or sub-categories are skipped — you'll see which ones and why."
+          onConfirm={handleBulkDelete}
+          onClose={() => setBulkConfirm(false)}
+          loading={deleting}
         />
       )}
 
