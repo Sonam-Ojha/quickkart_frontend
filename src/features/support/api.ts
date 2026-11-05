@@ -7,6 +7,7 @@ export interface SupportMessage {
 
 export interface SupportTicket {
   id: number;
+  subject?: string | null;
   category: string; status: 'open' | 'in_progress' | 'resolved';
   created_at: string;
   customer?: { id: number; name: string; email: string; mobile: string | null };

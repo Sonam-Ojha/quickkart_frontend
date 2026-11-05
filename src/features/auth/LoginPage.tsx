@@ -38,7 +38,13 @@ export function LoginPage() {
       }).catch((e) => console.error('[FCM] permission error:', e));
       navigate('/');
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Login failed. Please try again.');
+      if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+        setError('Server is taking too long to respond. Please wait a moment and try again.');
+      } else if (!err?.response) {
+        setError('Cannot reach server. Check your internet connection and try again.');
+      } else {
+        setError(err?.response?.data?.message || 'Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

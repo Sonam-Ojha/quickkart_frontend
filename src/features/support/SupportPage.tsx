@@ -53,7 +53,7 @@ function TicketDrawer({ ticket: init, onClose, onUpdate }: { ticket: SupportTick
         <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
           <div>
             <h2 className="font-bold text-slate-800">Ticket #{ticket.id}</h2>
-            <div className="text-xs text-slate-400 mt-0.5 capitalize">{ticket.category} · {formatDateTime(ticket.created_at)}</div>
+            <div className="text-xs text-slate-400 mt-0.5 capitalize">{ticket.subject ? `${ticket.subject} · ` : ''}{ticket.category} · {formatDateTime(ticket.created_at)}</div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X size={16} /></button>
         </div>

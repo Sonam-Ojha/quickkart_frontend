@@ -6,6 +6,7 @@ const DEFAULT_API = import.meta.env.DEV ? 'http://localhost:4000' : 'https://api
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 15000, // 15s — agar backend respond na kare toh error dikhao
 });
 
 api.interceptors.request.use((config) => {
