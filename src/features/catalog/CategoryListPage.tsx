@@ -425,14 +425,16 @@ function CategoryTable({
               <td className="px-3 sm:px-5 py-3.5">
                 <button
                   onClick={() => canEdit && onToggle(cat)}
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
-                    cat.isActive
-                      ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                      : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                  }`}
+                  disabled={!canEdit}
+                  className="flex items-center gap-2 group disabled:opacity-50"
+                  title={cat.isActive ? 'Click to deactivate' : 'Click to activate'}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${cat.isActive ? 'bg-green-500' : 'bg-slate-400'}`} />
-                  {cat.isActive ? 'Active' : 'Inactive'}
+                  <div className={`w-9 h-5 rounded-full transition-colors relative ${cat.isActive ? 'bg-green-500' : 'bg-slate-300'}`}>
+                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${cat.isActive ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                  </div>
+                  <span className={`text-xs font-medium ${cat.isActive ? 'text-green-700' : 'text-slate-400'}`}>
+                    {cat.isActive ? 'Active' : 'Inactive'}
+                  </span>
                 </button>
               </td>
               {canEdit && (

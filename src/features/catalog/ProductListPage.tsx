@@ -957,6 +957,20 @@ type ModalState =
   | { type: 'multi' }
   | { type: 'excel' };
 
+function exportProductsCSV(products: Product[]) {
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['ID', 'Name', 'Category', 'Brand', 'Unit', 'MRP (paise)', 'Price (paise)', 'MRP (₹)', 'Price (₹)', 'Tag', 'Active'],
+    ...products.map(p => [
+      p.id, p.name, p.category?.name ?? '', p.brand ?? '', p.unit ?? '',
+      p.mrp, p.price, (p.mrp / 100).toFixed(2), (p.price / 100).toFixed(2),
+      p.tag ?? '', p.isActive ? 'Yes' : 'No',
+    ]),
+  ]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Products');
+  XLSX.writeFile(wb, `products-${new Date().toISOString().slice(0, 10)}.xlsx`);
+}
+
 export function ProductListPage() {
   const { can } = usePermission();
   const [products, setProducts] = useState<Product[]>([]);
@@ -1067,6 +1081,9 @@ export function ProductListPage() {
         action={
           can('catalog.edit') && (
             <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => exportProductsCSV(products)} disabled={products.length === 0}>
+                <Download size={14} /> Export Excel
+              </Button>
               <Button size="sm" variant="outline" onClick={() => setModal({ type: 'excel' })}>
                 <FileSpreadsheet size={14} /> Import Excel
               </Button>

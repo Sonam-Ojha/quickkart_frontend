@@ -1,5 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, Printer, UserCheck, Mail, Phone, IndianRupee } from 'lucide-react';
+
+function downloadCSV(filename: string, rows: (string | number | null | undefined)[][], headers: string[]) {
+  const escape = (v: string | number | null | undefined) => {
+    const s = String(v ?? '').replace(/"/g, '""');
+    return /[,"\n]/.test(s) ? `"${s}"` : s;
+  };
+  const csv = [headers, ...rows].map(r => r.map(escape).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { Button } from '../../components/ui/button';
@@ -384,10 +397,36 @@ export function OrderListPage({ type, title = 'Orders' }: { type?: 'grocery' | '
   const [error, setError]     = useState('');
   const [search, setSearch]   = useState('');
   const [status, setStatus]   = useState('all');
-  const [selected, setSelected] = useState<Order | null>(null);
+  const [selected, setSelected]       = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [exporting, setExporting]     = useState(false);
 
   useEffect(() => { orderApi.getStats(type).then(setStats).catch(() => {}); }, [type]);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const data = await orderApi.getAll({ status: status !== 'all' ? status : undefined, type, search: search || undefined, page: 1, limit: 10000 });
+      const headers = ['Order ID', 'Date', 'Customer', 'Mobile', 'Status', 'Items', 'Subtotal', 'Delivery Fee', 'Discount', 'Total', 'Store', 'Payment'];
+      const rows = data.orders.map(o => [
+        o.id,
+        o.created_at ? new Date(o.created_at).toLocaleString('en-IN') : '',
+        o.customer?.name ?? '',
+        o.customer?.mobile ?? '',
+        o.status,
+        o.items?.map((i: any) => `${i.product?.name ?? 'Item'} x${i.quantity}`).join(' | ') ?? '',
+        o.subtotal,
+        o.deliveryFee,
+        o.discount,
+        o.total,
+        o.store?.name ?? '',
+        (o as any).payment?.gateway ?? '',
+      ]);
+      const prefix = type === 'print' ? 'print-orders' : 'orders';
+      downloadCSV(`${prefix}-${new Date().toISOString().slice(0,10)}.csv`, rows, headers);
+    } catch {}
+    finally { setExporting(false); }
+  };
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -426,7 +465,11 @@ export function OrderListPage({ type, title = 'Orders' }: { type?: 'grocery' | '
         title={title}
         subtitle={loading ? 'Loading...' : `${total} total orders`}
         breadcrumbs={[{ label: 'Home' }, { label: title }]}
-        action={<Button variant="outline" size="sm"><Download size={14} /> Export</Button>}
+        action={
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
+            {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Export CSV
+          </Button>
+        }
       />
 
       {/* Stats row */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Warehouse, Search, AlertTriangle, Package, Loader2, AlertCircle, Plus, Minus, Edit2, Trash2, X } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { Warehouse, Search, AlertTriangle, Package, Loader2, AlertCircle, Plus, Minus, Edit2, Trash2, X, Download } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -139,17 +140,45 @@ export function InventoryPage() {
   const lowStockCount = inventory.filter(r => r.stockQty < LOW_STOCK_THRESHOLD).length;
   const storeName = stores.find(s => s.id === selectedStore)?.name ?? '';
 
+  const handleExportInventory = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Product ID', 'Name', 'Brand', 'Unit', 'Category', 'Stock Qty', 'Status', 'Store'],
+      ...inventory.map(r => [
+        r.productId,
+        r.product.name,
+        r.product.brand ?? '',
+        r.product.unit ?? '',
+        r.product.category?.name ?? '',
+        r.stockQty,
+        r.stockQty === 0 ? 'Out of Stock' : r.stockQty < LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock',
+        storeName,
+      ]),
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
+    XLSX.writeFile(wb, `inventory-${storeName}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   return (
     <div>
       <PageHeader
         title="Inventory"
         subtitle={selectedStore ? `${storeName}` : 'Select a store'}
         breadcrumbs={[{ label: 'Home' }, { label: 'Catalog' }, { label: 'Inventory' }]}
-        action={can('catalog.edit') && selectedStore && (
-          <Button size="sm" onClick={() => setModal({ open: true, row: null })}>
-            <Plus size={14} /> Add Product
-          </Button>
-        )}
+        action={
+          <div className="flex items-center gap-2">
+            {selectedStore && inventory.length > 0 && (
+              <Button size="sm" variant="outline" onClick={handleExportInventory}>
+                <Download size={14} /> Export Excel
+              </Button>
+            )}
+            {can('catalog.edit') && selectedStore && (
+              <Button size="sm" onClick={() => setModal({ open: true, row: null })}>
+                <Plus size={14} /> Add Product
+              </Button>
+            )}
+          </div>
+        }
       />
 
       {/* Store selector */}
