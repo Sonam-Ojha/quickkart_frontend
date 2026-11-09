@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import * as XLSX from 'xlsx';
 import {
   Plus, Search, Package, Edit2, Trash2, Loader2, AlertCircle, X,
   FileSpreadsheet, Upload, Download, PlusCircle, CheckCircle2, Eye,
@@ -547,11 +546,12 @@ function ExcelImportModal({ categories, onClose, onSave }: {
     if (!file) return;
     setError('');
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
-        const wb = XLSX.read(ev.target?.result, { type: 'binary' });
+        const xl = await import('xlsx');
+        const wb = xl.read(ev.target?.result, { type: 'binary' });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const raw: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        const raw: any[] = xl.utils.sheet_to_json(ws, { defval: '' });
         if (!raw.length) { setError('Excel file is empty'); return; }
         const parsed: RowDraft[] = raw.map(r => {
           const { categoryId, error: catError } = resolveCategory(
@@ -582,8 +582,9 @@ function ExcelImportModal({ categories, onClose, onSave }: {
     reader.readAsBinaryString(file);
   };
 
-  const downloadTemplate = () => {
-    const ws = XLSX.utils.aoa_to_sheet([
+  const downloadTemplate = async () => {
+    const xl = await import('xlsx');
+    const ws = xl.utils.aoa_to_sheet([
       ['name', 'categoryName', 'subCategoryName', 'brand', 'unit', 'mrp', 'price', 'imageUrl', 'tag', 'isActive'],
       ...subs.slice(0, 2).map((sub, i) => [
         i === 0 ? 'Amul Milk 500ml' : 'Lay\'s Classic Salted',
@@ -591,9 +592,9 @@ function ExcelImportModal({ categories, onClose, onSave }: {
         i === 0 ? 'Amul' : 'Lay\'s', i === 0 ? '500 ml' : '26g', i === 0 ? 60 : 20, i === 0 ? 55 : 20, '', i === 0 ? 'bestseller' : 'deal', true,
       ]),
     ]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Products');
-    XLSX.writeFile(wb, 'products_template.xlsx');
+    const wb = xl.utils.book_new();
+    xl.utils.book_append_sheet(wb, ws, 'Products');
+    xl.writeFile(wb, 'products_template.xlsx');
   };
 
   const handleImport = async () => {
@@ -957,8 +958,9 @@ type ModalState =
   | { type: 'multi' }
   | { type: 'excel' };
 
-function exportProductsCSV(products: Product[]) {
-  const ws = XLSX.utils.aoa_to_sheet([
+async function exportProductsCSV(products: Product[]) {
+  const xl = await import('xlsx');
+  const ws = xl.utils.aoa_to_sheet([
     ['ID', 'Name', 'Category', 'Brand', 'Unit', 'MRP (paise)', 'Price (paise)', 'MRP (₹)', 'Price (₹)', 'Tag', 'Active'],
     ...products.map(p => [
       p.id, p.name, p.category?.name ?? '', p.brand ?? '', p.unit ?? '',
@@ -966,9 +968,9 @@ function exportProductsCSV(products: Product[]) {
       p.tag ?? '', p.isActive ? 'Yes' : 'No',
     ]),
   ]);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Products');
-  XLSX.writeFile(wb, `products-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  const wb = xl.utils.book_new();
+  xl.utils.book_append_sheet(wb, ws, 'Products');
+  xl.writeFile(wb, `products-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
 export function ProductListPage() {

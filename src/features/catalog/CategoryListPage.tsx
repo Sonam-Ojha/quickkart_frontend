@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import * as XLSX from 'xlsx';
 import {
   Plus, Edit2, Trash2, Loader2, AlertCircle, X,
   Upload, FileSpreadsheet, Download, PlusCircle, CheckCircle2,

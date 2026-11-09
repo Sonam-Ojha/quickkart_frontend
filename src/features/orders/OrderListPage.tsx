@@ -406,7 +406,7 @@ export function OrderListPage({ type, title = 'Orders' }: { type?: 'grocery' | '
   const handleExport = async () => {
     setExporting(true);
     try {
-      const data = await orderApi.getAll({ status: status !== 'all' ? status : undefined, type, search: search || undefined, page: 1, limit: 10000 });
+      const data = await orderApi.getAll({ status: status !== 'all' ? status : undefined, type, search: search || undefined, page: 1, limit: 500 });
       const headers = ['Order ID', 'Date', 'Customer', 'Mobile', 'Status', 'Items', 'Subtotal', 'Delivery Fee', 'Discount', 'Total', 'Store', 'Payment'];
       const rows = data.orders.map(o => [
         o.id,

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import * as XLSX from 'xlsx';
 import { Warehouse, Search, AlertTriangle, Package, Loader2, AlertCircle, Plus, Minus, Edit2, Trash2, X, Download } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
@@ -140,8 +139,9 @@ export function InventoryPage() {
   const lowStockCount = inventory.filter(r => r.stockQty < LOW_STOCK_THRESHOLD).length;
   const storeName = stores.find(s => s.id === selectedStore)?.name ?? '';
 
-  const handleExportInventory = () => {
-    const ws = XLSX.utils.aoa_to_sheet([
+  const handleExportInventory = async () => {
+    const xl = await import('xlsx');
+    const ws = xl.utils.aoa_to_sheet([
       ['Product ID', 'Name', 'Brand', 'Unit', 'Category', 'Stock Qty', 'Status', 'Store'],
       ...inventory.map(r => [
         r.productId,
@@ -154,9 +154,9 @@ export function InventoryPage() {
         storeName,
       ]),
     ]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
-    XLSX.writeFile(wb, `inventory-${storeName}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    const wb = xl.utils.book_new();
+    xl.utils.book_append_sheet(wb, ws, 'Inventory');
+    xl.writeFile(wb, `inventory-${storeName}-${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   return (

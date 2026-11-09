@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../store/auth.store';
 import { usePermission } from '../hooks/usePermission';
@@ -9,12 +9,31 @@ interface ProtectedRouteProps {
   permission?: string;
 }
 
+function isTokenExpiredOrInvalid(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return !!(payload.exp && Date.now() / 1000 > payload.exp);
+  } catch {
+    return true;
+  }
+}
+
 export function ProtectedRoute({ permission }: ProtectedRouteProps) {
   const hydrated = useAuthStore(s => s._hasHydrated);
   const token    = useAuthStore(s => s.token);
   const role     = useAuthStore(s => s.user?.role);
   const logout   = useAuthStore(s => s.logout);
   const { can } = usePermission();
+  const [evicted, setEvicted] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    const shouldEvict = isTokenExpiredOrInvalid(token) || (role != null && !VALID_ADMIN_ROLES.includes(role));
+    if (shouldEvict) {
+      logout();
+      setEvicted(true);
+    }
+  }, [token, role, logout]);
 
   if (!hydrated) return (
     <div className="flex items-center justify-center h-screen">
@@ -22,11 +41,12 @@ export function ProtectedRoute({ permission }: ProtectedRouteProps) {
     </div>
   );
 
-  if (!token) return <Navigate to="/login" replace />;
+  if (!token || evicted) return <Navigate to="/login" replace />;
+
+  if (isTokenExpiredOrInvalid(token)) return <Navigate to="/login" replace />;
 
   // Stale token with non-admin role → force re-login
   if (role && !VALID_ADMIN_ROLES.includes(role)) {
-    logout();
     return <Navigate to="/login" replace />;
   }
   if (permission && !can(permission)) {
