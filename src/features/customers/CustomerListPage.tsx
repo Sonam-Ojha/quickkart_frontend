@@ -224,9 +224,16 @@ export function CustomerListPage() {
                     <span className="text-xs text-slate-400">{formatDate(c.created_at)}</span>
                   </td>
                   <td className="px-3 sm:px-5 py-3.5">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.isActive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                      {c.isActive ? 'Active' : 'Blocked'}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium w-fit ${c.isActive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                        {c.isActive ? 'Active' : 'Blocked'}
+                      </span>
+                      {c.hasDeletionRequest && (
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium w-fit ${c.deletionStatus === 'processed' ? 'bg-slate-100 text-slate-500' : 'bg-orange-50 text-orange-600'}`}>
+                          {c.deletionStatus === 'processed' ? 'Deletion Done' : 'Delete Requested'}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-3 sm:px-5 py-3.5">
                     <div className="flex gap-1">

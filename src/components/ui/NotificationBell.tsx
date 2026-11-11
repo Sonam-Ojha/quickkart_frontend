@@ -156,10 +156,10 @@ export default function NotificationBell() {
           </div>
 
           {/* Categories */}
-          <div className="flex gap-1 px-3 py-2 border-b border-slate-100 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1.5 px-3 py-2.5 border-b border-slate-100 overflow-x-auto scrollbar-hide">
             {CATEGORIES.map(c => (
               <button key={c.key} onClick={() => changeCategory(c.key)}
-                className={`shrink-0 px-3 py-1 rounded-full text-xs font-inter font-semibold transition-colors ${
+                className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-inter font-semibold transition-colors whitespace-nowrap ${
                   category === c.key
                     ? 'bg-orange-500 text-white'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'

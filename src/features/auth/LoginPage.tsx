@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Zap, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { authApi } from './api';
@@ -171,12 +171,6 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <p className="text-center text-sm text-slate-500 mt-6">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-[#EA580C] font-semibold hover:underline">
-              Register
-            </Link>
-          </p>
 
           <p className="text-center text-xs text-slate-400 mt-6">
             Jhatpats Admin · v1.0 · Secured with JWT

@@ -10,6 +10,8 @@ export interface Customer {
   referralCode: string | null;
   isActive: boolean;
   created_at: string;
+  hasDeletionRequest?: boolean;
+  deletionStatus?: string | null;
 }
 
 export interface CustomerListResponse {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, Copy, Check, UserPlus } from 'lucide-react';
+import { X, Copy, Check, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminUsersApi, InvitePayload } from './api';
@@ -25,6 +25,7 @@ export function InviteAdminModal({ open, onClose }: Props) {
   const qc = useQueryClient();
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showPass, setShowPass] = useState(false);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<InvitePayload>({
     defaultValues: { role: 'support' },
@@ -126,6 +127,28 @@ export function InviteAdminModal({ open, onClose }: Props) {
                   })}
                 />
                 {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1.5 block">Password *</label>
+                <div className="relative">
+                  <Input
+                    type={showPass ? 'text' : 'password'}
+                    placeholder="Min 6 characters"
+                    {...register('password', {
+                      required: 'Password is required',
+                      minLength: { value: 6, message: 'Min 6 characters' },
+                    })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(p => !p)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-xs text-red-500 mt-1">{(errors.password as any).message}</p>}
               </div>
 
               <div>

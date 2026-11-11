@@ -13,6 +13,7 @@ export interface InvitePayload {
   name: string;
   email: string;
   role: string;
+  password: string;
 }
 
 export interface UpdatePayload {

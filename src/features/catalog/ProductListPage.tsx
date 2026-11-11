@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import BulkImageUploadModal from './BulkImageUploadModal';
 import {
   Plus, Search, Package, Edit2, Trash2, Loader2, AlertCircle, X,
   FileSpreadsheet, Upload, Download, PlusCircle, CheckCircle2, Eye,
-  Globe, MapPin, Building2, Store,
+  Globe, MapPin, Building2, Store, ImageIcon,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
@@ -956,7 +957,8 @@ type ModalState =
   | { type: 'none' }
   | { type: 'single'; product?: Product | null }
   | { type: 'multi' }
-  | { type: 'excel' };
+  | { type: 'excel' }
+  | { type: 'bulk-images' };
 
 async function exportProductsCSV(products: Product[]) {
   const xl = await import('xlsx');
@@ -1088,6 +1090,9 @@ export function ProductListPage() {
               </Button>
               <Button size="sm" variant="outline" onClick={() => setModal({ type: 'excel' })}>
                 <FileSpreadsheet size={14} /> Import Excel
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setModal({ type: 'bulk-images' })}>
+                <ImageIcon size={14} /> Bulk Images
               </Button>
               <Button size="sm" variant="outline" onClick={() => setModal({ type: 'multi' })}>
                 <Upload size={14} /> Add Multiple
@@ -1300,9 +1305,10 @@ export function ProductListPage() {
         </div>
       )}
 
-      {modal.type === 'single' && <ProductModal product={modal.product} categories={categories} onClose={closeModal} onSave={afterSave} />}
-      {modal.type === 'multi'  && <MultiAddModal categories={categories} onClose={closeModal} onSave={afterSave} />}
-      {modal.type === 'excel'  && <ExcelImportModal categories={categories} onClose={closeModal} onSave={afterSave} />}
+      {modal.type === 'single'       && <ProductModal product={modal.product} categories={categories} onClose={closeModal} onSave={afterSave} />}
+      {modal.type === 'multi'        && <MultiAddModal categories={categories} onClose={closeModal} onSave={afterSave} />}
+      {modal.type === 'excel'        && <ExcelImportModal categories={categories} onClose={closeModal} onSave={afterSave} />}
+      {modal.type === 'bulk-images'  && <BulkImageUploadModal onClose={closeModal} onDone={afterSave} />}
 
       {bulkConfirm && (
         <DeleteConfirm

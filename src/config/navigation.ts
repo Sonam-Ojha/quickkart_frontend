@@ -22,9 +22,8 @@ export const NAV_ITEMS: NavItem[] = [
   },
   { label: 'Banners',       href: '/banners',         icon: 'Image',           permission: 'banners.view' },
   { label: 'Coupons',       href: '/coupons',         icon: 'Ticket',          permission: 'coupons.view' },
-  { label: 'FAQs',          href: '/faqs',            icon: 'HelpCircle',      permission: 'banners.view' },
   { label: 'Info Pages',    href: '/info-pages',      icon: 'FileText',        permission: 'banners.view' },
-  { label: 'Referrals',     href: '/referrals',       icon: 'Users2',          permission: 'referrals.view' },
+  // { label: 'Referrals',     href: '/referrals',       icon: 'Users2',          permission: 'referrals.view' },
   {
     label: 'Stores & Geo', href: '#geo', icon: 'MapPin', permission: 'dark_stores.view',
     children: [
@@ -34,12 +33,17 @@ export const NAV_ITEMS: NavItem[] = [
   },
   { label: 'Riders',        href: '/riders',          icon: 'Bike',            permission: 'riders.view' },
   { label: 'Customers',          href: '/customers',          icon: 'Users',    permission: 'customers.view' },
-  { label: 'Account Deletions',  href: '/account-deletions',  icon: 'UserX',    permission: 'customers.view' },
   { label: 'Support',       href: '/support',         icon: 'MessageSquare',   permission: 'support.view' },
   { label: 'Payments',      href: '/payments',        icon: 'CreditCard',      permission: 'payments.view' },
   { label: 'Wallet',        href: '/wallet',          icon: 'Wallet',          permission: 'wallet.view' },
   { label: 'Notifications', href: '/notifications',   icon: 'Bell',            permission: 'notifications.view' },
   { label: 'Reports',       href: '/reports',         icon: 'BarChart2',       permission: 'reports.view' },
   { label: 'Admin Users',   href: '/admin-users',     icon: 'Shield',          permission: 'admin_users.view' },
-  { label: 'Settings',      href: '/settings',        icon: 'Settings',        permission: 'settings.view' },
+  {
+    label: 'Settings', href: '#settings', icon: 'Settings', permission: 'settings.view',
+    children: [
+      { label: 'General',   href: '/settings', icon: 'Settings' },
+      { label: 'FAQs',      href: '/faqs',     icon: 'HelpCircle', permission: 'banners.view' },
+    ]
+  },
 ];

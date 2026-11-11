@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Save, Loader2, AlertCircle, CheckCircle2, Plus, Trash2,
-  FileText, Phone, Truck, ShieldCheck, Smartphone, Sparkles, Clock,
+  FileText, Phone, Truck, ShieldCheck, Smartphone, Sparkles, Clock, IndianRupee,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
@@ -31,6 +31,7 @@ const TABS = [
   { id: 'branding', label: 'Branding',         desc: 'Footer text, address & copyright',     Icon: FileText    },
   { id: 'contact',  label: 'Contact & Support', desc: 'Support email & phone number',         Icon: Phone       },
   { id: 'delivery', label: 'Delivery',          desc: 'Fees, thresholds & delivery radius',   Icon: Truck       },
+  { id: 'charges',  label: 'Charges',           desc: 'All order charges — enable/disable & set amounts', Icon: IndianRupee },
   { id: 'auth',     label: 'Auth & OTP',        desc: 'OTP length, expiry & attempt limits',  Icon: ShieldCheck },
   { id: 'app',      label: 'App Config',        desc: 'Minimum supported app version',        Icon: Smartphone  },
   { id: 'why',      label: 'Why Choose Us',     desc: 'Trust badges shown on product pages',  Icon: Sparkles    },
@@ -51,7 +52,7 @@ interface Field {
   computeHint?: (v: string) => string | null;
 }
 
-const GROUPS: Record<Exclude<TabId, 'why' | 'service'>, Field[]> = {
+const GROUPS: Record<Exclude<TabId, 'why' | 'service' | 'charges'>, Field[]> = {
   branding: [
     { key: 'footer_tagline',  label: 'Brand Tagline',    type: 'text', full: true, hint: 'Shown below the logo in footer' },
     { key: 'company_address', label: 'Company Address',   type: 'text', full: true, hint: 'City, State shown in footer contact block' },
@@ -165,6 +166,70 @@ function Toggle({ checked, onChange, label, hint }: { checked: boolean; onChange
           checked ? 'translate-x-[22px]' : 'translate-x-[2px]',
         )} />
       </button>
+    </div>
+  );
+}
+
+// ── ChargeRow ────────────────────────────────────────────────────────────────
+function ChargeRow({ label, meaning, enabled, onToggle, amountKey, thresholdKey, thresholdLabel, values, set, alwaysOn }: {
+  label: string; meaning: string; enabled: boolean;
+  onToggle?: (v: boolean) => void;
+  amountKey: string; thresholdKey?: string; thresholdLabel?: string;
+  values: Record<string, string>; set: (k: string, v: string) => void;
+  alwaysOn?: boolean;
+}) {
+  const isOn = alwaysOn || enabled;
+  return (
+    <div className={`rounded-xl border p-4 transition-colors ${isOn ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50/60'}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className={`text-sm font-semibold ${isOn ? 'text-slate-800' : 'text-slate-400'}`}>{label}</p>
+          <p className="mt-0.5 text-xs text-slate-400">{meaning}</p>
+        </div>
+        {alwaysOn ? (
+          <span className="shrink-0 mt-0.5 text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Always On</span>
+        ) : (
+          <button
+            type="button" role="switch" aria-checked={enabled}
+            onClick={() => onToggle?.(!enabled)}
+            className={cn('relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors',
+              enabled ? 'bg-[#EA580C]' : 'bg-slate-200')}
+          >
+            <span className={cn('block h-5 w-5 rounded-full bg-white shadow transition-transform',
+              enabled ? 'translate-x-[22px]' : 'translate-x-[2px]')} />
+          </button>
+        )}
+      </div>
+      {isOn && (
+        <div className="mt-3 flex flex-wrap gap-3">
+          <div className="flex-1 min-w-[120px]">
+            <label className="text-xs text-slate-400 font-medium block mb-1">Amount (₹)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">₹</span>
+              <input
+                type="number" min="0"
+                value={values[amountKey] ?? ''}
+                onChange={e => set(amountKey, e.target.value)}
+                className="w-full h-9 pl-7 pr-3 bg-inputFill border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 outline-none focus:border-[#EA580C] focus:bg-white transition-all"
+              />
+            </div>
+          </div>
+          {thresholdKey && (
+            <div className="flex-1 min-w-[120px]">
+              <label className="text-xs text-slate-400 font-medium block mb-1">{thresholdLabel}</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">₹</span>
+                <input
+                  type="number" min="0"
+                  value={values[thresholdKey] ?? ''}
+                  onChange={e => set(thresholdKey, e.target.value)}
+                  className="w-full h-9 pl-7 pr-3 bg-inputFill border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 outline-none focus:border-[#EA580C] focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -357,7 +422,7 @@ export function SettingsPage() {
   };
 
   const activeMeta = TABS.find(t => t.id === activeTab)!;
-  const fields = (activeTab === 'why' || activeTab === 'service') ? [] : GROUPS[activeTab];
+  const fields = (activeTab === 'why' || activeTab === 'service' || activeTab === 'charges') ? [] : GROUPS[activeTab as keyof typeof GROUPS];
   const visibleWhy = whyItems.filter(i => i.title.trim() || i.desc.trim());
 
   // Service Hours derived state
@@ -456,15 +521,47 @@ export function SettingsPage() {
               <div className="p-4 sm:p-6">
 
                 {/* Field grid */}
-                {activeTab !== 'why' && activeTab !== 'service' && (
+                {activeTab !== 'why' && activeTab !== 'service' && activeTab !== 'charges' && (
                   <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-                    {fields.map(field => (
+                    {fields.map((field: Field) => (
                       <FieldRow
                         key={field.key}
                         field={field}
                         value={values[field.key] ?? ''}
                         onChange={val => set(field.key, val)}
                       />
+                    ))}
+                  </div>
+                )}
+
+                {/* ── Charges ── */}
+                {activeTab === 'charges' && (
+                  <div className="space-y-3">
+                    <p className="text-xs text-slate-400 mb-4">Enable/disable each charge and set the amount. Delivery Fee is always active.</p>
+
+                    {/* Delivery Fee — always on */}
+                    <ChargeRow label="Delivery Fee" meaning="Product customer tak pahunchane ka charge"
+                      enabled amountKey="delivery_fee" thresholdKey="free_delivery_threshold"
+                      thresholdLabel="Free above (₹)" values={values} set={set} alwaysOn />
+
+                    {[
+                      { key: 'platform_fee',  label: 'Platform Fee',   meaning: 'App maintenance aur operations' },
+                      { key: 'handling_fee',  label: 'Handling Fee',   meaning: 'Product picking, packing aur handling' },
+                      { key: 'small_cart',    label: 'Small Cart Fee', meaning: 'Order amount minimum se kam hone par', thresholdKey: 'charge_small_cart_threshold', thresholdLabel: 'Apply below (₹)' },
+                      { key: 'distance_fee',  label: 'Distance Fee',   meaning: 'Extra distance ke according' },
+                      { key: 'rain_fee',      label: 'Rain Fee',       meaning: 'Baarish ke time additional charge' },
+                      { key: 'surge_fee',     label: 'Surge Fee',      meaning: 'High demand ya peak hours mein' },
+                      { key: 'late_night',    label: 'Late Night Fee', meaning: 'Raat mein delivery ke liye' },
+                      { key: 'packaging_fee', label: 'Packaging Fee',  meaning: 'Special packaging ka charge' },
+                      { key: 'cod_fee',       label: 'COD Fee',        meaning: 'Cash on Delivery handling charge' },
+                    ].map(c => (
+                      <ChargeRow key={c.key} label={c.label} meaning={c.meaning}
+                        enabled={values[`charge_${c.key}_enabled`] === '1'}
+                        onToggle={v => set(`charge_${c.key}_enabled`, v ? '1' : '0')}
+                        amountKey={`charge_${c.key}_amount`}
+                        thresholdKey={c.thresholdKey}
+                        thresholdLabel={c.thresholdLabel}
+                        values={values} set={set} />
                     ))}
                   </div>
                 )}

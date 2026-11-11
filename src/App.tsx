@@ -36,7 +36,6 @@ const SupportPage           = lazy(() => import('./features/support/SupportPage'
 const FaqListPage           = lazy(() => import('./features/faqs/FaqListPage').then(m => ({ default: m.FaqListPage })));
 const InfoPagesPage         = lazy(() => import('./features/info-pages/InfoPagesPage'));
 const GeoMastersPage        = lazy(() => import('./features/geo/GeoMastersPage'));
-const AccountDeletionsPage  = lazy(() => import('./features/account-deletions/AccountDeletionsPage').then(m => ({ default: m.AccountDeletionsPage })));
 const LiveTrackingPage      = lazy(() => import('./features/tracking/LiveTrackingPage').then(m => ({ default: m.LiveTrackingPage })));
 
 const queryClient = new QueryClient({
@@ -134,7 +133,6 @@ export default function App() {
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
 
-                <Route path="account-deletions" element={<AccountDeletionsPage />} />
                 <Route path="profile"           element={<ProfilePage />} />
 
                 <Route path="*" element={<Navigate to="/" replace />} />
