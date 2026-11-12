@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingBag, MapPin, Package, Tag, Box, Warehouse,
   Image, Ticket, Users2, Store, Bike, Users, MessageSquare, CreditCard,
   Wallet, Bell, BarChart2, Shield, Settings, ChevronDown, ChevronRight,
-  Zap, Printer, HelpCircle, FileText, Globe2, Leaf, X
+  Zap, Printer, HelpCircle, FileText, Globe2, Leaf, UtensilsCrossed, X
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { NAV_ITEMS } from '../../config/navigation';
@@ -13,7 +13,7 @@ import { usePermission } from '../../hooks/usePermission';
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard, ShoppingBag, MapPin, Package, Tag, Box, Warehouse,
   Image, Ticket, Users2, Store, Bike, Users, MessageSquare, CreditCard,
-  Wallet, Bell, BarChart2, Shield, Settings, Printer, HelpCircle, FileText, Globe2, Leaf,
+  Wallet, Bell, BarChart2, Shield, Settings, Printer, HelpCircle, FileText, Globe2, Leaf, UtensilsCrossed,
 };
 
 interface SidebarProps {
@@ -33,9 +33,18 @@ export function Sidebar({ collapsed, mobileOpen, onClose }: SidebarProps) {
     );
   };
 
-  const visibleItems = NAV_ITEMS.filter(item =>
-    !item.permission || can(item.permission)
-  );
+  // A child uses its own permission, else its group's; a group shows when it
+  // has at least one visible child.
+  const visibleItems = NAV_ITEMS
+    .map(item => item.children
+      ? { ...item, children: item.children.filter(c => {
+          const p = c.permission ?? item.permission;
+          return !p || can(p);
+        }) }
+      : item)
+    .filter(item => item.children
+      ? item.children.length > 0
+      : !item.permission || can(item.permission));
 
   return (
     <aside

@@ -16,6 +16,7 @@ export interface Category {
   showInFilter: boolean;
   showInGrid: boolean;
   section: CategorySection;
+  groupName: string | null;
 }
 
 export interface CategoryPayload {
@@ -28,6 +29,7 @@ export interface CategoryPayload {
   showInFilter?: boolean;
   showInGrid?: boolean;
   section?: CategorySection;
+  groupName?: string;
 }
 
 export interface Product {

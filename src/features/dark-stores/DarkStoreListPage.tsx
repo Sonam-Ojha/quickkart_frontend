@@ -157,6 +157,17 @@ export function DarkStoreListPage() {
     } catch {}
   };
 
+  const [foodSaving, setFoodSaving] = useState<number | null>(null);
+  const handleFoodToggle = async (s: DarkStore) => {
+    setFoodSaving(s.id);
+    try {
+      const updated = await darkStoreApi.update(s.id, { foodEnabled: !s.foodEnabled });
+      setStores(prev => prev.map(x => x.id === s.id ? { ...x, ...updated } : x));
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Could not update food delivery');
+    } finally { setFoodSaving(null); }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -225,6 +236,26 @@ export function DarkStoreListPage() {
                     {Number(store.lat).toFixed(4)}, {Number(store.lng).toFixed(4)}
                   </div>
                 )}
+                {/* Food tab for customers in this store's area */}
+                <div className="flex items-center justify-between gap-2 px-3 py-2 mb-3 rounded-xl bg-red-50/60 border border-red-100">
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-slate-700">Food Delivery</div>
+                    <div className="text-[11px] text-slate-400">{store.foodEnabled ? 'Food tab is live in this area' : 'Food tab hidden in this area'}</div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={!!store.foodEnabled}
+                    aria-label="Food delivery"
+                    disabled={!can('dark_stores.edit') || foodSaving === store.id}
+                    onClick={() => handleFoodToggle(store)}
+                    className={`w-10 h-5 rounded-full transition-colors relative shrink-0 disabled:opacity-60 ${store.foodEnabled ? 'bg-[#DC2626]' : 'bg-slate-300'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform flex items-center justify-center ${store.foodEnabled ? 'translate-x-5' : 'translate-x-0.5'}`}>
+                      {foodSaving === store.id && <Loader2 size={10} className="animate-spin text-slate-400" />}
+                    </span>
+                  </button>
+                </div>
                 <div className="flex gap-2 pt-3 border-t border-slate-50">
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate(`/dark-stores/${store.id}`)}>
                     <ArrowRight size={12} /> Manage

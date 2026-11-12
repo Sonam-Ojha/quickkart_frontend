@@ -9,6 +9,8 @@ export interface DarkStore {
   lng: number | string | null;
   radius: number | null;
   isActive: boolean;
+  /** Food tab on/off for customers this store serves */
+  foodEnabled?: boolean;
 }
 
 export interface DarkStorePayload {
@@ -19,6 +21,7 @@ export interface DarkStorePayload {
   lng?: number;
   radius?: number;
   isActive?: boolean;
+  foodEnabled?: boolean;
 }
 
 export interface StoreStats {

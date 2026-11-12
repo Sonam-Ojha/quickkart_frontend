@@ -2,12 +2,15 @@ import api from '../../lib/api';
 
 export type BgType = 'orange-tint' | 'teal-tint' | 'blue-tint' | 'emerald-tint' | 'rose-tint' | 'purple-tint';
 export type BannerSection = 'hero' | 'promo';
+export type BannerPlatform = 'both' | 'web' | 'app';
 
 export interface Banner {
   id: number;
   title: string | null;
   subtitle: string | null;
   bannerImage: string;
+  mobileImage: string | null;
+  platform: BannerPlatform;
   section: BannerSection;
   emoji: string | null;
   bgType: BgType | null;
@@ -22,6 +25,8 @@ export interface BannerPayload {
   title?: string | null;
   subtitle?: string | null;
   bannerImage: string;
+  mobileImage?: string | null;
+  platform?: BannerPlatform;
   section?: BannerSection;
   emoji?: string | null;
   bgType: BgType | null;

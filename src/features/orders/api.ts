@@ -1,12 +1,15 @@
 import api from '../../lib/api';
 
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'out_for_delivery' | 'delivered' | 'cancelled';
+export type OrderType   = 'grocery' | 'print' | 'food';
 
 export interface OrderCustomer { id: number; name: string; email: string; mobile: string | null; }
 export interface OrderStore    { id: number; name: string; city: string; }
 export interface OrderRider    { id: number; name: string; mobile: string; rating: number; }
 export interface OrderProduct  { id: number; name: string; imageUrl: string | null; }
-export interface OrderItem     { id: number; quantity: number; unitPrice: number; total: number; product: OrderProduct; }
+// Food lines have no product — itemName is the menu item's name at order time
+export interface OrderItem     { id: number; quantity: number; unitPrice: number; total: number; product: OrderProduct | null; itemName?: string | null; }
+export interface OrderRestaurant { id: number; name: string; phone: string | null; address: string | null; }
 export interface PrintFile     { name: string; url: string; key?: string | null; pages: number; }
 export interface PrintJob {
   files: PrintFile[];
@@ -28,8 +31,9 @@ export interface Order {
   discount: number;
   total: number;
   cancelReason: string | null;
-  orderType?: 'grocery' | 'print';
+  orderType?: OrderType;
   printJob?: PrintJob | null;
+  restaurant?: OrderRestaurant | null;
   address?: OrderAddress | null;
   customer: OrderCustomer;
   store: OrderStore;
@@ -49,10 +53,10 @@ export interface OrderStats {
 }
 
 export const orderApi = {
-  getStats: (type?: 'grocery' | 'print') =>
+  getStats: (type?: OrderType) =>
     api.get<OrderStats>('/api/admin/orders/stats', { params: { type } }).then(r => r.data),
 
-  getAll: (params?: { status?: string; type?: 'grocery' | 'print'; search?: string; page?: number; limit?: number }) =>
+  getAll: (params?: { status?: string; type?: OrderType; search?: string; page?: number; limit?: number }) =>
     api.get<{ orders: Order[]; total: number; page: number; pages: number }>(
       '/api/admin/orders', { params }
     ).then(r => r.data),

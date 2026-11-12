@@ -105,7 +105,12 @@ function CategoryModal({
     parentId:  category?.parentId  ?? (mode === 'sub' ? (mainCategories[0]?.id ?? null) : null),
     showInFilter: category?.showInFilter ?? true,
     showInGrid:   category?.showInGrid   ?? true,
+    groupName:    category?.groupName    ?? '',
   });
+  // Headings already in use, offered as suggestions so spellings stay consistent
+  const existingGroups = [...new Set(
+    mainCategories.map(c => c.groupName?.trim()).filter((g): g is string => !!g)
+  )];
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
 
@@ -309,6 +314,27 @@ function CategoryModal({
                     </div>
                   </label>
                 </div>
+                {form.showInGrid && (
+                  <div className="mt-4">
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                      Grid Heading
+                    </label>
+                    <Input
+                      value={form.groupName ?? ''}
+                      onChange={e => setForm(f => ({ ...f, groupName: e.target.value }))}
+                      placeholder="e.g. Grocery & Kitchen"
+                      maxLength={60}
+                      list="category-group-options"
+                      className="h-11 bg-white"
+                    />
+                    <datalist id="category-group-options">
+                      {existingGroups.map(g => <option key={g} value={g} />)}
+                    </datalist>
+                    <p className="text-xs text-slate-400 mt-1.5">
+                      Categories with the same heading are shown together in the app. Leave blank to show under "More Categories".
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
