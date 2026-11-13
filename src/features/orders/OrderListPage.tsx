@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, Printer, UserCheck, Mail, Phone, IndianRupee } from 'lucide-react';
+import { Search, Eye, Download, Loader2, AlertCircle, ChevronLeft, ChevronRight, Package, Clock, CheckCircle, Truck, XCircle, X, Bike, MapPin, ShoppingBag, Printer, UserCheck, Mail, Phone, IndianRupee, UtensilsCrossed } from 'lucide-react';
 
 function downloadCSV(filename: string, rows: (string | number | null | undefined)[][], headers: string[]) {
   const escape = (v: string | number | null | undefined) => {
@@ -18,7 +18,7 @@ import { StatusBadge } from '../../components/common/StatusBadge';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { cn, rupees, formatDateTime } from '../../lib/utils';
-import { orderApi, Order, OrderStats, OrderStatus } from './api';
+import { orderApi, Order, OrderStats, OrderStatus, OrderType } from './api';
 import { riderApi, Rider } from '../riders/api';
 import { PrintJobSection } from './PrintJobSection';
 
@@ -178,6 +178,29 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
             </div>
           )}
 
+          {/* Restaurant — ops calls it to relay the order before confirming */}
+          {order.orderType === 'food' && order.restaurant && (
+            <section className="rounded-xl border border-red-100 bg-red-50/60 p-4">
+              <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-[#B91C1C]">Restaurant</h3>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-semibold text-slate-800">{order.restaurant.name}</div>
+                  {order.restaurant.address && <div className="text-xs text-slate-500 mt-0.5">{order.restaurant.address}</div>}
+                </div>
+                {order.restaurant.phone && (
+                  <a href={`tel:${order.restaurant.phone}`} className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#DC2626] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B91C1C]">
+                    <Phone size={12} /> {order.restaurant.phone}
+                  </a>
+                )}
+              </div>
+              {order.status === 'pending' && (
+                <p className="mt-3 text-xs text-[#991B1B]">
+                  Call the restaurant with the items below. Once they accept, set the status to <b>Confirmed</b> — that sends the order to riders.
+                </p>
+              )}
+            </section>
+          )}
+
           {/* Customer */}
           <section className="rounded-xl border border-slate-200 bg-white p-4">
             <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Customer</h3>
@@ -281,12 +304,12 @@ function OrderDrawer({ order, onClose, onStatusUpdate }: { order: Order; onClose
                 {order.items.map(item => (
                   <div key={item.id} className="flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
-                      {item.product.imageUrl
+                      {item.product?.imageUrl
                         ? <img src={item.product.imageUrl} alt="" className="h-full w-full object-cover" />
                         : <ShoppingBag size={14} className="text-slate-300" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-slate-700">{item.product.name}</div>
+                      <div className="truncate text-sm font-medium text-slate-700">{item.product?.name ?? item.itemName ?? 'Item'}</div>
                       <div className="text-xs text-slate-400">{item.quantity} × {rupees(item.unitPrice)}</div>
                     </div>
                     <span className="shrink-0 text-sm font-semibold text-slate-800">{rupees(item.total)}</span>
@@ -387,7 +410,7 @@ function OrderStatCard({ label, value, icon: Icon, color }: { label: string; val
 
 // ── Main Page ─────────────────────────────────────────────
 
-export function OrderListPage({ type, title = 'Orders' }: { type?: 'grocery' | 'print'; title?: string } = {}) {
+export function OrderListPage({ type, title = 'Orders' }: { type?: OrderType; title?: string } = {}) {
   const [orders, setOrders]   = useState<Order[]>([]);
   const [stats, setStats]     = useState<OrderStats | null>(null);
   const [total, setTotal]     = useState(0);
@@ -414,7 +437,7 @@ export function OrderListPage({ type, title = 'Orders' }: { type?: 'grocery' | '
         o.customer?.name ?? '',
         o.customer?.mobile ?? '',
         o.status,
-        o.items?.map((i: any) => `${i.product?.name ?? 'Item'} x${i.quantity}`).join(' | ') ?? '',
+        o.items?.map((i: any) => `${i.product?.name ?? i.itemName ?? 'Item'} x${i.quantity}`).join(' | ') ?? '',
         o.subtotal,
         o.deliveryFee,
         o.discount,
@@ -422,7 +445,7 @@ export function OrderListPage({ type, title = 'Orders' }: { type?: 'grocery' | '
         o.store?.name ?? '',
         (o as any).payment?.gateway ?? '',
       ]);
-      const prefix = type === 'print' ? 'print-orders' : 'orders';
+      const prefix = type === 'print' ? 'print-orders' : type === 'food' ? 'food-orders' : 'orders';
       downloadCSV(`${prefix}-${new Date().toISOString().slice(0,10)}.csv`, rows, headers);
     } catch {}
     finally { setExporting(false); }
@@ -534,6 +557,11 @@ export function OrderListPage({ type, title = 'Orders' }: { type?: 'grocery' | '
                     {order.orderType === 'print' && (
                       <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-[#C2410C]">
                         <Printer size={10} /> Print
+                      </span>
+                    )}
+                    {order.orderType === 'food' && (
+                      <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-[#B91C1C]">
+                        <UtensilsCrossed size={10} /> Food
                       </span>
                     )}
                   </td>

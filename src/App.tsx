@@ -15,6 +15,9 @@ import { RegisterPage } from './features/auth/RegisterPage';
 const DashboardPage         = lazy(() => import('./features/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const OrderListPage         = lazy(() => import('./features/orders/OrderListPage').then(m => ({ default: m.OrderListPage })));
 const PrintOrdersPage       = lazy(() => import('./features/print-orders/PrintOrdersPage').then(m => ({ default: m.PrintOrdersPage })));
+const RestaurantListPage    = lazy(() => import('./features/food/RestaurantListPage').then(m => ({ default: m.RestaurantListPage })));
+const FoodOrdersPage        = lazy(() => import('./features/food/FoodOrdersPage').then(m => ({ default: m.FoodOrdersPage })));
+const RestaurantMenuPage    = lazy(() => import('./features/food/RestaurantMenuPage').then(m => ({ default: m.RestaurantMenuPage })));
 const ProductListPage       = lazy(() => import('./features/catalog/ProductListPage').then(m => ({ default: m.ProductListPage })));
 const CategoryListPage      = lazy(() => import('./features/catalog/CategoryListPage').then(m => ({ default: m.CategoryListPage })));
 const BannerListPage        = lazy(() => import('./features/banners/BannerListPage').then(m => ({ default: m.BannerListPage })));
@@ -64,6 +67,7 @@ export default function App() {
                 <Route element={<ProtectedRoute permission="orders.view" />}>
                   <Route path="orders"       element={<OrderListPage />} />
                   <Route path="print-orders" element={<PrintOrdersPage />} />
+                  <Route path="food/orders"  element={<FoodOrdersPage />} />
                   <Route path="tracking"     element={<LiveTrackingPage />} />
                 </Route>
 
@@ -72,6 +76,8 @@ export default function App() {
                   <Route path="catalog/fresh"      element={<CategoryListPage key="fresh" section="fresh" />} />
                   <Route path="catalog/products"   element={<ProductListPage />} />
                   <Route path="catalog/inventory"  element={<InventoryPage />} />
+                  <Route path="food/restaurants"     element={<RestaurantListPage />} />
+                  <Route path="food/restaurants/:id" element={<RestaurantMenuPage />} />
                 </Route>
 
                 <Route element={<ProtectedRoute permission="banners.view" />}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Eye, EyeOff, Loader2, AlertCircle, X, Image, ImagePlus, MousePointerClick } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, AlertCircle, X, Image, ImagePlus, MousePointerClick } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -27,6 +27,8 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
     title:       banner?.title       ?? '',
     subtitle:    banner?.subtitle    ?? '',
     bannerImage: banner?.bannerImage ?? '',
+    mobileImage: banner?.mobileImage ?? '',
+    platform:    banner?.platform    ?? 'both',
     section:     banner?.section     ?? 'hero',
     emoji:       banner?.emoji       ?? '',
     bgType:      banner ? banner.bgType : null,
@@ -58,6 +60,8 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
         bgType:   mode === 'image' ? null : form.bgType,
         validTo:  form.validTo  || null,
         deeplink: form.deeplink || null,
+        // Phone artwork only applies to hero slides shown in the app
+        mobileImage: !isPromo && form.platform !== 'web' ? (form.mobileImage || null) : null,
       };
       banner ? await bannerApi.update(banner.id, payload) : await bannerApi.create(payload);
       onSave();
@@ -152,6 +156,25 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
                   {isPromo ? 'Small card row below the main carousel' : 'Full-width sliding carousel at the top'}
                 </p>
               </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">Show On *</label>
+                <div className="flex gap-2">
+                  {([['both', '🌐📱 Website + App'], ['web', '🌐 Website only'], ['app', '📱 App only']] as const).map(([p, label]) => (
+                    <button
+                      key={p} type="button"
+                      onClick={() => set('platform', p)}
+                      className={`flex-1 h-11 rounded-xl text-sm font-medium border transition-colors ${
+                        form.platform === p
+                          ? 'bg-slate-800 text-white border-slate-800'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Banner Image */}
@@ -161,16 +184,36 @@ function BannerModal({ banner, onClose, onSave }: { banner?: Banner | null; onCl
                 <h3 className="text-sm font-semibold text-slate-700">Banner Image</h3>
               </div>
               <p className="text-xs text-slate-400 mb-3">
-                Recommended: {isPromo ? '800 × 800px (square)' : '1200 × 400px (3:1)'}. Uploaded photos can be cropped to fit before saving.
+                Recommended: {isPromo
+                  ? '800 × 800px (square)'
+                  : form.platform === 'app' ? '1200 × 500px (12:5)' : '1800 × 300px (6:1) — website size'}. Uploaded photos can be cropped to fit before saving.
               </p>
               <ImageUploadField
-                label="Banner Image"
+                label={isPromo || form.platform === 'app' ? 'Banner Image' : 'Website Image'}
                 required
                 value={form.bannerImage}
                 onChange={url => set('bannerImage', url)}
-                aspectRatio={isPromo ? 1 : 3}
+                aspectRatio={isPromo ? 1 : form.platform === 'app' ? 12 / 5 : 6}
+                purpose={isPromo ? undefined : 'banner'}
                 previewClassName="h-36"
               />
+
+              {/* Separate phone artwork — the website slide is too wide for a phone screen */}
+              {!isPromo && form.platform === 'both' && (
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <p className="text-xs text-slate-400 mb-3">
+                    <span className="font-semibold text-slate-600">Phone image</span> (optional) — 1200 × 500px (12:5). Shown in the app and on the mobile website; if empty, the website image is used and its sides get cropped.
+                  </p>
+                  <ImageUploadField
+                    label="Phone Image"
+                    value={form.mobileImage ?? ''}
+                    onChange={url => set('mobileImage', url)}
+                    aspectRatio={12 / 5}
+                    purpose="banner"
+                    previewClassName="h-36"
+                  />
+                </div>
+              )}
 
               {/* Overlay mockup — only meaningful in Customize mode */}
               {form.bannerImage && mode === 'customize' && (
@@ -399,6 +442,9 @@ export function BannerListPage() {
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${banner.section === 'promo' ? 'bg-white/30 text-white' : 'bg-white/20 text-white'}`}>
                       {banner.section === 'promo' ? '🃏 Promo' : '🖼️ Hero'}
                     </span>
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/20 text-white">
+                      {banner.platform === 'web' ? '🌐 Web' : banner.platform === 'app' ? '📱 App' : '🌐📱 Both'}
+                    </span>
                     <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/20 text-white">#{banner.sortOrder}</span>
                     {!banner.isActive && <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-black/20 text-white">Hidden</span>}
                   </div>
@@ -417,12 +463,18 @@ export function BannerListPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
+                      role="switch"
+                      aria-checked={banner.isActive}
+                      aria-label={banner.isActive ? 'Live — click to hide' : 'Hidden — click to make live'}
+                      title={banner.isActive ? 'Live' : 'Hidden'}
                       onClick={() => handleToggle(banner)}
                       disabled={toggling === banner.id}
-                      className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${banner.isActive ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                      className={`w-10 h-5 rounded-full transition-colors relative shrink-0 disabled:opacity-60 ${banner.isActive ? 'bg-orange-500' : 'bg-slate-300'}`}
                     >
-                      {toggling === banner.id ? <Loader2 size={11} className="animate-spin" /> : banner.isActive ? <Eye size={11} /> : <EyeOff size={11} />}
-                      {banner.isActive ? 'Live' : 'Hidden'}
+                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform flex items-center justify-center ${banner.isActive ? 'translate-x-5' : 'translate-x-0.5'}`}>
+                        {toggling === banner.id && <Loader2 size={10} className="animate-spin text-slate-400" />}
+                      </span>
                     </button>
                     {can('banners.edit') && (
                       <>

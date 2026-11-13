@@ -20,6 +20,13 @@ export const NAV_ITEMS: NavItem[] = [
       { label: 'Inventory',  href: '/catalog/inventory',  icon: 'Warehouse' },
     ]
   },
+  {
+    label: 'Food', href: '#food', icon: 'UtensilsCrossed',
+    children: [
+      { label: 'Food Orders', href: '/food/orders',      icon: 'ShoppingBag', permission: 'orders.view' },
+      { label: 'Restaurants', href: '/food/restaurants', icon: 'Store',       permission: 'catalog.view' },
+    ]
+  },
   { label: 'Banners',       href: '/banners',         icon: 'Image',           permission: 'banners.view' },
   { label: 'Coupons',       href: '/coupons',         icon: 'Ticket',          permission: 'coupons.view' },
   { label: 'Info Pages',    href: '/info-pages',      icon: 'FileText',        permission: 'banners.view' },
