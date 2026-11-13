@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Zap, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { authApi } from './api';
@@ -10,6 +10,7 @@ import api from '../../lib/api';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const login = useAuthStore(s => s.login);
 
   const [email, setEmail] = useState('');
@@ -36,7 +37,8 @@ export function LoginPage() {
           listenForegroundMessages();
         }
       }).catch((e) => console.error('[FCM] permission error:', e));
-      navigate('/');
+      const from = (location.state as { from?: string })?.from ?? '/';
+      navigate(from, { replace: true });
     } catch (err: any) {
       if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
         setError('Server is taking too long to respond. Please wait a moment and try again.');

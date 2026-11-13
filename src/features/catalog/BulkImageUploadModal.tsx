@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { X, Upload, CheckCircle2, AlertCircle, Loader2, ImageIcon, XCircle } from 'lucide-react';
+import { X, Upload, CheckCircle2, AlertCircle, Loader2, ImageIcon, XCircle, Download } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import api from '../../lib/api';
 
@@ -13,6 +13,19 @@ interface UploadResult {
 }
 
 interface Props { onClose: () => void; onDone: () => void }
+
+async function downloadProductList() {
+  const { data } = await api.get('/api/admin/catalog/products?limit=2000');
+  const products: { id: number; name: string }[] = data.products ?? data.items ?? data ?? [];
+  const rows = [['ID', 'Product Name', 'Rename your file to']];
+  products.forEach(p => rows.push([String(p.id), p.name, `${p.id}.jpg`]));
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'product-list.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function BulkImageUploadModal({ onClose, onDone }: Props) {
   const [files, setFiles]       = useState<File[]>([]);
@@ -75,11 +88,20 @@ export default function BulkImageUploadModal({ onClose, onDone }: Props) {
         <div className="p-5 flex flex-col gap-4 overflow-y-auto flex-1">
 
           {/* Instructions */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 space-y-1">
-            <p className="font-semibold">How to name your files:</p>
-            <p>• <span className="font-mono bg-white px-1 rounded">142.jpg</span> → Product ID 142 ki image update hogi</p>
-            <p>• <span className="font-mono bg-white px-1 rounded">Bikano Punjabi Tadka.jpg</span> → Name se match hoga</p>
-            <p>• JPG, PNG, WebP — max 5MB per file</p>
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5 text-xs text-blue-800 space-y-2">
+            <p className="font-semibold text-sm">How to upload images in bulk:</p>
+            <div className="space-y-1.5">
+              <p><span className="font-bold text-blue-900">Step 1.</span> Download the product list to get all product IDs.</p>
+              <p><span className="font-bold text-blue-900">Step 2.</span> Rename each image file to its product ID — e.g. <span className="font-mono bg-white px-1 rounded">142.jpg</span>, <span className="font-mono bg-white px-1 rounded">205.png</span></p>
+              <p><span className="font-bold text-blue-900">Step 3.</span> Select all renamed images and click Upload.</p>
+            </div>
+            <p className="text-blue-600">Supported: JPG, PNG, WebP · Max 5 MB per file</p>
+            <button
+              onClick={downloadProductList}
+              className="mt-1 flex items-center gap-1.5 bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              <Download size={12} /> Download Product List
+            </button>
           </div>
 
           {/* Drop zone */}

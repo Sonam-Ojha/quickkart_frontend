@@ -232,21 +232,44 @@ function SmsPreview({ title, body }: { title: string; body: string }) {
   );
 }
 
+const DAYS = [
+  { key: 'mon', label: 'Mon' },
+  { key: 'tue', label: 'Tue' },
+  { key: 'wed', label: 'Wed' },
+  { key: 'thu', label: 'Thu' },
+  { key: 'fri', label: 'Fri' },
+  { key: 'sat', label: 'Sat' },
+  { key: 'sun', label: 'Sun' },
+];
+
 export function NotificationComposer() {
   const [title, setTitle]         = useState('');
   const [body, setBody]           = useState('');
   const [segment, setSegment]     = useState('all');
-  const [scheduled, setScheduled] = useState(false);
   const [channel, setChannel]     = useState<Channel>('push');
   const [sending, setSending]     = useState(false);
   const [result, setResult]       = useState<string | null>(null);
+
+  // scheduling
+  const [scheduled, setScheduled]   = useState(false);
+  const [fromDate, setFromDate]     = useState('');
+  const [toDate, setToDate]         = useState('');
+  const [sendTime, setSendTime]     = useState('10:00');
+  const [activeDays, setActiveDays] = useState<string[]>(['mon','tue','wed','thu','fri','sat','sun']);
+
+  const toggleDay = (day: string) =>
+    setActiveDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
 
   const handleSend = async () => {
     if (!title || !body || sending) return;
     setSending(true);
     setResult(null);
     try {
-      const res = await api.post('/api/admin/notifications/send', { title, body, segment });
+      const payload: Record<string, unknown> = { title, body, segment };
+      if (scheduled) {
+        payload.schedule = { fromDate, toDate, time: sendTime, days: activeDays };
+      }
+      const res = await api.post('/api/admin/notifications/send', payload);
       setResult(`✅ Sent to ${res.data.sent} users`);
       setTitle('');
       setBody('');
@@ -319,7 +342,56 @@ export function NotificationComposer() {
                 />
                 <label htmlFor="schedule" className="text-sm text-slate-700 cursor-pointer">Schedule for later</label>
               </div>
-              {scheduled && <Input type="datetime-local" className="mt-2" />}
+
+              {scheduled && (
+                <div className="border border-slate-200 rounded-xl p-4 space-y-4 bg-slate-50">
+                  {/* Date range */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">From Date</label>
+                      <Input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">To Date</label>
+                      <Input type="date" value={toDate} onChange={e => setToDate(e.target.value)} min={fromDate} />
+                    </div>
+                  </div>
+
+                  {/* Time */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Send Time (daily)</label>
+                    <Input type="time" value={sendTime} onChange={e => setSendTime(e.target.value)} className="w-36" />
+                  </div>
+
+                  {/* Days of week */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-2">Repeat on Days</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {DAYS.map(d => (
+                        <button
+                          key={d.key}
+                          type="button"
+                          onClick={() => toggleDay(d.key)}
+                          className={`w-10 h-10 rounded-full text-xs font-semibold border transition-colors ${
+                            activeDays.includes(d.key)
+                              ? 'bg-[#EA580C] border-[#EA580C] text-white'
+                              : 'bg-white border-slate-200 text-slate-500 hover:border-orange-300'
+                          }`}
+                        >
+                          {d.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2">
+                      {activeDays.length === 7
+                        ? 'Every day'
+                        : activeDays.length === 0
+                        ? 'No days selected'
+                        : `Every ${activeDays.map(d => DAYS.find(x => x.key === d)?.label).join(', ')}`}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           {result && (

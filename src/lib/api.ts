@@ -20,7 +20,8 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       useAuthStore.getState().logout();
-      window.location.href = '/login';
+      // ProtectedRoute detects token=null and redirects to /login with the
+      // current path in state, so the user returns here after re-login.
     }
     return Promise.reject(err);
   }

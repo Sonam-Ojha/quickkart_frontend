@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/auth.store';
 import { usePermission } from '../hooks/usePermission';
 
@@ -11,7 +11,9 @@ interface ProtectedRouteProps {
 
 function isTokenExpiredOrInvalid(token: string): boolean {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    const raw    = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = raw + '=='.slice(0, (4 - raw.length % 4) % 4);
+    const payload = JSON.parse(atob(padded));
     return !!(payload.exp && Date.now() / 1000 > payload.exp);
   } catch {
     return true;
@@ -19,20 +21,28 @@ function isTokenExpiredOrInvalid(token: string): boolean {
 }
 
 export function ProtectedRoute({ permission }: ProtectedRouteProps) {
-  const hydrated = useAuthStore(s => s._hasHydrated);
-  const token    = useAuthStore(s => s.token);
-  const role     = useAuthStore(s => s.user?.role);
-  const logout   = useAuthStore(s => s.logout);
+  // Use Zustand v5 persist API — more reliable than custom _hasHydrated flag
+  const [hydrated, setHydrated] = useState(() => useAuthStore.persist.hasHydrated());
+
+  useEffect(() => {
+    if (useAuthStore.persist.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    return useAuthStore.persist.onFinishHydration(() => setHydrated(true));
+  }, []);
+
+  const token  = useAuthStore(s => s.token);
+  const role   = useAuthStore(s => s.user?.role);
+  const logout = useAuthStore(s => s.logout);
   const { can } = usePermission();
-  const [evicted, setEvicted] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     if (!token) return;
-    const shouldEvict = isTokenExpiredOrInvalid(token) || (role != null && !VALID_ADMIN_ROLES.includes(role));
-    if (shouldEvict) {
-      logout();
-      setEvicted(true);
-    }
+    const expired    = isTokenExpiredOrInvalid(token);
+    const wrongRole  = role != null && !VALID_ADMIN_ROLES.includes(role);
+    if (expired || wrongRole) logout();
   }, [token, role, logout]);
 
   if (!hydrated) return (
@@ -41,14 +51,14 @@ export function ProtectedRoute({ permission }: ProtectedRouteProps) {
     </div>
   );
 
-  if (!token || evicted) return <Navigate to="/login" replace />;
+  if (!token) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
 
-  if (isTokenExpiredOrInvalid(token)) return <Navigate to="/login" replace />;
+  if (isTokenExpiredOrInvalid(token)) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
 
-  // Stale token with non-admin role → force re-login
   if (role && !VALID_ADMIN_ROLES.includes(role)) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
+
   if (permission && !can(permission)) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-8">
@@ -60,5 +70,6 @@ export function ProtectedRoute({ permission }: ProtectedRouteProps) {
       </div>
     );
   }
+
   return <Outlet />;
 }
