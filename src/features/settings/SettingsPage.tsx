@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Save, Loader2, AlertCircle, CheckCircle2, Plus, Trash2,
-  FileText, Phone, Truck, ShieldCheck, Smartphone, Sparkles, Clock, IndianRupee,
+  FileText, Phone, Truck, ShieldCheck, Smartphone, Sparkles, Clock, IndianRupee, KeyRound,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
@@ -36,6 +36,7 @@ const TABS = [
   { id: 'app',      label: 'App Config',        desc: 'Minimum supported app version',        Icon: Smartphone  },
   { id: 'why',      label: 'Why Choose Us',     desc: 'Trust badges shown on product pages',  Icon: Sparkles    },
   { id: 'service',  label: 'Service Hours',     desc: 'Operational hours & availability',     Icon: Clock       },
+  { id: 'otp',      label: 'Show OTP',          desc: 'Control OTP visibility per platform',  Icon: KeyRound    },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -52,7 +53,7 @@ interface Field {
   computeHint?: (v: string) => string | null;
 }
 
-const GROUPS: Record<Exclude<TabId, 'why' | 'service' | 'charges'>, Field[]> = {
+const GROUPS: Record<Exclude<TabId, 'why' | 'service' | 'charges' | 'otp'>, Field[]> = {
   branding: [
     { key: 'footer_tagline',  label: 'Brand Tagline',    type: 'text', full: true, hint: 'Shown below the logo in footer' },
     { key: 'company_address', label: 'Company Address',   type: 'text', full: true, hint: 'City, State shown in footer contact block' },
@@ -422,7 +423,7 @@ export function SettingsPage() {
   };
 
   const activeMeta = TABS.find(t => t.id === activeTab)!;
-  const fields = (activeTab === 'why' || activeTab === 'service' || activeTab === 'charges') ? [] : GROUPS[activeTab as keyof typeof GROUPS];
+  const fields = (activeTab === 'why' || activeTab === 'service' || activeTab === 'charges' || activeTab === 'otp') ? [] : GROUPS[activeTab as keyof typeof GROUPS];
   const visibleWhy = whyItems.filter(i => i.title.trim() || i.desc.trim());
 
   // Service Hours derived state
@@ -521,7 +522,7 @@ export function SettingsPage() {
               <div className="p-4 sm:p-6">
 
                 {/* Field grid */}
-                {activeTab !== 'why' && activeTab !== 'service' && activeTab !== 'charges' && (
+                {activeTab !== 'why' && activeTab !== 'service' && activeTab !== 'charges' && activeTab !== 'otp' && (
                   <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                     {fields.map((field: Field) => (
                       <FieldRow
@@ -735,6 +736,38 @@ export function SettingsPage() {
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {/* ── Show OTP ── */}
+                {activeTab === 'otp' && (
+                  <div className="space-y-4">
+                    <p className="text-sm text-slate-500">
+                      Control whether the OTP is shown on screen in each platform. Turn <strong>OFF</strong> once your SMS service is live.
+                    </p>
+                    {[
+                      { key: 'show_otp_web',          label: 'Customer Website',  desc: 'Show demo OTP on the web login page' },
+                      { key: 'show_otp_customer_app', label: 'Customer App',      desc: 'Show demo OTP in the Flutter customer app' },
+                      { key: 'show_otp_rider_app',    label: 'Rider App',         desc: 'Show demo OTP in the Flutter rider app' },
+                    ].map(({ key, label, desc }) => (
+                      <div key={key} className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">{label}</p>
+                          <p className="text-xs text-slate-400 mt-0.5">{desc}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => { set(key, values[key] === '1' ? '0' : '1'); }}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${
+                            values[key] !== '0' ? 'bg-[#EA580C]' : 'bg-slate-200'
+                          }`}
+                        >
+                          <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
+                            values[key] !== '0' ? 'translate-x-5' : 'translate-x-0'
+                          }`} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
 
