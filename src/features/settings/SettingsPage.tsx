@@ -676,15 +676,22 @@ export function SettingsPage() {
                       )}
                       {!serviceEnabled && (
                         <div className="mt-3">
-                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Reopens at</label>
-                          <Input
+                          <label className="mb-1.5 block text-sm font-medium text-slate-700">Auto-reopen at</label>
+                          <input
+                            type="datetime-local"
                             value={reopensAt}
+                            min={new Date().toISOString().slice(0, 16)}
                             onChange={e => set('reopens_at', e.target.value)}
-                            placeholder="6:00 AM"
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#EA580C] focus:border-transparent"
                           />
                           <p className="mt-1.5 text-xs text-slate-400">
-                            Exact time shown on the app & web closed screen (e.g. "6:00 AM"). Leave blank to hide it.
+                            Service will automatically become active at this date &amp; time.
                           </p>
+                          {reopensAt && (
+                            <p className="mt-1 text-xs font-medium text-amber-600">
+                              ⏰ Will auto-activate on {new Date(reopensAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
