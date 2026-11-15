@@ -52,6 +52,17 @@ export interface MenuItem {
 
 export type MenuItemPayload = Partial<Omit<MenuItem, 'id' | 'restaurantId'>>;
 
+/** Restaurant partner login (mobile + password) */
+export interface RestaurantStaff {
+  id: number;
+  restaurantId: number;
+  name: string;
+  mobile: string;
+  isActive: boolean;
+  lastLoginAt: string | null;
+  created_at: string;
+}
+
 const base = '/api/admin/food/restaurants';
 
 export const foodApi = {
@@ -77,4 +88,11 @@ export const foodApi = {
   toggleItem: (id: number, itemId: number) =>
     api.patch<{ item: MenuItem }>(`${base}/${id}/menu-items/${itemId}/toggle`).then(r => r.data.item),
   removeItem: (id: number, itemId: number) => api.delete(`${base}/${id}/menu-items/${itemId}`).then(r => r.data),
+
+  staff: (id: number) => api.get<{ staff: RestaurantStaff[] }>(`${base}/${id}/staff`).then(r => r.data.staff),
+  createStaff: (id: number, data: { name: string; mobile: string; password: string }) =>
+    api.post<{ staff: RestaurantStaff }>(`${base}/${id}/staff`, data).then(r => r.data.staff),
+  updateStaff: (id: number, staffId: number, data: { name?: string; password?: string; isActive?: boolean }) =>
+    api.patch<{ staff: RestaurantStaff }>(`${base}/${id}/staff/${staffId}`, data).then(r => r.data.staff),
+  removeStaff: (id: number, staffId: number) => api.delete(`${base}/${id}/staff/${staffId}`).then(r => r.data),
 };

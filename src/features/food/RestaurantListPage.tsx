@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Loader2, AlertCircle, X, UtensilsCrossed, MapPin, Clock, Phone, ArrowRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, AlertCircle, X, UtensilsCrossed, MapPin, Clock, Phone, ArrowRight, Users } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -8,6 +8,7 @@ import ImageUploadField from '../../components/common/ImageUploadField';
 import { usePermission } from '../../hooks/usePermission';
 import { darkStoreApi, DarkStore } from '../dark-stores/api';
 import { foodApi, Restaurant, RestaurantPayload } from './api';
+import { StaffLoginsModal } from './StaffLoginsModal';
 
 const LABEL = 'text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block';
 
@@ -225,6 +226,7 @@ export function RestaurantListPage() {
   const [storeFilter, setStoreFilter] = useState<number | 'all'>('all');
   const [modal, setModal]     = useState<{ open: boolean; restaurant?: Restaurant | null }>({ open: false });
   const [busy, setBusy]       = useState<string | null>(null);
+  const [loginsFor, setLoginsFor] = useState<Restaurant | null>(null);
 
   const load = async () => {
     setLoading(true); setError('');
@@ -344,6 +346,11 @@ export function RestaurantListPage() {
                   <ArrowRight size={12} /> Menu
                 </Button>
                 {canEdit && (
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => setLoginsFor(r)}>
+                    <Users size={12} /> Logins
+                  </Button>
+                )}
+                {canEdit && (
                   <>
                     <Button variant="ghost" size="icon" className="text-slate-400 hover:bg-slate-100" onClick={() => setModal({ open: true, restaurant: r })}><Edit2 size={14} /></Button>
                     <Button variant="ghost" size="icon" className="text-red-500 hover:bg-red-50" onClick={() => remove(r)}><Trash2 size={14} /></Button>
@@ -354,6 +361,8 @@ export function RestaurantListPage() {
           ))}
         </div>
       )}
+
+      {loginsFor && <StaffLoginsModal restaurant={loginsFor} onClose={() => setLoginsFor(null)} />}
 
       {modal.open && (
         <RestaurantModal

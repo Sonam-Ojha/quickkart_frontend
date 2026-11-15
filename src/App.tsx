@@ -16,10 +16,19 @@ const DashboardPage         = lazy(() => import('./features/dashboard/DashboardP
 const OrderListPage         = lazy(() => import('./features/orders/OrderListPage').then(m => ({ default: m.OrderListPage })));
 const PrintOrdersPage       = lazy(() => import('./features/print-orders/PrintOrdersPage').then(m => ({ default: m.PrintOrdersPage })));
 const RestaurantListPage    = lazy(() => import('./features/food/RestaurantListPage').then(m => ({ default: m.RestaurantListPage })));
+// Restaurant partner panel (separate login, no admin shell)
+const PartnerLayout         = lazy(() => import('./features/partner/PartnerLayout').then(m => ({ default: m.PartnerLayout })));
+const PartnerDashboardPage = lazy(() => import('./features/partner/PartnerDashboardPage').then(m => ({ default: m.PartnerDashboardPage })));
+const PartnerSettingsPage  = lazy(() => import('./features/partner/PartnerSettingsPage').then(m => ({ default: m.PartnerSettingsPage })));
+const PartnerOrdersPage     = lazy(() => import('./features/partner/PartnerOrdersPage').then(m => ({ default: m.PartnerOrdersPage })));
+const PartnerMenuPage       = lazy(() => import('./features/partner/PartnerMenuPage').then(m => ({ default: m.PartnerMenuPage })));
+const PartnerEarningsPage   = lazy(() => import('./features/partner/PartnerEarningsPage').then(m => ({ default: m.PartnerEarningsPage })));
 const FoodOrdersPage        = lazy(() => import('./features/food/FoodOrdersPage').then(m => ({ default: m.FoodOrdersPage })));
 const RestaurantMenuPage    = lazy(() => import('./features/food/RestaurantMenuPage').then(m => ({ default: m.RestaurantMenuPage })));
 const ProductListPage       = lazy(() => import('./features/catalog/ProductListPage').then(m => ({ default: m.ProductListPage })));
 const CategoryListPage      = lazy(() => import('./features/catalog/CategoryListPage').then(m => ({ default: m.CategoryListPage })));
+const ThemeListPage         = lazy(() => import('./features/themes/ThemeListPage').then(m => ({ default: m.ThemeListPage })));
+const ThemeEditorPage       = lazy(() => import('./features/themes/ThemeEditorPage').then(m => ({ default: m.ThemeEditorPage })));
 const BannerListPage        = lazy(() => import('./features/banners/BannerListPage').then(m => ({ default: m.BannerListPage })));
 const CouponListPage        = lazy(() => import('./features/coupons/CouponListPage').then(m => ({ default: m.CouponListPage })));
 const CustomerListPage      = lazy(() => import('./features/customers/CustomerListPage').then(m => ({ default: m.CustomerListPage })));
@@ -60,6 +69,16 @@ export default function App() {
             <Route path="/login"    element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
+            <Route path="/partner/login" element={<Navigate to="/login" replace />} />
+            <Route path="/partner" element={<PartnerLayout />}>
+              <Route index             element={<PartnerDashboardPage />} />
+              <Route path="orders"     element={<PartnerOrdersPage />} />
+              <Route path="settings"   element={<PartnerSettingsPage />} />
+              <Route path="menu"       element={<PartnerMenuPage />} />
+              <Route path="restaurant" element={<Navigate to="/partner/settings" replace />} />
+              <Route path="earnings"   element={<PartnerEarningsPage />} />
+            </Route>
+
             <Route element={<ProtectedRoute />}>
               <Route element={<AppShell />}>
                 <Route index element={<DashboardPage />} />
@@ -82,6 +101,8 @@ export default function App() {
 
                 <Route element={<ProtectedRoute permission="banners.view" />}>
                   <Route path="banners"    element={<BannerListPage />} />
+                  <Route path="themes"     element={<ThemeListPage />} />
+                  <Route path="themes/:id" element={<ThemeEditorPage />} />
                   <Route path="faqs"       element={<FaqListPage />} />
                   <Route path="info-pages" element={<InfoPagesPage />} />
                 </Route>

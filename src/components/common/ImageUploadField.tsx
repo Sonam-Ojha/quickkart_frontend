@@ -13,13 +13,15 @@ interface Props {
   aspectRatio?: number;
   /** 'banner' asks the server to keep a larger size for full-width banners. */
   purpose?: 'banner';
+  /** Custom uploader (e.g. the restaurant partner panel); defaults to the admin upload API. */
+  uploadFn?: (fd: FormData) => Promise<string>;
 }
 
 /**
  * Dual-mode image field: paste a URL OR upload a file.
  * Only one can be active at a time. Displays a live preview.
  */
-export default function ImageUploadField({ value, onChange, label = 'Image', required, previewClassName = 'h-28', aspectRatio, purpose }: Props) {
+export default function ImageUploadField({ value, onChange, label = 'Image', required, previewClassName = 'h-28', aspectRatio, purpose, uploadFn }: Props) {
   const [mode, setMode] = useState<'url' | 'upload'>(value ? 'url' : 'url');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -44,10 +46,12 @@ export default function ImageUploadField({ value, onChange, label = 'Image', req
       const fd = new FormData();
       fd.append('image', new File([blob], name, { type: blob.type || 'image/jpeg' }));
       if (purpose) fd.append('purpose', purpose);
-      const res = await api.post<{ url: string }>('/api/admin/upload', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      onChange(res.data.url);
+      const url = uploadFn
+        ? await uploadFn(fd)
+        : (await api.post<{ url: string }>('/api/admin/upload', fd, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          })).data.url;
+      onChange(url);
     } catch (e: any) {
       setError(e?.response?.data?.message ?? 'Upload failed');
     } finally {

@@ -28,6 +28,7 @@ export const NAV_ITEMS: NavItem[] = [
     ]
   },
   { label: 'Banners',       href: '/banners',         icon: 'Image',           permission: 'banners.view' },
+  { label: 'Festival Themes', href: '/themes',        icon: 'Sparkles',        permission: 'banners.view' },
   { label: 'Coupons',       href: '/coupons',         icon: 'Ticket',          permission: 'coupons.view' },
   { label: 'Info Pages',    href: '/info-pages',      icon: 'FileText',        permission: 'banners.view' },
   // { label: 'Referrals',     href: '/referrals',       icon: 'Users2',          permission: 'referrals.view' },

@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Zap, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Zap, User, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { authApi } from './api';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { requestNotificationPermission, listenForegroundMessages } from '../../lib/firebase';
 import api from '../../lib/api';
+import { partnerApi } from '../partner/api';
+import { usePartnerStore } from '../partner/partner.store';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const login = useAuthStore(s => s.login);
+  const partnerLogin = usePartnerStore(s => s.login);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,7 +27,20 @@ export function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const data = await authApi.login({ email, password });
+      // No '@' → it's a restaurant partner's mobile number; send them to their own panel.
+      const id = email.trim();
+      if (!id.includes('@')) {
+        const digits = id.replace(/\D/g, '');
+        if (digits.length < 10) {
+          setError('Enter a valid email address or 10-digit mobile number.');
+          return;
+        }
+        const r = await partnerApi.login(digits.slice(-10), password);
+        partnerLogin(r.token, r.staff, r.restaurant);
+        navigate('/partner', { replace: true });
+        return;
+      }
+      const data = await authApi.login({ email: id, password });
       login(data.user, data.token);
       // Request browser notification permission and save FCM token
       requestNotificationPermission().then((token) => {
@@ -105,7 +121,7 @@ export function LoginPage() {
           <h1 className="text-2xl font-bold text-slate-900 mb-1" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
             Welcome back
           </h1>
-          <p className="text-slate-500 text-sm mb-8">Sign in to your admin account</p>
+          <p className="text-slate-500 text-sm mb-8">Admin team: use your email · Restaurants: use your mobile number</p>
 
           {error && (
             <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm">
@@ -116,15 +132,16 @@ export function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Email address</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Email or mobile number</label>
               <div className="relative">
-                <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <Input
-                  type="email"
+                  type="text"
+                  autoComplete="username"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="pl-9"
-                  placeholder="Enter your email address"
+                  placeholder="Email (admin) or mobile number (restaurant)"
                   required
                   autoFocus
                 />

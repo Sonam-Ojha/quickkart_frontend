@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Loader2, AlertCircle, X, ArrowLeft, UtensilsCrossed, Check } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -11,6 +11,21 @@ import { Switch } from './RestaurantListPage';
 
 const LABEL = 'text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block';
 
+/** Where the menu editor reads and writes — the admin API for one restaurant,
+ *  or the restaurant partner's own API. */
+export interface MenuApi {
+  getMenu: () => Promise<{ categories: MenuCategory[]; items: MenuItem[] }>;
+  createCategory: (data: Partial<MenuCategory>) => Promise<unknown>;
+  updateCategory: (catId: number, data: Partial<MenuCategory>) => Promise<unknown>;
+  removeCategory: (catId: number) => Promise<unknown>;
+  createItem: (data: MenuItemPayload) => Promise<unknown>;
+  updateItem: (itemId: number, data: MenuItemPayload) => Promise<unknown>;
+  toggleItem: (itemId: number) => Promise<unknown>;
+  removeItem: (itemId: number) => Promise<unknown>;
+  /** Photo uploader; defaults to the admin upload API */
+  upload?: (fd: FormData) => Promise<string>;
+}
+
 // Indian veg / non-veg mark
 function VegMark({ veg }: { veg: boolean }) {
   const c = veg ? '#16A34A' : '#B91C1C';
@@ -21,8 +36,8 @@ function VegMark({ veg }: { veg: boolean }) {
   );
 }
 
-function ItemModal({ restaurantId, item, categories, defaultCategoryId, onClose, onSave }: {
-  restaurantId: number; item?: MenuItem | null; categories: MenuCategory[];
+function ItemModal({ menuApi, item, categories, defaultCategoryId, onClose, onSave }: {
+  menuApi: MenuApi; item?: MenuItem | null; categories: MenuCategory[];
   defaultCategoryId: number | null; onClose: () => void; onSave: () => void;
 }) {
   const [form, setForm] = useState<MenuItemPayload>({
@@ -49,7 +64,7 @@ function ItemModal({ restaurantId, item, categories, defaultCategoryId, onClose,
     setSaving(true); setError('');
     try {
       const payload = { ...form, imageUrl: form.imageUrl || null, unit: form.unit || null, description: form.description || null };
-      item ? await foodApi.updateItem(restaurantId, item.id, payload) : await foodApi.createItem(restaurantId, payload);
+      item ? await menuApi.updateItem(item.id, payload) : await menuApi.createItem(payload);
       onSave();
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Something went wrong');
@@ -116,7 +131,7 @@ function ItemModal({ restaurantId, item, categories, defaultCategoryId, onClose,
               </div>
               <div className="sm:col-span-2">
                 <label className={LABEL}>Photo</label>
-                <ImageUploadField label="Item photo" value={form.imageUrl ?? ''} onChange={url => set('imageUrl', url)} aspectRatio={1} previewClassName="h-40" />
+                <ImageUploadField label="Item photo" value={form.imageUrl ?? ''} onChange={url => set('imageUrl', url)} aspectRatio={1} previewClassName="h-40" uploadFn={menuApi.upload} />
               </div>
             </div>
           </div>
@@ -132,14 +147,12 @@ function ItemModal({ restaurantId, item, categories, defaultCategoryId, onClose,
   );
 }
 
-export function RestaurantMenuPage() {
-  const { id } = useParams<{ id: string }>();
-  const restaurantId = Number(id);
-  const navigate = useNavigate();
-  const { can } = usePermission();
-  const canEdit = can('catalog.edit');
-
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+/** Sections + dishes editor, shared by the admin Menu page and the partner panel. */
+export function MenuEditor({ menuApi, canEdit, header }: {
+  menuApi: MenuApi;
+  canEdit: boolean;
+  header: (info: { items: number; soldOut: number }) => React.ReactNode;
+}) {
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems]           = useState<MenuItem[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -150,16 +163,16 @@ export function RestaurantMenuPage() {
   const [busy, setBusy]             = useState<number | null>(null);
 
   const loadMenu = async () => {
-    const m = await foodApi.menu(restaurantId);
+    const m = await menuApi.getMenu();
     setCategories(m.categories); setItems(m.items);
   };
   const load = async () => {
     setLoading(true); setError('');
-    try { setRestaurant(await foodApi.get(restaurantId)); await loadMenu(); }
+    try { await loadMenu(); }
     catch (err: any) { setError(err?.response?.data?.message ?? 'Failed to load menu'); }
     finally { setLoading(false); }
   };
-  useEffect(() => { load(); }, [restaurantId]);
+  useEffect(() => { load(); }, [menuApi]);
 
   const run = async (fn: () => Promise<unknown>) => {
     setError('');
@@ -171,30 +184,30 @@ export function RestaurantMenuPage() {
     e.preventDefault();
     const name = newSection.trim();
     if (!name) return;
-    run(async () => { await foodApi.createCategory(restaurantId, { name, sortOrder: categories.length }); setNewSection(''); });
+    run(async () => { await menuApi.createCategory({ name, sortOrder: categories.length }); setNewSection(''); });
   };
 
   const saveRename = () => {
     if (!renaming?.name.trim()) { setRenaming(null); return; }
     const { id: catId, name } = renaming;
-    run(async () => { await foodApi.updateCategory(restaurantId, catId, { name: name.trim() }); setRenaming(null); });
+    run(async () => { await menuApi.updateCategory(catId, { name: name.trim() }); setRenaming(null); });
   };
 
   const removeSection = (c: MenuCategory) => {
     const n = items.filter(i => i.menuCategoryId === c.id).length;
     if (!window.confirm(n ? `Delete section "${c.name}"? Its ${n} item(s) will move to "Other" (not deleted).` : `Delete section "${c.name}"?`)) return;
-    run(() => foodApi.removeCategory(restaurantId, c.id));
+    run(() => menuApi.removeCategory(c.id));
   };
 
   const toggleItem = async (it: MenuItem) => {
     setBusy(it.id);
-    await run(() => foodApi.toggleItem(restaurantId, it.id));
+    await run(() => menuApi.toggleItem(it.id));
     setBusy(null);
   };
 
   const removeItem = (it: MenuItem) => {
     if (!window.confirm(`Delete "${it.name}" from the menu?`)) return;
-    run(() => foodApi.removeItem(restaurantId, it.id));
+    run(() => menuApi.removeItem(it.id));
   };
 
   if (loading) {
@@ -209,7 +222,7 @@ export function RestaurantMenuPage() {
   const soldOut = items.filter(i => !i.isAvailable).length;
 
   const itemRow = (it: MenuItem) => (
-    <div key={it.id} className={`flex items-center gap-3 px-4 py-3 ${it.isAvailable ? '' : 'bg-slate-50'}`}>
+    <div key={it.id} className={`flex items-center gap-3 px-4 py-3 border-b border-slate-100 last:border-b-0 ${it.isAvailable ? '' : 'bg-slate-50'}`}>
       <div className="w-14 h-14 rounded-xl bg-amber-50 overflow-hidden flex items-center justify-center shrink-0">
         {it.imageUrl ? <img src={it.imageUrl} alt="" className={`w-full h-full object-cover ${it.isAvailable ? '' : 'grayscale opacity-60'}`} /> : <UtensilsCrossed size={18} className="text-amber-300" />}
       </div>
@@ -244,13 +257,8 @@ export function RestaurantMenuPage() {
   );
 
   return (
-    <div className="max-w-4xl">
-      <PageHeader
-        title={restaurant ? restaurant.name : 'Menu'}
-        subtitle={`Menu · ${items.length} items${soldOut ? ` · ${soldOut} sold out` : ''}`}
-        breadcrumbs={[{ label: 'Home' }, { label: 'Food' }, { label: 'Restaurants', href: '/food/restaurants' }, { label: 'Menu' }]}
-        action={<Button size="sm" variant="outline" onClick={() => navigate('/food/restaurants')}><ArrowLeft size={14} /> All restaurants</Button>}
-      />
+    <div>
+      {header({ items: items.length, soldOut })}
 
       {error && <div className="flex items-center gap-2 p-3 mb-4 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600"><AlertCircle size={14} />{error}</div>}
 
@@ -278,11 +286,11 @@ export function RestaurantMenuPage() {
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
           {groups.map(({ cat, items: list }) => (
             <section key={cat?.id ?? 'other'} className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
               {/* Section header — every action visible, no hover needed */}
-              <div className="flex items-center gap-2 px-4 py-3 bg-slate-50/80 border-b border-slate-100">
+              <div className="flex flex-wrap items-center gap-2 px-4 py-3 bg-slate-50/80 border-b border-slate-100">
                 {cat && renaming?.id === cat.id ? (
                   <form className="flex-1 flex items-center gap-2" onSubmit={e => { e.preventDefault(); saveRename(); }}>
                     <Input value={renaming.name} onChange={e => setRenaming({ id: cat.id, name: e.target.value })} className="h-9 max-w-xs" autoFocus />
@@ -291,7 +299,7 @@ export function RestaurantMenuPage() {
                   </form>
                 ) : (
                   <>
-                    <h3 className="flex-1 font-semibold text-slate-800">
+                    <h3 className="flex-1 min-w-[140px] font-semibold text-slate-800">
                       {cat ? cat.name : 'Other'} <span className="text-xs font-normal text-slate-400 ml-1">{list.length} items</span>
                     </h3>
                     {canEdit && (
@@ -306,10 +314,10 @@ export function RestaurantMenuPage() {
               </div>
               {list.length === 0 ? (
                 <div className="px-4 py-6 text-center text-sm text-slate-400">
-                  No items yet{canEdit && <> — <button className="text-[#DC2626] font-semibold hover:underline" onClick={() => setModal({ open: true, item: null, categoryId: cat?.id ?? null })}>add the first one</button></>}
+                  No items yet{canEdit && <> — <button className="text-[#EA580C] font-semibold hover:underline" onClick={() => setModal({ open: true, item: null, categoryId: cat?.id ?? null })}>add the first one</button></>}
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100">{list.map(itemRow)}</div>
+                <div>{list.map(itemRow)}</div>
               )}
             </section>
           ))}
@@ -318,7 +326,7 @@ export function RestaurantMenuPage() {
 
       {modal.open && (
         <ItemModal
-          restaurantId={restaurantId}
+          menuApi={menuApi}
           item={modal.item}
           categories={categories}
           defaultCategoryId={modal.categoryId ?? null}
@@ -327,5 +335,43 @@ export function RestaurantMenuPage() {
         />
       )}
     </div>
+  );
+}
+
+/** Admin: one restaurant's menu, via the admin food API. */
+export function RestaurantMenuPage() {
+  const { id } = useParams<{ id: string }>();
+  const restaurantId = Number(id);
+  const navigate = useNavigate();
+  const { can } = usePermission();
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+
+  useEffect(() => { foodApi.get(restaurantId).then(setRestaurant).catch(() => {}); }, [restaurantId]);
+
+  // Stable per restaurant, so the editor loads once
+  const menuApi = useMemo<MenuApi>(() => ({
+    getMenu:        () => foodApi.menu(restaurantId),
+    createCategory: (d) => foodApi.createCategory(restaurantId, d),
+    updateCategory: (catId, d) => foodApi.updateCategory(restaurantId, catId, d),
+    removeCategory: (catId) => foodApi.removeCategory(restaurantId, catId),
+    createItem:     (d) => foodApi.createItem(restaurantId, d),
+    updateItem:     (itemId, d) => foodApi.updateItem(restaurantId, itemId, d),
+    toggleItem:     (itemId) => foodApi.toggleItem(restaurantId, itemId),
+    removeItem:     (itemId) => foodApi.removeItem(restaurantId, itemId),
+  }), [restaurantId]);
+
+  return (
+    <MenuEditor
+      menuApi={menuApi}
+      canEdit={can('catalog.edit')}
+      header={({ items, soldOut }) => (
+        <PageHeader
+          title={restaurant ? restaurant.name : 'Menu'}
+          subtitle={`Menu · ${items} items${soldOut ? ` · ${soldOut} sold out` : ''}`}
+          breadcrumbs={[{ label: 'Home' }, { label: 'Food' }, { label: 'Restaurants', href: '/food/restaurants' }, { label: 'Menu' }]}
+          action={<Button size="sm" variant="outline" onClick={() => navigate('/food/restaurants')}><ArrowLeft size={14} /> All restaurants</Button>}
+        />
+      )}
+    />
   );
 }

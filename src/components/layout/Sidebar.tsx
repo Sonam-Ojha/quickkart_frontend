@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingBag, MapPin, Package, Tag, Box, Warehouse,
   Image, Ticket, Users2, Store, Bike, Users, MessageSquare, CreditCard,
   Wallet, Bell, BarChart2, Shield, Settings, ChevronDown, ChevronRight,
-  Zap, Printer, HelpCircle, FileText, Globe2, Leaf, UtensilsCrossed, X
+  Zap, Printer, HelpCircle, FileText, Globe2, Leaf, UtensilsCrossed, X, Sparkles
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { NAV_ITEMS } from '../../config/navigation';
@@ -13,7 +13,7 @@ import { usePermission } from '../../hooks/usePermission';
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard, ShoppingBag, MapPin, Package, Tag, Box, Warehouse,
   Image, Ticket, Users2, Store, Bike, Users, MessageSquare, CreditCard,
-  Wallet, Bell, BarChart2, Shield, Settings, Printer, HelpCircle, FileText, Globe2, Leaf, UtensilsCrossed,
+  Wallet, Bell, BarChart2, Shield, Settings, Printer, HelpCircle, FileText, Globe2, Leaf, UtensilsCrossed, Sparkles,
 };
 
 interface SidebarProps {
