@@ -1,4 +1,17 @@
 Options -MultiViews
 RewriteEngine On
+
+# A missing build asset must never become index.html (invalid module MIME).
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^assets/ - [R=404,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [QSA,L]
+
+<IfModule mod_headers.c>
+  # Always revalidate the entry point so it references the current build.
+  <FilesMatch "\.html$">
+    Header always set Cache-Control "no-cache, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>
