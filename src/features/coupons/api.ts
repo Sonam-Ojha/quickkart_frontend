@@ -20,9 +20,9 @@ export interface CouponPayload {
   code: string;
   type: 'flat' | 'percent';
   value: number;
-  maxDiscount?: number;
+  maxDiscount?: number | null;
   minOrder?: number;
-  usageLimit?: number;
+  usageLimit?: number | null;
   perUserLimit?: number;
   validFrom: string;
   validTo: string;

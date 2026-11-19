@@ -16,18 +16,25 @@ const EMPTY: CouponPayload = {
   validFrom: '', validTo: '', isActive: true,
 };
 
+// The API stores coupon money (flat value, max discount, min order) in paise;
+// the form works in rupees.
+const toRupees = (paise?: number | null) => (paise == null ? undefined : paise / 100);
+const toPaise  = (rupees?: number | null) => (rupees == null ? null : Math.round(rupees * 100));
+// Coupon dates are whole days in India time — read them back the same way.
+const istDate  = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) : '');
+
 function CouponModal({ coupon, onClose, onSave }: { coupon?: Coupon | null; onClose: () => void; onSave: () => void }) {
   const [form, setForm] = useState<CouponPayload>(
     coupon ? {
       code:         coupon.code,
       type:         coupon.type,
-      value:        coupon.value,
-      maxDiscount:  coupon.maxDiscount ?? undefined,
-      minOrder:     coupon.minOrder,
+      value:        coupon.type === 'flat' ? toRupees(coupon.value) ?? 0 : coupon.value,
+      maxDiscount:  toRupees(coupon.maxDiscount),
+      minOrder:     toRupees(coupon.minOrder) ?? 0,
       usageLimit:   coupon.usageLimit ?? undefined,
       perUserLimit: coupon.perUserLimit,
-      validFrom:    coupon.validFrom?.slice(0, 10),
-      validTo:      coupon.validTo?.slice(0, 10),
+      validFrom:    istDate(coupon.validFrom),
+      validTo:      istDate(coupon.validTo),
       isActive:     coupon.isActive,
     } : { ...EMPTY }
   );
@@ -42,9 +49,18 @@ function CouponModal({ coupon, onClose, onSave }: { coupon?: Coupon | null; onCl
     if (!form.value)     { setError('Value is required'); return; }
     if (!form.validFrom) { setError('Valid from date is required'); return; }
     if (!form.validTo)   { setError('Valid to date is required'); return; }
+    if (form.validTo < form.validFrom) { setError('Valid to date must be on or after valid from'); return; }
+    if (form.type === 'percent' && (form.value < 1 || form.value > 100)) { setError('Discount % must be between 1 and 100'); return; }
+    const payload: CouponPayload = {
+      ...form,
+      value:       form.type === 'flat' ? toPaise(form.value) ?? 0 : form.value,
+      maxDiscount: form.type === 'percent' ? toPaise(form.maxDiscount) : null,
+      minOrder:    toPaise(form.minOrder) ?? 0,
+      usageLimit:  form.usageLimit ?? null,
+    };
     setSaving(true); setError('');
     try {
-      coupon ? await couponApi.update(coupon.id, form) : await couponApi.create(form);
+      coupon ? await couponApi.update(coupon.id, payload) : await couponApi.create(payload);
       onSave();
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Something went wrong');
@@ -82,19 +98,21 @@ function CouponModal({ coupon, onClose, onSave }: { coupon?: Coupon | null; onCl
                 {form.type === 'percent' ? 'Discount %' : 'Discount ₹'} *
               </label>
               <Input type="number" min="1" value={form.value || ''} onChange={e => set('value', Number(e.target.value))}
-                placeholder={form.type === 'percent' ? '10–100' : 'in paise'} />
+                placeholder={form.type === 'percent' ? '10–100' : 'e.g. 50'} />
             </div>
-            <div>
-              <label className="text-xs font-medium text-slate-600 mb-1 block">Max Discount ₹</label>
-              <Input type="number" min="0" value={form.maxDiscount ?? ''} onChange={e => set('maxDiscount', e.target.value ? Number(e.target.value) : undefined)}
-                placeholder="paise (optional)" />
-            </div>
+            {form.type === 'percent' && (
+              <div>
+                <label className="text-xs font-medium text-slate-600 mb-1 block">Max Discount ₹</label>
+                <Input type="number" min="0" value={form.maxDiscount ?? ''} onChange={e => set('maxDiscount', e.target.value ? Number(e.target.value) : undefined)}
+                  placeholder="e.g. 100 (optional)" />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Min Order ₹</label>
-              <Input type="number" min="0" value={form.minOrder ?? 0} onChange={e => set('minOrder', Number(e.target.value))} placeholder="paise" />
+              <Input type="number" min="0" value={form.minOrder ?? 0} onChange={e => set('minOrder', Number(e.target.value))} placeholder="e.g. 199" />
             </div>
             <div>
               <label className="text-xs font-medium text-slate-600 mb-1 block">Per User Limit</label>
